@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import json
-import cPickle
+import pickle as cPickle
 import numpy as np
 import utils
 import h5py
@@ -112,7 +112,7 @@ class VQAFeatureDataset(Dataset):
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name), 'rb'))
         print('loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:

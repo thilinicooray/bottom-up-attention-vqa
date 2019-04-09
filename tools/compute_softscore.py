@@ -1,13 +1,17 @@
+"""
+This code is slightly modified from Hengyuan Hu's repository.
+https://github.com/hengyuan-hu/bottom-up-attention-vqa
+"""
 from __future__ import print_function
 import os
 import sys
 import json
 import numpy as np
 import re
-import cPickle
+import _pickle as cPickle
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dataset import Dictionary
+# from dataset import Dictionary
 import utils
 
 
@@ -77,17 +81,19 @@ punct = [';', r"/", '[', ']', '"', '{', '}',
                 '>', '<', '@', '`', ',', '?', '!']
 
 
+# Notice that VQA score is the average of 10 choose 9 candidate answers cases
+# See http://visualqa.org/evaluation.html
 def get_score(occurences):
     if occurences == 0:
-        return 0
+        return .0
     elif occurences == 1:
-        return 0.3
+        return .3
     elif occurences == 2:
-        return 0.6
+        return .6
     elif occurences == 3:
-        return 0.9
+        return .9
     else:
-        return 1
+        return 1.
 
 
 def process_punctuation(inText):
@@ -142,7 +148,7 @@ def filter_answers(answers_dset, min_occurence):
         if gtruth not in occurence:
             occurence[gtruth] = set()
         occurence[gtruth].add(ans_entry['question_id'])
-    for answer in occurence.keys():
+    for answer in list(occurence):
         if len(occurence[answer]) < min_occurence:
             occurence.pop(answer)
 
@@ -239,6 +245,13 @@ if __name__ == '__main__':
 
     answers = train_answers + val_answers
     occurence = filter_answers(answers, 9)
-    ans2label = create_ans2label(occurence, 'trainval')
+
+    cache_path = 'data/cache/trainval_ans2label.pkl'
+    if os.path.isfile(cache_path):
+        print('found %s' % cache_path)
+        ans2label = cPickle.load(open(cache_path, 'rb'))
+    else:
+        ans2label = create_ans2label(occurence, 'trainval')
     compute_target(train_answers, ans2label, 'train')
     compute_target(val_answers, ans2label, 'val')
+

@@ -17,7 +17,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import base64
 import csv
 import h5py
-import cPickle
+import pickle as cPickle
 import numpy as np
 import utils
 
@@ -42,8 +42,8 @@ if __name__ == '__main__':
     h_val = h5py.File(val_data_file, "w")
 
     if os.path.exists(train_ids_file) and os.path.exists(val_ids_file):
-        train_imgids = cPickle.load(open(train_ids_file))
-        val_imgids = cPickle.load(open(val_ids_file))
+        train_imgids = cPickle.load(open(train_ids_file, 'rb'))
+        val_imgids = cPickle.load(open(val_ids_file, 'rb'))
     else:
         train_imgids = utils.load_imageid('data/train2014')
         val_imgids = utils.load_imageid('data/val2014')
@@ -71,10 +71,12 @@ if __name__ == '__main__':
     val_counter = 0
 
     print("reading tsv...")
-    with open(infile, "r+b") as tsv_in_file:
+    with open(infile, "r+") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
         for item in reader:
             item['num_boxes'] = int(item['num_boxes'])
+            item['boxes'] = bytes(item['boxes'], 'utf')
+            item['features'] = bytes(item['features'], 'utf')
             image_id = int(item['image_id'])
             image_w = float(item['image_w'])
             image_h = float(item['image_h'])
