@@ -9,6 +9,7 @@ from dataset import Dictionary, VQAGridDataset
 import base_model
 from train_grid import train
 import utils
+import utils_imsitu
 
 
 def parse_args():
@@ -39,11 +40,10 @@ if __name__ == '__main__':
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_dset, args.num_hid).cuda()
+    utils_imsitu.set_trainable(model.conv_net, False)
     model.w_emb.init_embedding('data/glove6b_init_300d.npy')
 
     model = nn.DataParallel(model).cuda()
-
-    print('batch size :', batch_size)
 
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=3)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=3)

@@ -30,8 +30,6 @@ class resnet_152_features(nn.Module):
         x = self.resnet.layer3(x)
         x = self.resnet.layer4(x)
 
-        print('resnet out :', x.size())
-
         return x
 
 
@@ -85,12 +83,10 @@ class BaseModelGrid(nn.Module):
 
         return: logits, not probs
         """
-        print(' original image :', v.size())
         img_features = self.conv_net(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img = img_features.view(batch_size, n_channel, -1)
-        print('image :', img.size())
         v = img.permute(0, 2, 1)
 
         w_emb = self.w_emb(q)
