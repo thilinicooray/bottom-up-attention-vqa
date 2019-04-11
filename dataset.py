@@ -264,7 +264,7 @@ class VQAGridDataset(Dataset):
     def __getitem__(self, index):
         entry = self.entries[index]
         image_id = entry['image_id']
-        file_name = self.image_filenames[image_id]
+        file_name = self.image_filenames[str(image_id)]
         img = Image.open(os.path.join(self.img_dir, file_name)).convert('RGB')
         #transform must be None in order to give it as a tensor
         img = self.transform(img)
