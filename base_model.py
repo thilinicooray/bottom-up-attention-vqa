@@ -117,9 +117,9 @@ def build_baseline0grid(dataset, num_hid):
     conv_net = resnet_152_features()
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = Attention(dataset.v_dim, q_emb.num_hid, num_hid)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])
-    v_net = FCNet([dataset.v_dim, num_hid])
+    v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, dataset.num_ans_candidates, 0.5)
     return BaseModel(conv_net, w_emb, q_emb, v_att, q_net, v_net, classifier)
