@@ -11,9 +11,6 @@ class resnet_152_features(nn.Module):
         super(resnet_152_features, self).__init__()
         self.resnet = tv.models.resnet152(pretrained=True)
 
-        for param in self.resnet.parameters():
-            param.require_grad = False
-
         #probably want linear, relu, dropout
 
     def base_size(self): return 2048
