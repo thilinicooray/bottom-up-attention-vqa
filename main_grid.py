@@ -43,6 +43,8 @@ if __name__ == '__main__':
 
     model = nn.DataParallel(model).cuda()
 
+    print('batch size :', batch_size)
+
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=3)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=3)
     train(model, train_loader, eval_loader, args.epochs, args.output)
