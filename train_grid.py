@@ -28,6 +28,8 @@ def train(model, train_loader, eval_loader, num_epochs, output):
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
+    print('Model training started !')
+
     for epoch in range(num_epochs):
         total_loss = 0
         train_score = 0
@@ -41,7 +43,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             pred = model(v, q, a)
             loss = instance_bce_with_logits(pred, a)
             loss.backward()
-            nn.utils.clip_grad_norm(model.parameters(), 0.25)
+            nn.utils.clip_grad_norm_(model.parameters(), 0.25)
             optim.step()
             optim.zero_grad()
 
@@ -61,7 +63,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
 
         if eval_score > best_eval_score:
             print('saving best model :', eval_score)
-            model_path = os.path.join(output, 'model_grid.pth')
+            model_path = os.path.join(output, 'model_grid_BUTD.pth')
             torch.save(model.state_dict(), model_path)
             best_eval_score = eval_score
 
@@ -70,6 +72,7 @@ def evaluate(model, dataloader):
     score = 0
     upper_bound = 0
     num_data = 0
+    print('Evaluation started !')
     for v, q, a in iter(dataloader):
         v = Variable(v, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
