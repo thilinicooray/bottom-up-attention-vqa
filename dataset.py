@@ -242,8 +242,8 @@ class VQAGridDataset(Dataset):
             entry['q_token'] = tokens
 
     def tensorize(self):
-        self.features = torch.from_numpy(self.features)
-        self.spatials = torch.from_numpy(self.spatials)
+        #self.features = torch.from_numpy(self.features)
+        #self.spatials = torch.from_numpy(self.spatials)
 
         for entry in self.entries:
             question = torch.from_numpy(np.array(entry['q_token']))
