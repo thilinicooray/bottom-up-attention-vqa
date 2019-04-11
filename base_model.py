@@ -122,7 +122,7 @@ def build_baseline0grid(dataset, num_hid):
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, dataset.num_ans_candidates, 0.5)
-    return BaseModel(conv_net, w_emb, q_emb, v_att, q_net, v_net, classifier)
+    return BaseModelGrid(conv_net, w_emb, q_emb, v_att, q_net, v_net, classifier)
 
 
 def build_baseline0_newatt(dataset, num_hid):
