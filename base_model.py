@@ -151,6 +151,7 @@ def build_baseline0grid(dataset, num_hid):
     return BaseModelGrid(conv_net, w_emb, q_emb, v_att, q_net, v_net, classifier)
 
 def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes):
+    print('words count :', dataset.dictionary.ntoken)
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
