@@ -100,7 +100,7 @@ class BaseModelGrid(nn.Module):
         return logits
 
 class BaseModelGrid_Imsitu(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder):
         super(BaseModelGrid_Imsitu, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
@@ -108,6 +108,7 @@ class BaseModelGrid_Imsitu(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
+        self.encoder = encoder
 
     def forward(self, v, q, labels):
         """Forward
@@ -118,11 +119,11 @@ class BaseModelGrid_Imsitu(nn.Module):
         return: logits, not probs
         """
 
-        img = v.expand(6,v.size(0), v.size(1), v.size(2))
+        img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
         img = img.transpose(0,1)
-        img = img.contiguous().view(v.size(0) * 6, -1, v.size(2))
+        img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
 
-        q = q.view(v.size(0)* 6, -1)
+        q = q.view(v.size(0)* self.encoder.max_role_count, -1)
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -135,7 +136,7 @@ class BaseModelGrid_Imsitu(nn.Module):
         joint_repr = q_repr * v_repr
         logits = self.classifier(joint_repr)
 
-        role_label_pred = logits.contiguous().view(v.size(0), 6, -1)
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
         return role_label_pred
 
@@ -149,9 +150,9 @@ class BaseModelGrid_Imsitu(nn.Module):
                 frame_loss = 0
                 #verb_loss = utils.cross_entropy_loss(verb_pred[i], gt_verbs[i])
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
-                for j in range(0, self.dataset.encoder.max_role_count):
-                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.dataset.encoder.get_num_labels())
-                frame_loss = frame_loss/len(self.dataset.encoder.verb2_role_dict[self.dataset.encoder.verb_list[gt_verbs[i]]])
+                for j in range(0, self.encoder.max_role_count):
+                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
+                frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
 
@@ -181,7 +182,7 @@ def build_baseline0grid(dataset, num_hid):
         num_hid, 2 * num_hid, dataset.num_ans_candidates, 0.5)
     return BaseModelGrid(conv_net, w_emb, q_emb, v_att, q_net, v_net, classifier)
 
-def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes):
+def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes, encoder):
     print('words count :', dataset.dictionary.ntoken)
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
@@ -190,7 +191,7 @@ def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes):
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu( w_emb, q_emb, v_att, q_net, v_net, classifier)
+    return BaseModelGrid_Imsitu( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder)
 
 def build_baseline0_newatt(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)

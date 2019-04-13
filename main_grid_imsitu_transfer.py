@@ -284,7 +284,7 @@ def main():
     train_set = imsitu_loader_roleq_buatt(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels())
+    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder)
 
     model.w_emb.init_embedding(w_emb_path)
 
