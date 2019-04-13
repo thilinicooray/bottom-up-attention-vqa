@@ -5,6 +5,7 @@ from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
 import torchvision as tv
+import utils_imsitu
 
 class resnet_152_features(nn.Module):
     def __init__(self):
@@ -137,6 +138,27 @@ class BaseModelGrid_Imsitu(nn.Module):
         role_label_pred = logits.contiguous().view(v.size(0), 6, -1)
 
         return role_label_pred
+
+    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels,args):
+
+        batch_size = role_label_pred.size()[0]
+
+        loss = 0
+        for i in range(batch_size):
+            for index in range(gt_labels.size()[1]):
+                frame_loss = 0
+                #verb_loss = utils.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
+                for j in range(0, self.dataset.encoder.max_role_count):
+                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.dataset.encoder.get_num_labels())
+                frame_loss = frame_loss/len(self.dataset.encoder.verb2_role_dict[self.dataset.encoder.verb_list[gt_verbs[i]]])
+                #print('frame loss', frame_loss, 'verb loss', verb_loss)
+                loss += frame_loss
+
+
+        final_loss = loss/batch_size
+        #print('loss :', final_loss)
+        return final_loss
 
 def build_baseline0(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
