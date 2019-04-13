@@ -87,6 +87,8 @@ class imsitu_encoder():
               '\n\t max role count:', self.max_role_count,
               '\n\t max q word count:', self.max_q_word_count)
 
+        print('q words count :', len(self.question_words))
+
 
         verb2role_list = []
         for verb_id in range(len(self.verb_list)):
