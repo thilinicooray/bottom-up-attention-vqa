@@ -286,9 +286,7 @@ def main():
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels())
 
-    tfidf = None
-    weights = None
-    model.w_emb.init_embedding(w_emb_path, tfidf, weights)
+    model.w_emb.init_embedding(w_emb_path)
 
     #print('MODEL :', model)
 
