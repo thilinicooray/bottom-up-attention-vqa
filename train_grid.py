@@ -74,8 +74,8 @@ def evaluate(model, dataloader):
     num_data = 0
     print('Evaluation started !')
     for v, q, a in iter(dataloader):
-        v = Variable(v, volatile=True).cuda()
-        q = Variable(q, volatile=True).cuda()
+        v = Variable(v).cuda()
+        q = Variable(q).cuda()
         pred = model(v, q, None)
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
