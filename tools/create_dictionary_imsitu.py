@@ -49,7 +49,7 @@ def create_glove_embedding_init(idx2word, glove_file):
 
 if __name__ == '__main__':
     d = create_dictionary('data')
-    d.dump_to_file('data/dictionary.pkl')
+    d.dump_to_file('data/dictionary_imsitu.pkl')
 
     d = Dictionary.load_from_file('data/dictionary_imsitu.pkl')
     emb_dim = 300
