@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -153,7 +153,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 max_score = max(dev_score_list)
 
                 if max_score == dev_score_list[-1]:
-                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_buatt_trainall_resnetfeat.model".format( model_name))
+                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_{}.model".format( model_name, model_saving_name))
                     print ('New best model saved! {0}'.format(max_score))
 
                 #eval on the trainset
@@ -249,6 +249,8 @@ def main():
     parser.add_argument('--dataset_folder', type=str, default='./imSitu', help='Location of annotations')
     parser.add_argument('--imgset_dir', type=str, default='./resized_256', help='Location of original images')
     parser.add_argument('--frcnn_feat_dir', type=str, help='Location of output from detectron')
+    parser.add_argument('--train_file', type=str, help='trainfile name')
+    parser.add_argument('--model_saving_name', type=str, help='save name of the outpul model')
 
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--num_hid', type=int, default=1024)
@@ -273,7 +275,7 @@ def main():
 
     print('model spec :, top down att with role q ')
 
-    train_set = json.load(open(dataset_folder + "/updated_train_new.json"))
+    train_set = json.load(open(dataset_folder + args.train_file))
     imsitu_roleq = json.load(open("data/imsitu_questions_prev.json"))
     encoder = imsitu_encoder(train_set, imsitu_roleq)
 
@@ -389,7 +391,8 @@ def main():
     else:
 
         print('Model training started!')
-        train(model, train_loader, dev_loader, None, optimizer, scheduler, n_epoch, args.output_dir, encoder, args.gpuid, clip_norm, None, model_name, args)
+        train(model, train_loader, dev_loader, None, optimizer, scheduler, n_epoch, args.output_dir, encoder, args.gpuid, clip_norm, None, model_name, args.model_saving_name,
+              args)
 
 
 
