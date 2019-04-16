@@ -325,7 +325,7 @@ def main():
         print('Training from the scratch.')
         model_name = 'train_full'
 
-    '''utils_imsitu.set_trainable(model, False)
+    utils_imsitu.set_trainable(model, False)
     utils_imsitu.set_trainable(model.classifier, True)
     utils_imsitu.set_trainable(model.w_emb, True)
     utils_imsitu.set_trainable(model.q_emb, True)
@@ -333,10 +333,10 @@ def main():
         {'params': model.classifier.parameters()},
         {'params': model.w_emb.parameters()},
         {'params': model.q_emb.parameters()}
-    ], lr=1e-3)'''
+    ], lr=1e-3)
 
-    utils_imsitu.set_trainable(model, True)
-    optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+    #utils_imsitu.set_trainable(model, True)
+    #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
 
     #optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_step, gamma=lr_gamma)
