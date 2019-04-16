@@ -331,8 +331,8 @@ def main():
     utils_imsitu.set_trainable(model.q_emb, True)
     optimizer = torch.optim.Adamax([
         {'params': model.classifier.parameters()},
-        {'params': model.w_emb.parameters()},
-        {'params': model.q_emb.parameters()}
+        {'params': model.w_emb.parameters(), 'lr': 1e-4},
+        {'params': model.q_emb.parameters(), 'lr': 1e-4}
     ], lr=1e-3)
 
     #utils_imsitu.set_trainable(model, True)
