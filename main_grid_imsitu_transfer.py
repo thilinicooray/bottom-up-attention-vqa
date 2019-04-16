@@ -275,7 +275,7 @@ def main():
 
     print('model spec :, top down att with role q ')
 
-    train_set = json.load(open(dataset_folder + args.train_file))
+    train_set = json.load(open(dataset_folder + '/' + args.train_file))
     imsitu_roleq = json.load(open("data/imsitu_questions_prev.json"))
     encoder = imsitu_encoder(train_set, imsitu_roleq)
 
