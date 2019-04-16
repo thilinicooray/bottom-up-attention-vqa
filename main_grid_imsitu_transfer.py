@@ -153,7 +153,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 max_score = max(dev_score_list)
 
                 if max_score == dev_score_list[-1]:
-                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_buatt_trans_tranin classlangonly.model".format( model_name))
+                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_buatt_trainall_resnetfeat.model".format( model_name))
                     print ('New best model saved! {0}'.format(max_score))
 
                 #eval on the trainset
@@ -254,7 +254,7 @@ def main():
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0grid_imsitu')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
-    parser.add_argument('--batch_size', type=int, default=256)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
 
     #todo: train role module separately with gt verbs
@@ -323,7 +323,7 @@ def main():
         print('Training from the scratch.')
         model_name = 'train_full'
 
-    utils_imsitu.set_trainable(model, False)
+    '''utils_imsitu.set_trainable(model, False)
     utils_imsitu.set_trainable(model.classifier, True)
     utils_imsitu.set_trainable(model.w_emb, True)
     utils_imsitu.set_trainable(model.q_emb, True)
@@ -331,7 +331,10 @@ def main():
         {'params': model.classifier.parameters()},
         {'params': model.w_emb.parameters()},
         {'params': model.q_emb.parameters()}
-    ], lr=1e-3)
+    ], lr=1e-3)'''
+
+    utils_imsitu.set_trainable(model, True)
+    optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
 
     #optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_step, gamma=lr_gamma)
