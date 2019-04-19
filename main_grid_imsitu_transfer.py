@@ -249,7 +249,9 @@ def main():
     parser.add_argument('--dataset_folder', type=str, default='./imSitu', help='Location of annotations')
     parser.add_argument('--imgset_dir', type=str, default='./resized_256', help='Location of original images')
     parser.add_argument('--frcnn_feat_dir', type=str, help='Location of output from detectron')
-    parser.add_argument('--train_file', type=str, help='trainfile name')
+    parser.add_argument('--train_file', default="updated_train_new.json", type=str, help='trainfile name')
+    parser.add_argument('--dev_file', default="dev.json", type=str, help='dev file name')
+    parser.add_argument('--test_file', default="test.json", type=str, help='test file name')
     parser.add_argument('--model_saving_name', type=str, help='save name of the outpul model')
 
     parser.add_argument('--epochs', type=int, default=500)
@@ -294,11 +296,11 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
-    dev_set = json.load(open(dataset_folder +"/dev.json"))
+    dev_set = json.load(open(dataset_folder + '/' + args.dev_file))
     dev_set = imsitu_loader_roleq_buatt(imgset_folder, dev_set, encoder, dictionary, 'val', encoder.dev_transform)
     dev_loader = torch.utils.data.DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
-    test_set = json.load(open(dataset_folder +"/test.json"))
+    test_set = json.load(open(dataset_folder + '/' + args.test_file))
     test_set = imsitu_loader_roleq_buatt(imgset_folder, test_set, encoder, dictionary, 'test', encoder.dev_transform)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
@@ -321,6 +323,14 @@ def main():
 
         utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv_net', 'w_emb'])
         model_name = 'pre_trained_buatt'
+    elif args.resume_training:
+        print('Resume training from: {}'.format(args.resume_model))
+        args.train_all = True
+        if len(args.resume_model) == 0:
+            raise Exception('[pretrained module] not specified')
+        utils_imsitu.load_net(args.resume_model, [model])
+        optimizer_select = 0
+        model_name = 'resume_all'
     else:
         print('Training from the scratch.')
         model_name = 'train_full'
