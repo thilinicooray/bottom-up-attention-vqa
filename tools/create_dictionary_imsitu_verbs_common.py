@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     commonq_dict = {'A' : 'what is the action happening', 'B' : 'what is someone doing', 'C' : 'is the', 'D' : 'action'}
 
-    for key, q in commonq_dict:
+    for key, q in commonq_dict.items():
         d = create_dictionary(q)
         d.dump_to_file('data/dictionary_imsitu_verbcommon_' + key + '.pkl')
 
