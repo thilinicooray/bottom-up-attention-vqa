@@ -163,7 +163,7 @@ class BaseModelGrid_Imsitu(nn.Module):
 
 class BaseModelGrid_Imsitu_Verb(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder):
-        super(BaseModelGrid_Imsitu, self).__init__()
+        super(BaseModelGrid_Imsitu_Verb, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
