@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (_, img, verb, questions) in enumerate(train_loader):
+        for i, (img_id, img, verb, questions) in enumerate(train_loader):
             #print("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -116,8 +116,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #top1.add_point_eval5(verb_predict, verb, role_predict, labels)
             #top5.add_point_eval5(verb_predict, verb, role_predict, labels)
 
-            top1.add_point_verb_only_eval(id, verb_predict, verb)
-            top5.add_point_verb_only_eval(id, verb_predict, verb)
+            top1.add_point_verb_only_eval(img_id, verb_predict, verb)
+            top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
 
             if total_steps % print_freq == 0:
@@ -212,11 +212,11 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
-                top1.add_point_verb_only_eval(id, verb_predict, verb)
-                top5.add_point_verb_only_eval(id, verb_predict, verb)
+                top1.add_point_verb_only_eval(img_id, verb_predict, verb)
+                top5.add_point_verb_only_eval(img_id, verb_predict, verb)
             else:
-                top1.add_point_verb_only_eval(id, verb_predict, verb)
-                top5.add_point_verb_only_eval(id, verb_predict, verb)
+                top1.add_point_verb_only_eval(img_id, verb_predict, verb)
+                top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
             del verb_predict, img, verb
             #break
