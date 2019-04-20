@@ -266,6 +266,53 @@ class imsitu_loader_roleq_buatt(data.Dataset):
     def __len__(self):
         return len(self.annotations)
 
+class imsitu_loader_verb_buatt_common(data.Dataset):
+    def __init__(self, img_dir, annotation_file, encoder, dictionary, name, q_type, transform=None, dataroot='data'):
+        self.img_dir = img_dir
+        self.annotations = annotation_file
+        self.ids = list(self.annotations.keys())
+        self.encoder = encoder
+        self.dictionary = dictionary
+        self.transform = transform
+
+        commonq_dict = {'A' : 'what is the action happening', 'B' : 'what is someone doing', 'C' : 'is the', 'D' : 'action'}
+        self.common_q = commonq_dict[q_type]
+
+        self.img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'imsitu_%s_imgid2idx.pkl' % name), 'rb'))
+        print('loading features from h5 file')
+        h5_path = os.path.join(dataroot, 'imsitu_%s.hdf5' % name)
+        with h5py.File(h5_path, 'r') as hf:
+            self.features = np.array(hf.get('image_features'))
+
+        self.features = torch.from_numpy(self.features)
+
+
+
+    def tokenize(self, question):
+        """Tokenizes the questions.
+
+        This will add q_token in each entry of the dataset.
+        -1 represent nil, and should be treated as padding_idx in embedding
+        """
+        tokens = self.dictionary.tokenize(question, False)
+
+        return torch.tensor(tokens)
+
+    def __getitem__(self, index):
+        _id = self.ids[index]
+        ann = self.annotations[_id]
+
+        img = self.features[self.img_id2idx[_id]]
+
+        verb = self.encoder.encode(ann)
+        question = self.tokenize(self.common_q)
+
+        return _id, img, verb, question
+
+    def __len__(self):
+        return len(self.annotations)
+
 class imsitu_loader_hico(data.Dataset):
     def __init__(self, img_dir, annotation_file, encoder, transform=None):
         self.img_dir = img_dir
