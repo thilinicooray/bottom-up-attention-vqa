@@ -4,6 +4,7 @@ from collections import OrderedDict
 import csv
 import nltk
 import torchvision as tv
+import json
 
 #This is the class which encodes training set json in the following structure
 #todo: the structure
@@ -22,6 +23,7 @@ class imsitu_encoder():
         self.question_words = {}
         self.max_q_word_count = 0
         self.vrole_question = {}
+        self.role_corrected_dict = json.load(open('data/roles_namecorrected.json'))
 
         # imag preprocess
         self.normalize = tv.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -141,6 +143,13 @@ class imsitu_encoder():
         #assuming labels are also in order of roles in encoder
         return verb, role_nl_qs, labels
 
+    def encode_with_rolenames(self, item):
+        verb = self.verb_list.index(item['verb'])
+        role_names = self.get_role_names(item['verb'])
+        labels = self.get_label_ids(item['frames'])
+
+        return verb, role_names, labels
+
     def encode_verb(self, item):
         verb = self.verb_list.index(item['verb'])
         labels = self.get_label_ids(item['frames'])
@@ -192,6 +201,15 @@ class imsitu_encoder():
             verb2role_oh_embedding_list.append(torch.stack(role_embedding_verb, 0))
 
         return verb2role_oh_embedding_list
+
+    def get_role_names(self, verb):
+        current_role_list = self.verb2_role_dict[verb]
+
+        role_verb = []
+        for role in current_role_list:
+            role_verb.append(self.role_corrected_dict[role])
+
+        return role_verb
 
     def save_encoder(self):
         return None
