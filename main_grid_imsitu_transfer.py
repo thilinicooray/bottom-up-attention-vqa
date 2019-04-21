@@ -153,7 +153,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 max_score = max(dev_score_list)
 
                 if max_score == dev_score_list[-1]:
-                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_ftall4{}.model".format( model_name, model_saving_name))
+                    torch.save(model.state_dict(), model_dir + "/{}_roles_independent_ftall5{}.model".format( model_name, model_saving_name))
                     print ('New best model saved! {0}'.format(max_score))
 
                 #eval on the trainset
@@ -342,10 +342,10 @@ def main():
     optimizer = torch.optim.Adamax([
         {'params': model.classifier.parameters()},
         {'params': model.w_emb.parameters()},
-        {'params': model.q_emb.parameters(), 'lr': 1e-4},
-        {'params': model.v_att.parameters(), 'lr': 1e-4},
-        {'params': model.q_net.parameters(), 'lr': 1e-4},
-        {'params': model.v_net.parameters(), 'lr': 1e-4}
+        {'params': model.q_emb.parameters(), 'lr': 1e-5},
+        {'params': model.v_att.parameters(), 'lr': 1e-5},
+        {'params': model.q_net.parameters(), 'lr': 1e-5},
+        {'params': model.v_net.parameters(), 'lr': 1e-5}
     ], lr=1e-3)
 
     #utils_imsitu.set_trainable(model, True)
