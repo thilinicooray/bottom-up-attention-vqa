@@ -255,8 +255,8 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
-        joint_repr = q_repr * v_repr
-        logits = self.classifier(joint_repr)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
 
         if self.training:
             loss1 = self.calculate_loss(logits, gt_verbs)
@@ -280,7 +280,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
         #todo : combine rep of both and send for final pred
-        joint_repr = q_repr * v_repr
+        joint_repr = q_repr * v_repr + joint_repr_prev
         logits = self.classifier(joint_repr)
         loss = None
         if self.training:
