@@ -343,10 +343,10 @@ def main():
             opts.append({'params': model.w_emb.parameters()})
         if True:
             utils_imsitu.set_trainable(model.q_emb, True)
-            opts.append({'params': model.q_emb.parameters()})
+            opts.append({'params': model.q_emb.parameters(), 'lr': 4e-5})
 
-        #optimizer = torch.optim.Adamax(opts, lr=1e-3)
-        optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
+        optimizer = torch.optim.Adamax(opts, lr=1e-3)
+        #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
 
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
@@ -357,15 +357,15 @@ def main():
         optimizer_select = 0
         model_name = 'resume_all'
         utils_imsitu.set_trainable(model, True)
-        #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     else:
         print('Training from the scratch.')
         model_name = 'train_full'
 
         utils_imsitu.set_trainable(model, True)
-        #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     #utils_imsitu.set_trainable(model, True)
     #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
