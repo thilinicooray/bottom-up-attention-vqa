@@ -372,6 +372,36 @@ class imsitu_loader_verb_buatt_common(data.Dataset):
     def __len__(self):
         return len(self.annotations)
 
+class imsitu_loader_verb_buatt_iter(data.Dataset):
+    def __init__(self, img_dir, annotation_file, encoder, name, transform=None, dataroot='data'):
+        self.img_dir = img_dir
+        self.annotations = annotation_file
+        self.ids = list(self.annotations.keys())
+        self.encoder = encoder
+        self.transform = transform
+
+        self.img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'imsitu_%s_imgid2idx.pkl' % name), 'rb'))
+        print('loading features from h5 file')
+        h5_path = os.path.join(dataroot, 'imsitu_%s.hdf5' % name)
+        with h5py.File(h5_path, 'r') as hf:
+            self.features = np.array(hf.get('image_features'))
+
+        self.features = torch.from_numpy(self.features)
+
+    def __getitem__(self, index):
+        _id = self.ids[index]
+        ann = self.annotations[_id]
+
+        img = self.features[self.img_id2idx[_id]]
+
+        verb = self.encoder.encode_verb_only(ann)
+
+        return _id, img, verb
+
+    def __len__(self):
+        return len(self.annotations)
+
 class imsitu_loader_hico(data.Dataset):
     def __init__(self, img_dir, annotation_file, encoder, transform=None):
         self.img_dir = img_dir
