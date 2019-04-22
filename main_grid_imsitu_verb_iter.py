@@ -275,7 +275,7 @@ def main():
 
     verbq_dict_path = 'data/dictionary_imsitu_verbqagents.pkl'
     verbq_dictionary = Dictionary.load_from_file(verbq_dict_path)
-    verbq_w_emb_path = 'data/glove6b_init_imsitu_verbqagents300d.npy' 
+    verbq_w_emb_path = 'data/glove6b_init_imsitu_verbqagents300d.npy'
 
     role_dict_path = 'data/dictionary_imsitu.pkl'
     role_dictionary = Dictionary.load_from_file(role_dict_path)
@@ -418,7 +418,7 @@ def main():
     else:
 
         print('Model training started!')
-        train(model, train_loader, dev_loader, None, optimizer, scheduler, n_epoch, args.output_dir, encoder, args.gpuid, clip_norm, None, model_name, args.commonq_type+'_'+args.model_saving_name,
+        train(model, train_loader, dev_loader, None, optimizer, scheduler, n_epoch, args.output_dir, encoder, args.gpuid, clip_norm, None, model_name, args.model_saving_name,
               args)
 
 
