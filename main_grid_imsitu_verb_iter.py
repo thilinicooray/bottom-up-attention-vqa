@@ -275,7 +275,7 @@ def main():
 
     verbq_dict_path = 'data/dictionary_imsitu_verbqagents.pkl'
     verbq_dictionary = Dictionary.load_from_file(verbq_dict_path)
-    verbq_w_emb_path = 'data/glove6b_init_imsitu_verbqagents_300d.npy'
+    verbq_w_emb_path = 'data/glove6b_init_imsitu_verbqagents300d.npy' 
 
     role_dict_path = 'data/dictionary_imsitu.pkl'
     role_dictionary = Dictionary.load_from_file(role_dict_path)
