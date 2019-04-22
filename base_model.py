@@ -258,7 +258,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         joint_repr = q_repr * v_repr
         logits = self.classifier(joint_repr)
 
-        if self.trainig:
+        if self.training:
             loss1 = self.calculate_loss(logits, gt_verbs)
 
         sorted_idx = torch.sort(logits, 1, True)[1]
@@ -283,7 +283,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         joint_repr = q_repr * v_repr
         logits = self.classifier(joint_repr)
         loss = None
-        if self.trainig:
+        if self.training:
             loss2 = self.calculate_loss(logits, gt_verbs)
             loss = (loss1 + loss2)/2
 
