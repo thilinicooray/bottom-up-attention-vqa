@@ -268,8 +268,7 @@ def main():
     dataset_folder = args.dataset_folder
     imgset_folder = args.imgset_dir
 
-    print('model spec :commonq verb, transfer, word embed, q embed ', args.commonq_type, args.use_pretrained_buatt,
-          args.train_word_embd, args.train_q_embd)
+    print('model spec :iter verb1')
 
     train_set = json.load(open(dataset_folder + '/' + args.train_file))
     imsitu_roleq = json.load(open("data/imsitu_questions_prev.json"))
