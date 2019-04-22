@@ -535,9 +535,9 @@ class imsitu_encoder():
             role_qs_all.extend(role_nl_qs)
 
         for q in role_qs_all:
-            len = len(q.split())
-            if len > max_len:
-                max_len = len
+            length = len(q.split())
+            if length > max_len:
+                max_len = length
 
         rquestion_tokens = []
         for entry in role_qs_all:
@@ -590,9 +590,9 @@ class imsitu_encoder():
             else:
                 question = 'what is the action happening'
 
-            len = len(question.split())
-            if len > max_len:
-                max_len = len
+            length = len(question.split())
+            if length > max_len:
+                max_len = length
             all_qs.append(question)
 
         rquestion_tokens = []
