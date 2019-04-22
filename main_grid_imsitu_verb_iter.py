@@ -334,12 +334,8 @@ def main():
         utils_imsitu.set_trainable(model, False)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
-        utils_imsitu.set_trainable(model.v_dimred, True)
-        utils_imsitu.set_trainable(model.v_flatten, True)
 
-        opts = [{'params': model.classifier.parameters()},
-                {'params': model.v_dimred.parameters()},
-                {'params': model.v_flatten.parameters()}
+        opts = [{'params': model.classifier.parameters()}
                 ]
 
         if True:
@@ -372,9 +368,9 @@ def main():
     #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
 
     #optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_step, gamma=lr_gamma)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     #gradient clipping, grad check
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
     if args.evaluate:
         top1, top5, val_loss = eval(model, dev_loader, encoder, args.gpuid, write_to_file = True)
