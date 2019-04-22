@@ -334,8 +334,12 @@ def main():
         utils_imsitu.set_trainable(model, False)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
+        utils_imsitu.set_trainable(model.v_dimred, True)
+        utils_imsitu.set_trainable(model.v_flatten, True)
 
-        opts = [{'params': model.classifier.parameters()}
+        opts = [{'params': model.classifier.parameters()},
+                {'params': model.v_dimred.parameters()},
+                {'params': model.v_flatten.parameters()}
                 ]
 
         if True:
