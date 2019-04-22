@@ -220,13 +220,11 @@ class BaseModelGrid_Imsitu_Verb(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_VerbIter(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, v_dimred, v_flatten, q_net, v_net, classifier, encoder, role_module):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module):
         super(BaseModelGrid_Imsitu_VerbIter, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
-        self.v_dimred = v_dimred
-        self.v_flatten = v_flatten
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
