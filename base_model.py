@@ -282,10 +282,15 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         att = self.v_att(v, q_emb)
-        v_emb = (att * v).sum(1) # [batch, v_dim]
+        #v_emb = (att * v).sum(1) # [batch, v_dim]
+        v_emb = (att * v)
+        v_emb = v_emb.transpose(1,2)
+        v_emb = v_emb.view(v_emb.size(0),v_emb.size(1), 7, 7)
+        v_emb_small = self.v_dimred(v_emb)
+        v_emb_flt = self.v_flatten(v_emb_small.view(-1,v_emb_small.size(1)* v_emb_small.size(2)*v_emb_small.size(3)))
 
         q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
+        v_repr = self.v_net(v_emb_flt)
         #todo : combine rep of both and send for final pred
         joint_repr = q_repr * v_repr
         logits = self.classifier(joint_repr)
