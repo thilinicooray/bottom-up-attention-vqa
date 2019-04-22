@@ -142,7 +142,7 @@ class BaseModelGrid_Imsitu(nn.Module):
 
     def forward_noq(self, v, verb):
         q = self.encoder.get_role_q_by_verb(verb)
-        if self.gpu_mode >= 0:
+        if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
 
         role_label_pred = self.forward(v, q, None)
@@ -241,7 +241,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         """
         #iter 0 with general q
         q = self.encoder.get_generalq()
-        if self.gpu_mode >= 0:
+        if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
 
         batch_size = v.size(0)
@@ -268,7 +268,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         verb_q_idx = self.encoder.get_verbq_idx(verbs, label_idx)
 
-        if self.gpu_mode >= 0:
+        if torch.cuda.is_available():
             verb_q_idx = verb_q_idx.to(torch.device('cuda'))
 
         w_emb = self.w_emb(verb_q_idx)
