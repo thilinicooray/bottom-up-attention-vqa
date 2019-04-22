@@ -220,11 +220,13 @@ class BaseModelGrid_Imsitu_Verb(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_VerbIter(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module):
+    def __init__(self, w_emb, q_emb, v_att, v_dimred, v_flatten, q_net, v_net, classifier, encoder, role_module):
         super(BaseModelGrid_Imsitu_VerbIter, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
+        self.v_dimred = v_dimred
+        self.v_flatten = v_flatten
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
@@ -251,10 +253,13 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         att = self.v_att(v, q_emb)
-        v_emb = (att * v).sum(1) # [batch, v_dim]
+        #v_emb = (att * v).sum(1) # [batch, v_dim]
+        v_emb = (att * v)
+        v_emb_small = self.v_dimred(v_emb)
+        v_emb_flt = self.v_flatten(v_emb_small.view(-1,v_emb_small.size(1)* v_emb_small.size(2)*v_emb_small.size(3)))
 
         q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
+        v_repr = self.v_net(v_emb_flt)
         joint_repr_prev = q_repr * v_repr
         logits = self.classifier(joint_repr_prev)
 
@@ -363,12 +368,19 @@ def build_baseline0grid_imsitu_verbiter(dataset, num_hid, num_ans_classes, encod
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
+
+    v_dimred = nn.Sequential(
+        nn.Conv2d(2048, 512, [1, 1], 1, 0, bias=False),
+        nn.ReLU(),
+        nn.MaxPool2d(2, 2)
+    )
+    v_flatten = nn.Linear(512*3*3, 2048)
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
-    return BaseModelGrid_Imsitu_VerbIter( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module)
+    return BaseModelGrid_Imsitu_VerbIter( w_emb, q_emb, v_att, v_dimred, v_flatten, q_net, v_net, classifier, encoder, role_module)
 
 def build_baseline0_newatt(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
