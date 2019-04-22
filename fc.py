@@ -35,7 +35,6 @@ class FCNet(nn.Module):
         self.tanh = nn.Tanh()
         self.second_lin = weight_norm(nn.Linear(in_dim, out_dim), dim=None)
         self.sigmoid = nn.Sigmoid()
-        self.dropout = nn.Dropout(0.3)
 
 
     def forward(self, x):
@@ -43,7 +42,7 @@ class FCNet(nn.Module):
         y_hat = self.tanh(self.first_lin(x))
         g = self.sigmoid(self.second_lin(x))
 
-        y = self.dropout(y_hat * g)
+        y = y_hat * g
 
         return y
 

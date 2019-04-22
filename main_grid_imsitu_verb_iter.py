@@ -345,7 +345,7 @@ def main():
             utils_imsitu.set_trainable(model.q_emb, True)
             opts.append({'params': model.q_emb.parameters()})
 
-        optimizer = torch.optim.Adamax(opts, lr=1e-3)
+        optimizer = torch.optim.Adamax(opts, lr=1e-3, weight_decay=5e-4)
 
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
