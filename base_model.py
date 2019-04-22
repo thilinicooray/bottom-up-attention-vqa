@@ -336,6 +336,17 @@ def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes, encoder):
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder)
 
+def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder):
+    print('words count :', encoder.roleq_dict.ntoken)
+    w_emb = WordEmbedding(encoder.roleq_dict.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+    return BaseModelGrid_Imsitu( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder)
+
 def build_baseline0grid_imsitu_verb(dataset, num_hid, num_ans_classes, encoder):
     print('words count :', dataset.dictionary.ntoken)
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
@@ -348,8 +359,8 @@ def build_baseline0grid_imsitu_verb(dataset, num_hid, num_ans_classes, encoder):
     return BaseModelGrid_Imsitu_Verb( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder)
 
 def build_baseline0grid_imsitu_verbiter(dataset, num_hid, num_ans_classes, encoder, role_module):
-    print('words count verbiter:', dataset.dictionary.ntoken)
-    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
+    print('words count verbiter:', encoder.verbq_dict.ntoken)
+    w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])

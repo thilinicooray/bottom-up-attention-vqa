@@ -286,13 +286,15 @@ def main():
     train_set = imsitu_loader_verb_buatt_iter(imgset_folder, train_set, encoder, 'train', encoder.train_transform)
 
     #get role_model
-    role_constructor = 'build_%s' % 'baseline0grid_imsitu'
+    print('loading role model')
+    role_constructor = 'build_%s' % 'baseline0grid_imsitu4verb'
     role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder)
 
     role_model.w_emb.init_embedding(role_w_emb_path)
 
     utils_imsitu.load_net(args.role_module, [role_model])
     utils_imsitu.set_trainable(role_model, False)
+    print('role model loaded')
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model)
