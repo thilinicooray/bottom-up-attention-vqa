@@ -331,11 +331,14 @@ def main():
         utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv_net', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
-        utils_imsitu.set_trainable(model, False)
+        utils_imsitu.set_trainable(model, True)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
 
-        opts = [{'params': model.classifier.parameters()}
+        opts = [{'params': model.classifier.parameters()},
+                {'params': model.v_att.parameters(), 'lr': 1e-5},
+                {'params': model.q_net.parameters(), 'lr': 1e-5},
+                {'params': model.v_net.parameters(), 'lr': 1e-5}
                 ]
 
         if True:
@@ -343,7 +346,7 @@ def main():
             opts.append({'params': model.w_emb.parameters()})
         if True:
             utils_imsitu.set_trainable(model.q_emb, True)
-            opts.append({'params': model.q_emb.parameters(), 'lr': 4e-5})
+            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})
 
         optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
