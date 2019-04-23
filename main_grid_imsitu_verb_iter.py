@@ -343,7 +343,7 @@ def main():
             opts.append({'params': model.w_emb.parameters()})
         if True:
             utils_imsitu.set_trainable(model.q_emb, True)
-            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})
+            opts.append({'params': model.q_emb.parameters(), 'lr': 1e-3})
 
         optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)

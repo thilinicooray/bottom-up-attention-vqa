@@ -360,7 +360,7 @@ def build_baseline0grid_imsitu_verb(dataset, num_hid, num_ans_classes, encoder):
 def build_baseline0grid_imsitu_verbiter(dataset, num_hid, num_ans_classes, encoder, role_module):
     print('words count verbiter:', encoder.verbq_dict.ntoken)
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 2, True, 0.0, rnn_type='LSTM')
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.1)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
