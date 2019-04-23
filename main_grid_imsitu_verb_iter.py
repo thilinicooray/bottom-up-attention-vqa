@@ -331,11 +331,14 @@ def main():
         utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv_net', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
-        utils_imsitu.set_trainable(model, False)
+        utils_imsitu.set_trainable(model, True)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
 
-        opts = [{'params': model.classifier.parameters()}
+        opts = [{'params': model.classifier.parameters()},
+                {'params': model.v_att.parameters(), 'lr': 5e-5},
+                {'params': model.q_net.parameters(), 'lr': 5e-5},
+                {'params': model.v_net.parameters(), 'lr': 5e-5},
                 ]
 
         if True:
@@ -343,7 +346,7 @@ def main():
             opts.append({'params': model.w_emb.parameters()})
         if True:
             utils_imsitu.set_trainable(model.q_emb, True)
-            opts.append({'params': model.q_emb.parameters(), 'lr': 1e-3})
+            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})
 
         optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
@@ -371,9 +374,9 @@ def main():
     #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
 
     #optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     #gradient clipping, grad check
-    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
     if args.evaluate:
         top1, top5, val_loss = eval(model, dev_loader, encoder, args.gpuid, write_to_file = True)
