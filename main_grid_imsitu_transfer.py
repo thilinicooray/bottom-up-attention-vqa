@@ -321,7 +321,7 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv_net', 'w_emb'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv_net', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
@@ -343,9 +343,9 @@ def main():
         {'params': model.classifier.parameters()},
         {'params': model.w_emb.parameters()},
         {'params': model.q_emb.parameters()},
-        {'params': model.v_att.parameters(), 'lr': 1e-5},
-        {'params': model.q_net.parameters(), 'lr': 1e-5},
-        {'params': model.v_net.parameters(), 'lr': 1e-5},
+        {'params': model.v_att.parameters(), 'lr': 5e-5},
+        {'params': model.q_net.parameters(), 'lr': 5e-5},
+        {'params': model.v_net.parameters(), 'lr': 5e-5},
     ], lr=1e-3)
 
     #utils_imsitu.set_trainable(model, True)
