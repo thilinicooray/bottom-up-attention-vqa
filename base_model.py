@@ -109,6 +109,7 @@ class BaseModelGrid_Imsitu(nn.Module):
         self.v_net = v_net
         self.classifier = classifier
         self.encoder = encoder
+        self.dropout = nn.Dropout(0.2)
 
     def forward(self, v, q, labels):
         """Forward
@@ -132,7 +133,7 @@ class BaseModelGrid_Imsitu(nn.Module):
         v_emb = (att * img).sum(1) # [batch, v_dim]
 
         q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
+        v_repr = self.dropout(self.v_net(v_emb))
         joint_repr = q_repr * v_repr
         logits = self.classifier(joint_repr)
 
