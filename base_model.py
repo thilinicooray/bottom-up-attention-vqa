@@ -6,6 +6,7 @@ from classifier import SimpleClassifier
 from fc import FCNet
 import torchvision as tv
 import utils_imsitu
+import numpy as np
 
 class resnet_152_features(nn.Module):
     def __init__(self):
@@ -215,9 +216,10 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             if self.training:
                 losses.append(self.calculate_loss(gt_verb, role_label_pred, labels))
 
-            label_idx = torch.max(role_label_pred,-1)[1]
+            #label_idx = torch.max(role_label_pred,-1)[1]
             #for gt labels
-            #label_idx = labels
+            frame_idx = np.random.randint(3, size=1)
+            label_idx = labels[:,frame_idx,:]
 
             verb_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
