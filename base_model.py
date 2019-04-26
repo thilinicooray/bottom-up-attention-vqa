@@ -212,8 +212,8 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             joint_repr = q_repr * v_repr
             if i != 0:
                 joint_repr = joint_repr + prev_rep
-                prev_rep = joint_repr
-                
+            prev_rep = joint_repr
+
             logits = self.classifier(joint_repr)
 
             role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
