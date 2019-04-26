@@ -183,7 +183,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
 
-    def forward(self, v, q, labels, gt_verb):
+    '''def forward(self, v, q, labels, gt_verb):
         """Forward
 
         v: [batch, org img grid]
@@ -236,6 +236,50 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             loss_all = torch.stack(losses,0)
             loss = torch.sum(loss_all, 0)/self.num_iter
 
+
+        return role_label_pred, loss'''
+
+    def forward(self, v, q, labels, gt_verb):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+
+        img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+        frame_idx = np.random.randint(3, size=1)
+        label_idx = labels[:,frame_idx,:].squeeze()
+
+        q = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr = q_repr * v_repr
+
+        logits = self.classifier(joint_repr)
+
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+        loss = None
+
+        if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
         return role_label_pred, loss
 
