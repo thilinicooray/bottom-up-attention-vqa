@@ -395,7 +395,7 @@ class imsitu_loader_verb_buatt_iter(data.Dataset):
 
         img = self.features[self.img_id2idx[_id]]
 
-        verb = self.encoder.encode_verb_only(ann)
+        verb, labels = self.encoder.encode_verb_only(ann)
 
         return _id, img, verb
 

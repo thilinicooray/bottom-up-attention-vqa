@@ -249,6 +249,8 @@ def main():
     parser.add_argument('--output', type=str, default='saved_models/exp0')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
+    parser.add_argument('--num_iter_verb', type=int, default=2)
+    parser.add_argument('--num_iter_role', type=int, default=1)
 
     parser.add_argument('--role_module', type=str, default='', help='pretrained role module')
 
@@ -277,9 +279,9 @@ def main():
     verbq_dictionary = Dictionary.load_from_file(verbq_dict_path)
     verbq_w_emb_path = 'data/glove6b_init_imsitu_verbqagents300d.npy'
 
-    role_dict_path = 'data/dictionary_imsitu.pkl'
+    role_dict_path = 'data/dictionary_imsitu_roleall.pkl'
     role_dictionary = Dictionary.load_from_file(role_dict_path)
-    role_w_emb_path = 'data/glove6b_init_imsitu_300d.npy'
+    role_w_emb_path = 'data/glove6b_init_imsitu_roleall_300d.npy'
 
     encoder = imsitu_encoder(train_set, imsitu_roleq, role_dictionary, verbq_dictionary)
 
@@ -288,7 +290,7 @@ def main():
     #get role_model
     print('loading role model')
     role_constructor = 'build_%s' % 'baseline0grid_imsitu4verb'
-    role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder)
+    role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter_role)
 
     role_model.w_emb.init_embedding(role_w_emb_path)
 
@@ -297,7 +299,7 @@ def main():
     print('role model loaded')
 
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model)
+    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model, args.num_iter_verb)
 
     model.w_emb.init_embedding(verbq_w_emb_path)
 

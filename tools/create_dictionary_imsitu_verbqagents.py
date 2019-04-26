@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import numpy as np
+import torch.nn as nn
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dataset import Dictionary
 
@@ -10,7 +11,7 @@ from dataset import Dictionary
 def create_dictionary(dataroot):
     dictionary = Dictionary()
     files = [
-        'allwords4verbq.json'
+        'allwords4verbq1.json'
     ]
 
     for path in files:
@@ -30,7 +31,8 @@ def create_glove_embedding_init(idx2word, glove_file):
         entries = f.readlines()
     emb_dim = len(entries[0].split(' ')) - 1
     print('embedding dim is %d' % emb_dim)
-    weights = np.zeros((len(idx2word), emb_dim), dtype=np.float32)
+    val = nn.Embedding(len(idx2word), emb_dim)
+    weights = val.weight.detach().numpy()
 
     for entry in entries:
         vals = entry.split(' ')

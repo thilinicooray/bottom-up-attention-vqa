@@ -27,7 +27,7 @@ class imsitu_encoder():
         self.roleq_dict = roleq_dict
         self.verbq_dict = verbq_dict
 
-        self.agent_label2eng = json.load(open('data/allwords4verbq.json'))
+        self.obj_label2eng = json.load(open('data/allwords4verbq1.json'))
 
 
         # imag preprocess
@@ -568,6 +568,12 @@ class imsitu_encoder():
             verb_name = self.verb_list[curr_verb_id]
             current_role_list = self.verb2_role_dict[verb_name]
             agent_name = ''
+
+            place_name = ''
+            if 'place' in current_role_list :
+                plz_idx = current_role_list.index('place')
+                place_name = self.label_list[current_labels[plz_idx]]
+
             has_agent = False
             for role in current_role_list:
                 if role in agent_roles:
@@ -584,8 +590,15 @@ class imsitu_encoder():
                             break
                 agent_name = self.label_list[current_labels[agent_idx]]
 
-            if len(agent_name) > 0 :
-                agent_eng_name = self.agent_label2eng[agent_name]
+            if len(agent_name) > 0 and len(place_name) > 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
+            elif len(place_name) > 0 and len(agent_name) == 0:
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the action happening at the ' + place_eng_name
+            elif len(agent_name) > 0 and len(place_name) == 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
                 question = 'what is the '+ agent_eng_name + ' doing'
             else:
                 question = 'what is the action happening'
