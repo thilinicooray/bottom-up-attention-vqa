@@ -256,7 +256,7 @@ def main():
 
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--num_hid', type=int, default=1024)
-    parser.add_argument('--model', type=str, default='baseline0grid_imsitu')
+    parser.add_argument('--model', type=str, default='baseline0grid_imsitu_roleiter')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_iter', type=int, default=1)
