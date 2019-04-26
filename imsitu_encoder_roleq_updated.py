@@ -536,13 +536,13 @@ class imsitu_encoder():
                 if length > max_len:
                     max_len = length
                 current_verb_qs.append(template)
-                print('added q :', template, org_template)
             all_qs.append(current_verb_qs)
 
         all_new_list = []
         for q_list in all_qs:
             rquestion_tokens = []
             for entry in q_list:
+                print('tokeningzing :', entry)
                 tokens = self.dictionary.tokenize(entry, False)
                 tokens = tokens[:max_len]
                 if len(tokens) < max_len:
