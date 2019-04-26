@@ -397,7 +397,7 @@ class imsitu_loader_verb_buatt_iter(data.Dataset):
 
         verb, labels = self.encoder.encode_verb_only(ann)
 
-        return _id, img, verb
+        return _id, img, verb, labels
 
     def __len__(self):
         return len(self.annotations)
