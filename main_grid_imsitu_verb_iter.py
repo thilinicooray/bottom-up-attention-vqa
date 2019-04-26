@@ -298,8 +298,8 @@ def main():
 
     role_model.w_emb.init_embedding(role_w_emb_path)
 
-    #utils_imsitu.load_net(args.role_module, [role_model])
-    #utils_imsitu.set_trainable(role_model, False)
+    utils_imsitu.load_net(args.role_module, [role_model])
+    utils_imsitu.set_trainable(role_model, False)
     print('role model loaded')
 
     constructor = 'build_%s' % args.model
