@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=400):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (img_id, img, verb) in enumerate(train_loader):
+        for i, (img_id, img, verb, labels) in enumerate(train_loader):
             #print("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -58,9 +58,11 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             if gpu_mode >= 0:
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
+                labels = torch.autograd.Variable(labels.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
+                labels = torch.autograd.Variable(labels)
 
             '''print('all inputs')
             print(img)
@@ -71,7 +73,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            verb_predict, loss = pmodel(img, verb)
+            verb_predict, loss = pmodel(img, verb, labels)
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
@@ -186,7 +188,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
     top5 = imsitu_scorer(encoder, 5, 3)
     with torch.no_grad():
         mx = len(dev_loader)
-        for i, (img_id, img, verb) in enumerate(dev_loader):
+        for i, (img_id, img, verb, labels) in enumerate(dev_loader):
             #print("{}/{} batches\r".format(i+1,mx)) ,
             '''im_data = torch.squeeze(im_data,0)
             im_info = torch.squeeze(im_info,0)
@@ -199,11 +201,13 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             if gpu_mode >= 0:
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
+                labels = torch.autograd.Variable(labels.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
+                labels = torch.autograd.Variable(labels)
 
-            verb_predict, _ = model(img, None)
+            verb_predict, _ = model(img, None, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -213,8 +217,8 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top1.add_point_verb_only_eval(img_id, verb_predict, verb)
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
-            del verb_predict, img, verb
-            #break
+            del verb_predict, img, verb, labels
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -238,9 +242,9 @@ def main():
     parser.add_argument('--dataset_folder', type=str, default='./imSitu', help='Location of annotations')
     parser.add_argument('--imgset_dir', type=str, default='./resized_256', help='Location of original images')
     parser.add_argument('--frcnn_feat_dir', type=str, help='Location of output from detectron')
-    parser.add_argument('--train_file', default="updated_train_new.json", type=str, help='trainfile name')
-    parser.add_argument('--dev_file', default="dev.json", type=str, help='dev file name')
-    parser.add_argument('--test_file', default="test.json", type=str, help='test file name')
+    parser.add_argument('--train_file', default="train_new_2000_all.json", type=str, help='trainfile name')
+    parser.add_argument('--dev_file', default="dev_new_2000_all.json", type=str, help='dev file name')
+    parser.add_argument('--test_file', default="test_new_2000_all.json", type=str, help='test file name')
     parser.add_argument('--model_saving_name', type=str, help='save name of the outpul model')
 
     parser.add_argument('--epochs', type=int, default=500)
@@ -294,8 +298,8 @@ def main():
 
     role_model.w_emb.init_embedding(role_w_emb_path)
 
-    utils_imsitu.load_net(args.role_module, [role_model])
-    utils_imsitu.set_trainable(role_model, False)
+    #utils_imsitu.load_net(args.role_module, [role_model])
+    #utils_imsitu.set_trainable(role_model, False)
     print('role model loaded')
 
     constructor = 'build_%s' % args.model
