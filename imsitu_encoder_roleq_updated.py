@@ -542,7 +542,7 @@ class imsitu_encoder():
         for q_list in all_qs:
             rquestion_tokens = []
             for entry in q_list:
-                print('tokeningzing :', entry)
+                #print('tokeningzing :', entry)
                 tokens = self.dictionary.tokenize(entry, False)
                 tokens = tokens[:max_len]
                 if len(tokens) < max_len:
