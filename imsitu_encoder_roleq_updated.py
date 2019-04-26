@@ -523,8 +523,8 @@ class imsitu_encoder():
             current_verb_qs = []
 
             for i in range(len(current_role_list)):
-                template = role_q_templates[current_role_list[i]]
-
+                org_template = role_q_templates[current_role_list[i]]
+                template = org_template
                 for j in range(len(current_role_list)):
                     if i != j:
                         token = '<' + current_role_list[j].upper() + '>'
@@ -536,7 +536,7 @@ class imsitu_encoder():
                 if length > max_len:
                     max_len = length
                 current_verb_qs.append(template)
-                print('added q :', template)
+                print('added q :', template, org_template)
             all_qs.append(current_verb_qs)
 
         all_new_list = []
