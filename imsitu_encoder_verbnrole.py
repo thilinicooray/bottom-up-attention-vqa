@@ -570,7 +570,6 @@ class imsitu_encoder():
             curr_verb_id = verb_ids[i]
             current_labels = label_ids[i]
             verb_name = self.verb_list[curr_verb_id]
-            #print('verb name :', verb_name)
             current_role_list = self.verb2_role_dict[verb_name]
             agent_name = ''
 
@@ -594,6 +593,8 @@ class imsitu_encoder():
                             agent_idx = current_role_list.index(a_role)
                             break
                 agent_name = self.label_list[current_labels[agent_idx]]
+
+            print('agent place', verb_name, agent_name,  place_name)
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.obj_label2eng[agent_name]
