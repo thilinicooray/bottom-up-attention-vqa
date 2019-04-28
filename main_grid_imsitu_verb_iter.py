@@ -338,6 +338,7 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
+        utils_imsitu.set_trainable(model.role_model, False)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
 

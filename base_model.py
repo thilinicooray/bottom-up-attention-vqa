@@ -239,6 +239,57 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
 
         return role_label_pred, loss
 
+    def forward_eval(self, v, q, labels, gt_verb):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        losses = []
+        prev_rep = None
+        for i in range(self.num_iter):
+
+            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = joint_repr + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+            #for gt labels
+            #frame_idx = np.random.randint(3, size=1)
+            #label_idx = labels[:,frame_idx,:].squeeze()
+
+            verb_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+            if torch.cuda.is_available():
+                q = verb_q_idx.to(torch.device('cuda'))
+
+        loss = None
+
+
+        return role_label_pred, loss
+
     '''def forward(self, v, labels, gt_verb):
         """Forward
 
@@ -288,7 +339,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
 
-        role_label_pred, _ = self.forward(v, q, None, verb)
+        role_label_pred, _ = self.forward_eval(v, q, None, verb)
 
         return role_label_pred
 
