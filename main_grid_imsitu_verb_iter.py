@@ -363,7 +363,6 @@ def main():
         if len(args.resume_model) == 0:
             raise Exception('[pretrained module] not specified')
         utils_imsitu.load_net(args.resume_model, [model])
-        utils_imsitu.load_net(args.role_module, [role_model])
         optimizer_select = 0
         model_name = 'resume_all'
         utils_imsitu.set_trainable(model, True)
