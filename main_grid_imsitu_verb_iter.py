@@ -376,8 +376,16 @@ def main():
         model_name = 'train_full'
 
         utils_imsitu.set_trainable(model, True)
+        utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
-        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+        opts = [{'params': model.classifier.parameters()},
+                {'params': model.v_att.parameters()},
+                {'params': model.q_net.parameters()},
+                {'params': model.v_net.parameters()},
+                {'params': model.w_emb.parameters()},
+                {'params': model.q_emb.parameters()}
+                ]
+        optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     #utils_imsitu.set_trainable(model, True)
