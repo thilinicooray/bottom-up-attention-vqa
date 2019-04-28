@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -218,7 +218,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
             del verb_predict, img, verb, labels
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -338,7 +338,7 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
-        utils_imsitu.set_trainable(model.role_model, False)
+        utils_imsitu.set_trainable(model.role_module, False)
         utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
 
