@@ -570,6 +570,7 @@ class imsitu_encoder():
             curr_verb_id = verb_ids[i]
             current_labels = label_ids[i]
             verb_name = self.verb_list[curr_verb_id]
+            print('verb name :', verb_name)
             current_role_list = self.verb2_role_dict[verb_name]
             agent_name = ''
 
