@@ -426,7 +426,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
 
-    def forward(self, v, gt_verbs, labels):
+    '''def forward(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -474,9 +474,9 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             loss_all = torch.stack(losses,0)
             loss = torch.sum(loss_all, 0)/self.num_iter
 
-        return logits, loss
+        return logits, loss'''
 
-    '''def forward(self, v, gt_verbs, labels):
+    def forward(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -508,9 +508,9 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         if self.training:
             loss = self.calculate_loss(logits, gt_verbs)
 
-        return logits, loss'''
+        return logits, loss
 
-    def forward_eval(self, v, gt_verbs, labels, topk = 5):
+    def forward_eval(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -519,45 +519,39 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         return: logits, not probs
         """
         #iter 0 with general q
-        frame_idx = np.random.randint(3, size=1)
-        label_idx = labels[:,frame_idx,:].squeeze()
-        q = self.encoder.get_verbq_idx(gt_verbs, label_idx)
-
+        q = self.encoder.get_generalq()
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
 
-        w_emb = self.w_emb(q)
-        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        batch_size = v.size(0)
+        q = q.expand(batch_size, q.size(0))
+        for i in range(self.num_iter):
 
-        att = self.v_att(v, q_emb)
-        v_emb = (att * v).sum(1) # [batch, v_dim]
-        q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
-        joint_repr_prev = q_repr * v_repr
-        logits = self.classifier(joint_repr_prev)
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-        #get top 5
-        beam_role_idx = None
-        sorted_idx = torch.sort(logits, 1, True)[1]
-        #print('sorted ', sorted_idx.size())
-        verbs = sorted_idx[:,:topk]
-        #print('size verbs :', verbs.size())
-        #print('top1 verbs', verbs)
+            att = self.v_att(v, q_emb)
+            v_emb = (att * v).sum(1) # [batch, v_dim]
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr_prev = q_repr * v_repr
+            logits = self.classifier(joint_repr_prev)
 
-        #print('verbs :', verbs.size(), verbs)
-        for k in range(0,topk):
-            topk_verb = verbs[:,k]
-            role_pred = self.role_module.forward(v, labels, topk_verb)
+            sorted_idx = torch.sort(logits, 1, True)[1]
+            verbs = sorted_idx[:,0]
+            role_pred = self.role_module.forward_noq(v, verbs)
+            label_idx = torch.max(role_pred,-1)[1]
 
-            if k == 0:
-                idx = torch.max(role_pred,-1)[1]
-                #print(idx[1])
-                beam_role_idx = idx
-            else:
-                idx = torch.max(role_pred,-1)[1]
-                beam_role_idx = torch.cat((beam_role_idx.clone(), idx), 1)
+            q = self.encoder.get_verbq_idx(verbs, label_idx)
 
-        return logits, beam_role_idx
+            if torch.cuda.is_available():
+                q = q.to(torch.device('cuda'))
+
+
+        loss = None
+
+
+        return logits, loss
 
 
     def calculate_loss(self, verb_pred, gt_verbs):
