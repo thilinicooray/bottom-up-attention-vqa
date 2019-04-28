@@ -389,10 +389,9 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             q = q.to(torch.device('cuda'))
 
         batch_size = v.size(0)
+        q = q.expand(batch_size, q.size(0))
         losses = []
         for i in range(self.num_iter):
-
-            q = q.expand(batch_size, q.size(0))
 
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -474,10 +473,9 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             q = q.to(torch.device('cuda'))
 
         batch_size = v.size(0)
+        q = q.expand(batch_size, q.size(0))
         losses = []
         for i in range(self.num_iter):
-
-            q = q.expand(batch_size, q.size(0))
 
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
