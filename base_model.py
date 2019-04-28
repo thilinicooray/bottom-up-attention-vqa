@@ -183,7 +183,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
 
-    def forward(self, v, q, labels, gt_verb):
+    '''def forward(self, v, q, labels, gt_verb):
         """Forward
 
         v: [batch, org img grid]
@@ -237,9 +237,9 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             loss = torch.sum(loss_all, 0)/self.num_iter
 
 
-        return role_label_pred, loss
+        return role_label_pred, loss'''
 
-    '''def forward(self, v, q, labels, gt_verb):
+    def forward(self, v, q, labels, gt_verb):
         """Forward
 
         v: [batch, org img grid]
@@ -281,7 +281,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         if self.training:
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
-        return role_label_pred, loss'''
+        return role_label_pred, loss
 
     def forward_noq(self, v, verb):
         q = self.encoder.get_role_q_by_verb(verb)
