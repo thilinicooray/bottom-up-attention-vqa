@@ -459,7 +459,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         return logits, loss'''
 
-    def forward_eval(self, v, gt_verbs, labels):
+    def forward_eval(self, v, gt_verbs, labels, topk = 5):
         """Forward
 
         v: [batch, org img grid]
@@ -497,12 +497,30 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             if torch.cuda.is_available():
                 q = q.to(torch.device('cuda'))
 
-        #get all pred based on latest verb
+        #get top 5
+        beam_role_idx = None
         sorted_idx = torch.sort(logits, 1, True)[1]
-        verbs = sorted_idx[:,0]
-        role_pred = self.role_module.forward_noq(v, verbs)
+        #print('sorted ', sorted_idx.size())
+        verbs = sorted_idx[:,:topk]
+        #print('size verbs :', verbs.size())
+        #print('top1 verbs', verbs)
 
-        return logits, role_pred
+        #print('verbs :', verbs.size(), verbs)
+        for k in range(0,topk):
+            topk_verb = verbs[:,k]
+            role_pred = self.role_module.forward_noq(v, topk_verb)
+
+            if k == 0:
+                idx = torch.max(role_pred,-1)[1]
+                #print(idx[1])
+                beam_role_idx = idx
+            else:
+                idx = torch.max(role_pred,-1)[1]
+                beam_role_idx = torch.cat((beam_role_idx.clone(), idx), 1)
+            if self.gpu_mode >= 0:
+                torch.cuda.empty_cache()
+
+        return logits, beam_role_idx
 
 
     def calculate_loss(self, verb_pred, gt_verbs):
