@@ -611,11 +611,12 @@ class imsitu_encoder():
             if length > max_len:
                 max_len = length
             all_qs.append(question)
-
         rquestion_tokens = []
         for entry in all_qs:
             if len(entry) > 0:
                 tokens = self.verbq_dict.tokenize(entry, False)
+                print('question', entry, tokens)
+
                 tokens = tokens[:max_len]
                 if len(tokens) < max_len:
                     # Note here we pad in front of the sentence
