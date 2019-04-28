@@ -496,7 +496,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         #print('verbs :', verbs.size(), verbs)
         for k in range(0,topk):
             topk_verb = verbs[:,k]
-            role_pred = self.role_module.forward(v, topk_verb, labels)
+            role_pred = self.role_module.forward(v, labels, topk_verb)
 
             if k == 0:
                 idx = torch.max(role_pred,-1)[1]
