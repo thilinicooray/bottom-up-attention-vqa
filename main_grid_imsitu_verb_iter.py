@@ -375,6 +375,7 @@ def main():
         model_name = 'train_full'
 
         utils_imsitu.set_trainable(model, True)
+        utils_imsitu.set_trainable(model.role_module, False)
         optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
