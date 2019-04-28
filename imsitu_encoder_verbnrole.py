@@ -594,7 +594,7 @@ class imsitu_encoder():
                             break
                 agent_name = self.label_list[current_labels[agent_idx]]
 
-            print('agent place', verb_name, agent_name,  place_name)
+            #print('agent place', verb_name, agent_name,  place_name)
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.obj_label2eng[agent_name]
@@ -617,7 +617,7 @@ class imsitu_encoder():
         for entry in all_qs:
             if len(entry) > 0:
                 tokens = self.verbq_dict.tokenize(entry, False)
-                print('question', entry, tokens)
+                #print('question', entry, tokens)
 
                 tokens = tokens[:max_len]
                 if len(tokens) < max_len:
