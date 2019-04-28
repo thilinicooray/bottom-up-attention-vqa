@@ -510,7 +510,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         return logits, loss
 
-    def forward_eval(self, v, gt_verbs, labels):
+    '''def forward_eval(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -551,7 +551,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         loss = None
 
 
-        return logits, loss
+        return logits, loss'''
 
 
     def calculate_loss(self, verb_pred, gt_verbs):
