@@ -28,6 +28,8 @@ class imsitu_encoder():
         self.verbq_dict = verbq_dict
 
         self.obj_label2eng = json.load(open('data/allwords4verbq1.json'))
+        self.q_templates = json.load(open('data/role_detailed_templates.json'))
+        self.all_labels = json.load(open('data/all_label_mapping.json'))
 
 
         # imag preprocess
@@ -626,5 +628,63 @@ class imsitu_encoder():
                 rquestion_tokens.append(torch.tensor(tokens))
 
         return torch.stack(rquestion_tokens,0)
+
+    def get_detailed_roleq_idx(self, verb_ids, label_ids):
+
+        batch_size = verb_ids.size(0)
+        all_qs = []
+        max_len = 0
+
+
+
+        for i in range(batch_size):
+            curr_verb_id = verb_ids[i]
+            current_labels = label_ids[i]
+            verb_name = self.verb_list[curr_verb_id]
+            current_role_list = self.verb2_role_dict[verb_name]
+
+            role_q_templates = self.q_templates[verb_name]['roles']
+            current_verb_qs = []
+
+            for i in range(len(current_role_list)):
+                org_template = role_q_templates[current_role_list[i]]
+                template = org_template
+                for j in range(len(current_role_list)):
+                    if i != j:
+                        token = '<' + current_role_list[j].upper() + '>'
+                        label = self.label_list[current_labels[j]]
+                        label_name = self.all_labels[label] if label in self.all_labels else label
+                        template = template.replace(token, label_name)
+
+                length = len(template.split())
+                if length > max_len:
+                    max_len = length
+                current_verb_qs.append(template)
+            all_qs.append(current_verb_qs)
+
+        all_new_list = []
+        for q_list in all_qs:
+            rquestion_tokens = []
+            for entry in q_list:
+                #print('tokeningzing :', entry)
+                tokens = self.roleq_dict.tokenize(entry, False)
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.roleq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+            role_padding_count = self.max_role_count - len(rquestion_tokens)
+
+            #todo : how to handle below sequence making for non roles properly?
+            for i in range(role_padding_count):
+                padding = [self.roleq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(padding))
+
+            all_new_list.append(torch.stack(rquestion_tokens,0))
+
+        return torch.stack(all_new_list,0)
 
 
