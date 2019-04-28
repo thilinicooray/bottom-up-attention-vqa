@@ -375,7 +375,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
 
-    def forward(self, v, gt_verbs, labels):
+    '''def forward(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -423,9 +423,9 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             loss_all = torch.stack(losses,0)
             loss = torch.sum(loss_all, 0)/self.num_iter
 
-        return logits, loss
+        return logits, loss'''
 
-    '''def forward(self, v, gt_verbs, labels):
+    def forward(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -457,7 +457,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         if self.training:
             loss = self.calculate_loss(logits, gt_verbs)
 
-        return logits, loss'''
+        return logits, loss
 
     def forward_eval(self, v, gt_verbs, labels, topk = 5):
         """Forward
