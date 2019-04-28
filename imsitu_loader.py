@@ -383,7 +383,7 @@ class imsitu_loader_verb_buatt_iter(data.Dataset):
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'imsitu_%s_imgid2idx.pkl' % name), 'rb'))
         print('loading features from h5 file')
-        h5_path = os.path.join(dataroot, 'imsitu_%s.hdf5' % name)
+        h5_path = os.path.join(dataroot, 'imsitu_%s_prev.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
 
