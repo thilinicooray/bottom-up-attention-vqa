@@ -517,8 +517,6 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
             else:
                 idx = torch.max(role_pred,-1)[1]
                 beam_role_idx = torch.cat((beam_role_idx.clone(), idx), 1)
-            if self.gpu_mode >= 0:
-                torch.cuda.empty_cache()
 
         return logits, beam_role_idx
 
