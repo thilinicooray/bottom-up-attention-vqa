@@ -239,7 +239,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
 
         return role_label_pred, loss'''
 
-    def forward(self, v, q, labels, gt_verb):
+    def forward(self, v, labels, gt_verb):
         """Forward
 
         v: [batch, org img grid]
