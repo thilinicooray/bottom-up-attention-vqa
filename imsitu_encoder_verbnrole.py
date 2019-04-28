@@ -616,7 +616,7 @@ class imsitu_encoder():
         for entry in all_qs:
             if len(entry) > 0:
                 tokens = self.verbq_dict.tokenize(entry, False)
-                #print('question', entry, tokens)
+                print('question', entry, tokens)
 
                 tokens = tokens[:max_len]
                 if len(tokens) < max_len:
