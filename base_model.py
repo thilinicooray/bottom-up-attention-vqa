@@ -510,7 +510,7 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         return logits, loss
 
-    '''def forward_eval(self, v, gt_verbs, labels):
+    def forward_eval(self, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -525,33 +525,41 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
 
         batch_size = v.size(0)
         q = q.expand(batch_size, q.size(0))
-        for i in range(self.num_iter):
 
-            w_emb = self.w_emb(q)
-            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-            att = self.v_att(v, q_emb)
-            v_emb = (att * v).sum(1) # [batch, v_dim]
-            q_repr = self.q_net(q_emb)
-            v_repr = self.v_net(v_emb)
-            joint_repr_prev = q_repr * v_repr
-            logits = self.classifier(joint_repr_prev)
+        att = self.v_att(v, q_emb)
+        v_emb = (att * v).sum(1) # [batch, v_dim]
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
 
-            sorted_idx = torch.sort(logits, 1, True)[1]
-            verbs = sorted_idx[:,0]
-            role_pred = self.role_module.forward_noq(v, verbs)
-            label_idx = torch.max(role_pred,-1)[1]
+        sorted_idx = torch.sort(logits, 1, True)[1]
+        verbs = sorted_idx[:,0]
+        role_pred = self.role_module.forward_noq(v, verbs)
+        label_idx = torch.max(role_pred,-1)[1]
 
-            q = self.encoder.get_verbq_idx(verbs, label_idx)
+        q = self.encoder.get_verbq_idx(verbs, label_idx)
 
-            if torch.cuda.is_available():
-                q = q.to(torch.device('cuda'))
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
 
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(v, q_emb)
+        v_emb = (att * v).sum(1) # [batch, v_dim]
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
 
         loss = None
 
 
-        return logits, loss'''
+        return logits, loss
 
 
     def calculate_loss(self, verb_pred, gt_verbs):
