@@ -1,6 +1,6 @@
 import torch
 from imsitu_encoder_verbnrole import imsitu_encoder
-from imsitu_loader import imsitu_loader_verb_buatt_iter
+from imsitu_loader import imsitu_loader_verb_buatt_iter4cnn
 from imsitu_scorer_log import imsitu_scorer
 import json
 import os
@@ -23,13 +23,13 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    '''if model.gpu_mode >= 0 :
+    if model.gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
+        pmodel = model
     pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
@@ -148,7 +148,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 max_score = max(dev_score_list)
 
                 if max_score == dev_score_list[-1]:
-                    torch.save(model.state_dict(), model_dir + "/{}_verb_iter_{}.model".format( model_name, model_saving_name))
+                    torch.save(model.state_dict(), model_dir + "/{}_verb_iter_cnn_{}.model".format( model_name, model_saving_name))
                     print ('New best model saved! {0}'.format(max_score))
 
                 #eval on the trainset
@@ -249,7 +249,7 @@ def main():
 
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--num_hid', type=int, default=1024)
-    parser.add_argument('--model', type=str, default='baseline0grid_imsitu_verbiter')
+    parser.add_argument('--model', type=str, default='baseline0grid_imsitu_verbiterCNN')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
@@ -289,7 +289,7 @@ def main():
 
     encoder = imsitu_encoder(train_set, imsitu_roleq, role_dictionary, verbq_dictionary)
 
-    train_set = imsitu_loader_verb_buatt_iter(imgset_folder, train_set, encoder, 'train', encoder.train_transform)
+    train_set = imsitu_loader_verb_buatt_iter4cnn(imgset_folder, train_set, encoder, 'train', encoder.train_transform)
 
     #get role_model
     print('loading role model')
@@ -310,11 +310,11 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     dev_set = json.load(open(dataset_folder + '/' + args.dev_file))
-    dev_set = imsitu_loader_verb_buatt_iter(imgset_folder, dev_set, encoder, 'test', encoder.dev_transform)
+    dev_set = imsitu_loader_verb_buatt_iter4cnn(imgset_folder, dev_set, encoder, 'dev', encoder.dev_transform)
     dev_loader = torch.utils.data.DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     test_set = json.load(open(dataset_folder + '/' + args.test_file))
-    test_set = imsitu_loader_verb_buatt_iter(imgset_folder, test_set, encoder, 'test', encoder.dev_transform)
+    test_set = imsitu_loader_verb_buatt_iter4cnn(imgset_folder, test_set, encoder, 'test', encoder.dev_transform)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     if not os.path.exists(args.output_dir):
@@ -347,6 +347,7 @@ def main():
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
+                {'params': model.cnn.parameters(), 'lr': 5e-5},
                 ]
 
         if True:
