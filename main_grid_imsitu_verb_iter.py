@@ -73,7 +73,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            verb_predict, loss = pmodel(img, verb, labels)
+            verb_predict, loss1 = pmodel(img, verb, labels)
+            loss = loss1.mean()
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
