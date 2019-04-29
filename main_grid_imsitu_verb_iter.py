@@ -347,7 +347,7 @@ def main():
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
-                {'params': model.cnn.parameters(), 'lr': 5e-5},
+                {'params': model.conv.parameters(), 'lr': 5e-5},
                 ]
 
         if True:
