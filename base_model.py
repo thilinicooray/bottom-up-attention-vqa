@@ -603,9 +603,10 @@ class BaseModelGrid_Imsitu_VerbIter(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
-    def __init__(self, cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
+    def __init__(self, cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
         super(BaseModelGrid_Imsitu_VerbIterCNN, self).__init__()
         self.conv = cnn
+        self.conv_exp = conv_exp
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
@@ -626,7 +627,7 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
         """
         #iter 0 with general q\
         #ENCODE THE IMAGE USING CNN on the fly
-        img_features = self.conv(image)
+        img_features = self.conv_exp(self.conv(image))
         batch_size, n_channel, conv_h, conv_w = img_features.size()
         v = img_features.view(batch_size, n_channel, -1)
         v = v.permute(0, 2, 1)
@@ -654,15 +655,16 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
                 loss1 = self.calculate_loss(logits, gt_verbs)
                 losses.append(loss1)
 
-            sorted_idx = torch.sort(logits, 1, True)[1]
-            verbs = sorted_idx[:,0]
-            role_pred = self.role_module.forward_noq(v, verbs)
-            label_idx = torch.max(role_pred,-1)[1]
+            if self.num_iter > 1:
+                sorted_idx = torch.sort(logits, 1, True)[1]
+                verbs = sorted_idx[:,0]
+                role_pred = self.role_module.forward_noq(v, verbs)
+                label_idx = torch.max(role_pred,-1)[1]
 
-            q = self.encoder.get_verbq_idx(verbs, label_idx)
+                q = self.encoder.get_verbq_idx(verbs, label_idx)
 
-            if torch.cuda.is_available():
-                q = q.to(torch.device('cuda'))
+                if torch.cuda.is_available():
+                    q = q.to(torch.device('cuda'))
 
 
         loss = None
@@ -857,7 +859,12 @@ def build_baseline0grid_imsitu_verbiter(dataset, num_hid, num_ans_classes, encod
 
 def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
     print('words count verbiter:', encoder.verbq_dict.ntoken)
-    cnn = resnet_152_features()
+    cnn = vgg16_modified()
+    conv_exp = nn.Sequential(
+        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
+        nn.BatchNorm2d(2048),
+        nn.ReLU()
+    )
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
@@ -866,7 +873,7 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
-    return BaseModelGrid_Imsitu_VerbIterCNN( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
+    return BaseModelGrid_Imsitu_VerbIterCNN( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
 def build_baseline0_newatt(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
