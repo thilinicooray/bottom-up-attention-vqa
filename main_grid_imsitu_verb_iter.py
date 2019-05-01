@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    '''if gpu_mode >= 0 :
+    if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
-    pmodel = model
+        pmodel = model
+    #pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -219,7 +219,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
             del verb_predict, img, verb, labels
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -335,7 +335,7 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv', 'conv_exp', 'w_emb', 'classifier'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['cnn', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
@@ -345,11 +345,10 @@ def main():
         #flt img param
 
         opts = [{'params': model.classifier.parameters()},
-                {'params': model.conv_exp.parameters()},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
-                {'params': model.conv.parameters(), 'lr': 5e-5},
+                {'params': model.cnn.parameters(), 'lr': 5e-5},
                 ]
 
         if True:

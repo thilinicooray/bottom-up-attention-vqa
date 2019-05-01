@@ -190,10 +190,9 @@ class BaseModelGrid_Imsitu(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter(nn.Module):
-    def __init__(self, cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
+    def __init__(self, cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter, self).__init__()
         self.cnn = cnn
-        self.conv_exp = conv_exp
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
@@ -216,9 +215,8 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         for i in range(self.num_iter):
 
             cnn_out = self.cnn(v)
-            exp = self.conv_exp(cnn_out)
-            batch_size, n_channel, conv_h, conv_w = exp.size()
-            img = exp.view(batch_size, n_channel, -1)
+            batch_size, n_channel, conv_h, conv_w = cnn_out.size()
+            img = cnn_out.view(batch_size, n_channel, -1)
             img = img.permute(0, 2, 1)
 
 
@@ -808,12 +806,12 @@ def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes, encoder):
 
 def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)
-    cnn = vgg16_modified()
-    conv_exp = nn.Sequential(
+    cnn = resnet_152_features()
+    '''conv_exp = nn.Sequential(
         nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
         nn.BatchNorm2d(2048),
         nn.ReLU()
-    )
+    )'''
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
@@ -821,11 +819,11 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+    return BaseModelGrid_Imsitu_RoleIter( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', encoder.roleq_dict.ntoken)
-    cnn = vgg16_modified()
+    cnn = resnet_152_features()
     conv_exp = nn.Sequential(
         nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
         nn.BatchNorm2d(2048),
@@ -838,7 +836,7 @@ def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, 
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+    return BaseModelGrid_Imsitu_RoleIter( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_verb(dataset, num_hid, num_ans_classes, encoder):
     print('words count :', dataset.dictionary.ntoken)
