@@ -215,14 +215,14 @@ class imsitu_loader_roleq_buatt(data.Dataset):
         self.dictionary = dictionary
         self.transform = transform
 
-        self.img_id2idx = cPickle.load(
+        '''self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'imsitu_%s_imgid2idx.pkl' % name), 'rb'))
         print('loading features from h5 file')
         h5_path = os.path.join(dataroot, 'imsitu_%s.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
 
-        self.features = torch.from_numpy(self.features)
+        self.features = torch.from_numpy(self.features)'''
 
 
 
@@ -256,7 +256,9 @@ class imsitu_loader_roleq_buatt(data.Dataset):
         _id = self.ids[index]
         ann = self.annotations[_id]
 
-        img = self.features[self.img_id2idx[_id]]
+        img = Image.open(os.path.join(self.img_dir, _id)).convert('RGB')
+        #transform must be None in order to give it as a tensor
+        if self.transform is not None: img = self.transform(img)
 
         verb, nl_qs, labels = self.encoder.encode_ban(ann)
         questions = self.tokenize(nl_qs)

@@ -31,6 +31,24 @@ class resnet_152_features(nn.Module):
 
         return x
 
+class vgg16_modified(nn.Module):
+    def __init__(self):
+        super(vgg16_modified, self).__init__()
+        vgg = tv.models.vgg16(pretrained=True)
+        self.vgg_features = vgg.features
+
+    def rep_size(self):
+        return 1024
+
+    def base_size(self):
+        return 512
+
+    def forward(self,x):
+        #return self.dropout2(self.relu2(self.lin2(self.dropout1(self.relu1(self.lin1(self.vgg_features(x).view(-1, 512*7*7)))))))
+        features = self.vgg_features(x)
+
+        return features
+
 
 class BaseModel(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier):
@@ -172,8 +190,10 @@ class BaseModelGrid_Imsitu(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
+    def __init__(self, cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter, self).__init__()
+        self.cnn = cnn
+        self.conv_exp = conv_exp
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
@@ -195,7 +215,13 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         prev_rep = None
         for i in range(self.num_iter):
 
-            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            cnn_out = self.cnn(v)
+            exp = self.conv_exp(cnn_out)
+            batch_size, n_channel, conv_h, conv_w = exp.size()
+            img = exp.view(batch_size, n_channel, -1)
+            img = img.permute(0, 2, 1)
+
+            img = img.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
             img = img.transpose(0,1)
             img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
 
@@ -780,6 +806,12 @@ def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes, encoder):
 
 def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)
+    cnn = vgg16_modified()
+    conv_exp = nn.Sequential(
+        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
+        nn.BatchNorm2d(2048),
+        nn.ReLU()
+    )
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
@@ -787,7 +819,7 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+    return BaseModelGrid_Imsitu_RoleIter( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', encoder.roleq_dict.ntoken)

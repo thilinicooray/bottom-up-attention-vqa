@@ -29,6 +29,10 @@ class imsitu_encoder():
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
 
+        self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
+                            'seller', 'boaters', 'blocker', 'farmer']
+
+
         # imag preprocess
         self.normalize = tv.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
@@ -50,8 +54,28 @@ class imsitu_encoder():
 
         for verb, values in role_questions.items():
             roles = values['roles']
+
+            has_agent = False
+            agent_role = None
+            if 'agent' in roles.keys():
+                agent_role = 'agent'
+                has_agent = True
+            for role1 in roles.keys():
+                if role1 in self.agent_roles[1:]:
+                    agent_role = role1
+                    has_agent = True
+                    break
+
             for role, info in roles.items():
-                question = info['question']
+                #question = info['question']
+
+                if has_agent and role == agent_role:
+                    question = 'who is the ' + role
+                elif role == 'place':
+                    question = 'where is the ' + role
+                else:
+                    question = 'what is the ' + role
+
                 self.vrole_question[verb+'_'+role] = question
                 words = nltk.word_tokenize(question)
                 words = words[:-1] #ignore ? mark
@@ -521,16 +545,17 @@ class imsitu_encoder():
 
             role_q_templates = self.q_templates[verb_name]['roles']
             current_verb_qs = []
+            role_dict = {}
+            for j in range(len(current_role_list)):
+                label = self.label_list[current_labels[j]]
+                label_name = self.all_labels[label] if label in self.all_labels else label
+                role_dict[current_role_list[j].upper()] = label_name
 
             for i in range(len(current_role_list)):
                 org_template = role_q_templates[current_role_list[i]]
-                template = org_template
-                for j in range(len(current_role_list)):
-                    if i != j:
-                        token = '<' + current_role_list[j].upper() + '>'
-                        label = self.label_list[current_labels[j]]
-                        label_name = self.all_labels[label] if label in self.all_labels else label
-                        template = template.replace(token, label_name)
+                template = org_template.format(**role_dict)
+
+                print('template :', template)
 
                 length = len(template.split())
                 if length > max_len:
