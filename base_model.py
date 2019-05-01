@@ -221,14 +221,17 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             img = exp.view(batch_size, n_channel, -1)
             img = img.permute(0, 2, 1)
 
+            print('final from cnn', img.size())
+
             img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
             img = img.transpose(0,1)
             img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, img.size(2))
-
+            print('final from expand img', img.size())
             q = q.view(batch_size* self.encoder.max_role_count, -1)
 
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
+            print('final from eembd', q_emb.size())
 
             att = self.v_att(img, q_emb)
             v_emb = (att * img).sum(1) # [batch, v_dim]
