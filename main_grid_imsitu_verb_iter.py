@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    if gpu_mode >= 0 :
+    '''if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model
-    #pmodel = model
+        pmodel = model'''
+    pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -74,7 +74,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print(labels)'''
 
             verb_predict, loss1 = pmodel(img, verb, labels)
-            loss = loss1.mean()
+            loss = loss1
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
