@@ -555,7 +555,7 @@ class imsitu_encoder():
                 org_template = role_q_templates[current_role_list[i]]
                 template = org_template.format(**role_dict)
 
-                print('template :', template)
+                #print('template :', template)
 
                 length = len(template.split())
                 if length > max_len:
