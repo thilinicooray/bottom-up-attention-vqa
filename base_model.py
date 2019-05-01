@@ -224,6 +224,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             print('final from cnn', img.size())
 
             img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+            print('final from expand img1', img.size())
             img = img.transpose(0,1)
             img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, img.size(2))
             print('final from expand img', img.size())
