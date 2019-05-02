@@ -919,12 +919,6 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
 
 def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', encoder.roleq_dict.ntoken)
-    cnn = resnet_152_features()
-    conv_exp = nn.Sequential(
-        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
-        nn.BatchNorm2d(2048),
-        nn.ReLU()
-    )
     w_emb = WordEmbedding(encoder.roleq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
@@ -932,7 +926,7 @@ def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, 
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+    return BaseModelGrid_Imsitu_RoleIter( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_verb(dataset, num_hid, num_ans_classes, encoder):
     print('words count :', dataset.dictionary.ntoken)
