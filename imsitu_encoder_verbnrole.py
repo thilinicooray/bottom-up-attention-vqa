@@ -628,7 +628,7 @@ class imsitu_encoder():
         else:
             question = "who is the agent"
 
-        return question, has_agent, agent_role
+        return question
 
     def get_place_nl_question(self, verb):
         current_role_list = self.verb2_role_dict[verb]
@@ -646,7 +646,7 @@ class imsitu_encoder():
         else:
             question = "where is the place"
 
-        return question, has_place, place_role
+        return question
 
     def get_agent_place_roleqs(self, batch_size, verbs):
         role_qs_all = []
@@ -698,9 +698,9 @@ class imsitu_encoder():
             else:
                 agent_q = "who is the agent"
 
-            #role_nl_qs = [agent_q]
+            role_nl_qs = [agent_q]
 
-            role_qs_all.append(agent_q)
+            role_qs_all.extend(role_nl_qs)
 
         for q in role_qs_all:
             length = len(q.split())
@@ -735,9 +735,9 @@ class imsitu_encoder():
             else:
                 place_q = "where is the place"
 
-            #role_nl_qs = [place_q]
+            role_nl_qs = [place_q]
 
-            role_qs_all.append(place_q)
+            role_qs_all.extend(role_nl_qs)
 
         for q in role_qs_all:
             length = len(q.split())
