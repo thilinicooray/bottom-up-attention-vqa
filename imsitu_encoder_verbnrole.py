@@ -97,7 +97,7 @@ class imsitu_encoder():
             if current_verb not in self.verb_list:
                 self.verb_list.append(current_verb)
                 self.verb2_role_dict[current_verb] = []
-
+            roles = img['frames'][0].keys()
             has_agent = False
             has_place = False
             agent_role = None
