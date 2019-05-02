@@ -524,7 +524,7 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
         self.encoder = encoder
         self.transform = transform
 
-        '''self.role_img_id2idx = cPickle.load(
+        self.role_img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'imsitu_%s_imgid2idx_prev.pkl' % name), 'rb'))
         print('loading role img features from h5 file')
         h5_path = os.path.join(dataroot, 'imsitu_%s_prev.hdf5' % name)
@@ -540,7 +540,7 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
         with h5py.File(h5_path, 'r') as hf:
             self.verb_features = np.array(hf.get('image_features'))
 
-        self.verb_features = torch.from_numpy(self.verb_features)'''
+        self.verb_features = torch.from_numpy(self.verb_features)
 
     def __getitem__(self, index):
         _id = self.ids[index]
