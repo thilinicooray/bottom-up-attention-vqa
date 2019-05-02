@@ -175,7 +175,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 top1 = imsitu_scorer(encoder, 1, 3)
                 top5 = imsitu_scorer(encoder, 5, 3)
 
-            del  loss, verb
+            del   v_img, r_img, loss, verb
             #break
         print('Epoch ', epoch, ' completed!')
         scheduler.step()
@@ -222,7 +222,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top1.add_point_verb_only_eval(img_id, verb_predict, verb)
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
-            del verb_predict, verb, labels
+            del  v_img, r_img, verb_predict, verb, labels
             #break
 
     #return top1, top5, val_loss/mx
