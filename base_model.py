@@ -190,9 +190,8 @@ class BaseModelGrid_Imsitu(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter(nn.Module):
-    def __init__(self, cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter, self).__init__()
-        self.cnn = cnn
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
@@ -212,17 +211,14 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         """
         losses = []
         prev_rep = None
+        batch_size = v.size(0)
         for i in range(self.num_iter):
 
-            cnn_out = self.cnn(v)
-            batch_size, n_channel, conv_h, conv_w = cnn_out.size()
-            img = cnn_out.view(batch_size, n_channel, -1)
-            img = img.permute(0, 2, 1)
-
+            img = v
 
             img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
             img = img.transpose(0,1)
-            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, n_channel)
+            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
             q = q.view(batch_size* self.encoder.max_role_count, -1)
 
             w_emb = self.w_emb(q)
@@ -772,6 +768,8 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
+
+
 def build_baseline0(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
@@ -806,12 +804,6 @@ def build_baseline0grid_imsitu(dataset, num_hid, num_ans_classes, encoder):
 
 def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)
-    cnn = resnet_152_features()
-    '''conv_exp = nn.Sequential(
-        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
-        nn.BatchNorm2d(2048),
-        nn.ReLU()
-    )'''
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
@@ -819,7 +811,7 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+    return BaseModelGrid_Imsitu_RoleIter(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', encoder.roleq_dict.ntoken)
@@ -879,7 +871,8 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
     role_module = role_module
     return BaseModelGrid_Imsitu_VerbIterCNN( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
-def build_baseline0_newatt(dataset, num_hid):
+
+'''def build_baseline0_newatt(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
@@ -887,4 +880,4 @@ def build_baseline0_newatt(dataset, num_hid):
     v_net = FCNet([dataset.v_dim, num_hid])
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)'''

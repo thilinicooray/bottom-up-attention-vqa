@@ -25,6 +25,7 @@ class imsitu_encoder():
         self.max_q_word_count = 0
         self.vrole_question = {}
         self.role_corrected_dict = json.load(open('data/roles_namecorrected.json'))
+        self.verb2word_map = json.load(open('data/verb2word_mapping.json'))
         self.dictionary = dict
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
@@ -54,6 +55,7 @@ class imsitu_encoder():
 
         for verb, values in role_questions.items():
             roles = values['roles']
+            verb_name = self.verb2word_map[verb]
 
             has_agent = False
             agent_role = None
@@ -70,11 +72,11 @@ class imsitu_encoder():
                 #question = info['question']
 
                 if has_agent and role == agent_role:
-                    question = 'who is the ' + role
+                    question = 'who is the ' + role + ' ' + verb_name
                 elif role == 'place':
-                    question = 'where is the ' + role
+                    question = 'where is the ' + role + ' ' + verb_name
                 else:
-                    question = 'what is the ' + role
+                    question = 'what is the ' + role + ' ' + verb_name
 
                 self.vrole_question[verb+'_'+role] = question
                 words = nltk.word_tokenize(question)
