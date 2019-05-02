@@ -296,6 +296,7 @@ class imsitu_loader_roleq_buatt_agent(data.Dataset):
         -1 represent nil, and should be treated as padding_idx in embedding
         """
         for entry in questions:
+            print('q :', entry)
             tokens = self.dictionary.tokenize(entry, False)
             tokens = tokens[:max_length]
             if len(tokens) < max_length:
