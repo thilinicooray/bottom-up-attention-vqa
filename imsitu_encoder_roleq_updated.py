@@ -62,11 +62,12 @@ class imsitu_encoder():
             if 'agent' in roles.keys():
                 agent_role = 'agent'
                 has_agent = True
-            for role1 in roles.keys():
-                if role1 in self.agent_roles[1:]:
-                    agent_role = role1
-                    has_agent = True
-                    break
+            else:
+                for role1 in roles.keys():
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        has_agent = True
+                        break
 
             for role, info in roles.items():
                 #question = info['question']

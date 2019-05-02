@@ -63,11 +63,12 @@ class imsitu_encoder():
             if 'agent' in roles.keys():
                 agent_role = 'agent'
                 has_agent = True
-            for role1 in roles.keys():
-                if role1 in self.agent_roles[1:]:
-                    agent_role = role1
-                    has_agent = True
-                    break
+            else:
+                for role1 in roles.keys():
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        has_agent = True
+                        break
 
             for role, info in roles.items():
                 #question = info['question']
@@ -101,11 +102,12 @@ class imsitu_encoder():
             if 'agent' in roles:
                 agent_role = 'agent'
                 has_agent = True
-            for role1 in roles:
-                if role1 in self.agent_roles[1:]:
-                    agent_role = role1
-                    has_agent = True
-                    break
+            else:
+                for role1 in roles:
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        has_agent = True
+                        break
             for frame in img['frames']:
                 for role,label in frame.items():
                     if role not in self.role_list:
@@ -115,8 +117,6 @@ class imsitu_encoder():
                     if len(self.verb2_role_dict[current_verb]) > self.max_role_count:
                         self.max_role_count = len(self.verb2_role_dict[current_verb])
                     if label not in self.label_list:
-                        if has_agent and role == agent_role:
-                            self.agent_label_list.append(label)
                         '''if label not in label_frequency:
                             label_frequency[label] = 1
                         else:
@@ -125,6 +125,9 @@ class imsitu_encoder():
                         if label_frequency[label] == 20:
                             self.label_list.append(label)'''
                         self.label_list.append(label)
+                    if label not in self.agent_label_list:
+                        if has_agent and role == agent_role:
+                            self.agent_label_list.append(label)
 
         print('train set stats: \n\t verb count:', len(self.verb_list), '\n\t role count:',len(self.role_list),
               '\n\t label count:', len(self.label_list) ,
@@ -391,11 +394,12 @@ class imsitu_encoder():
         if 'agent' in current_role_list:
             agent_role = 'agent'
             has_agent = True
-        for role1 in current_role_list:
-            if role1 in self.agent_roles[1:]:
-                agent_role = role1
-                has_agent = True
-                break
+        else:
+            for role1 in current_role_list:
+                if role1 in self.agent_roles[1:]:
+                    agent_role = role1
+                    has_agent = True
+                    break
 
         if has_agent:
             question = self.vrole_question[verb+'_'+agent_role]
