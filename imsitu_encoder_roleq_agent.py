@@ -388,10 +388,10 @@ class imsitu_encoder():
 
         has_agent = False
         agent_role = None
-        if 'agent' in current_role_list.keys():
+        if 'agent' in current_role_list:
             agent_role = 'agent'
             has_agent = True
-        for role1 in current_role_list.keys():
+        for role1 in current_role_list:
             if role1 in self.agent_roles[1:]:
                 agent_role = role1
                 has_agent = True
