@@ -55,7 +55,7 @@ class imsitu_encoder():
 
         for verb, values in role_questions.items():
             roles = values['roles']
-            verb_name = self.verb2word_map[verb]
+            verb_name = self.verb2word_map[verb][0]
 
             has_agent = False
             agent_role = None
