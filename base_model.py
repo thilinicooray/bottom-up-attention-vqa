@@ -211,7 +211,7 @@ class BaseModelGrid_Imsitu_Agent(nn.Module):
 
         img = v
         q = q.squeeze()
-        print('inside model :', img.size(), q.size())
+        #print('inside model :', img.size(), q.size())
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -225,7 +225,7 @@ class BaseModelGrid_Imsitu_Agent(nn.Module):
         logits = self.classifier(joint_repr)
 
         loss = None
-        if self.training():
+        if self.training:
             loss = self.calculate_loss(logits, labels)
 
         return logits, loss
