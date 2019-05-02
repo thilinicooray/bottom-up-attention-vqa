@@ -79,8 +79,7 @@ class imsitu_encoder():
                     question = 'what is the ' + role + ' ' + verb_name
 
                 self.vrole_question[verb+'_'+role] = question
-                words = nltk.word_tokenize(question)
-                words = words[:-1] #ignore ? mark
+                words = question.split()
                 if len(words) > self.max_q_word_count:
                     self.max_q_word_count = len(words)
                 #print('q words :', words)
