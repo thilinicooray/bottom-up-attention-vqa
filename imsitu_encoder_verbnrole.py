@@ -19,6 +19,8 @@ class imsitu_encoder():
         self.max_label_count = 3
         self.verb2_role_dict = {}
         self.label_list = []
+        self.agent_label_list = []
+        self.place_label_list = []
         label_frequency = {}
         self.max_role_count = 0
         self.question_words = {}
@@ -26,11 +28,13 @@ class imsitu_encoder():
         self.vrole_question = {}
         self.roleq_dict = roleq_dict
         self.verbq_dict = verbq_dict
-
+        self.verb2word_map = json.load(open('data/verb2word_mapping.json'))
         self.obj_label2eng = json.load(open('data/allwords4verbq1.json'))
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
 
+        self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
+                            'seller', 'boaters', 'blocker', 'farmer']
 
         # imag preprocess
         self.normalize = tv.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -73,6 +77,21 @@ class imsitu_encoder():
                 self.verb_list.append(current_verb)
                 self.verb2_role_dict[current_verb] = []
 
+            has_agent = False
+            has_place = False
+            agent_role = None
+            if 'place' in roles:
+                has_place = True
+            if 'agent' in roles:
+                agent_role = 'agent'
+                has_agent = True
+            else:
+                for role1 in roles:
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        has_agent = True
+                        break
+
             for frame in img['frames']:
                 for role,label in frame.items():
                     if role not in self.role_list:
@@ -90,6 +109,13 @@ class imsitu_encoder():
                         if label_frequency[label] == 20:
                             self.label_list.append(label)'''
                         self.label_list.append(label)
+                    if label not in self.agent_label_list:
+                        if has_agent and role == agent_role:
+                            self.agent_label_list.append(label)
+
+                    if label not in self.place_label_list:
+                        if has_place and role == 'place':
+                            self.place_label_list.append(label)
 
         print('train set stats: \n\t verb count:', len(self.verb_list), '\n\t role count:',len(self.role_list),
               '\n\t label count:', len(self.label_list) ,
@@ -556,6 +582,253 @@ class imsitu_encoder():
                 rquestion_tokens.append(torch.tensor(tokens))
             else:
                 tokens = [self.roleq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_agent_nl_question(self, verb):
+        current_role_list = self.verb2_role_dict[verb]
+
+        has_agent = False
+        agent_role = None
+        if 'agent' in current_role_list:
+            agent_role = 'agent'
+            has_agent = True
+        else:
+            for role1 in current_role_list:
+                if role1 in self.agent_roles[1:]:
+                    agent_role = role1
+                    has_agent = True
+                    break
+
+        if has_agent:
+            question = self.vrole_question[verb+'_'+agent_role]
+
+        else:
+            question = "who is the agent"
+
+        return question, has_agent, agent_role
+
+    def get_place_nl_question(self, verb):
+        current_role_list = self.verb2_role_dict[verb]
+
+        has_place = False
+        place_role = None
+        if 'place' in current_role_list:
+            place_role = 'place'
+            has_place = True
+
+
+        if has_place:
+            question = self.vrole_question[verb+'_'+place_role]
+
+        else:
+            question = "where is the place"
+
+        return question, has_place, place_role
+
+    def get_agent_place_roleqs(self, batch_size, verbs):
+        role_qs_all = []
+        max_len = 0
+        for i in range(batch_size):
+            if verbs is not None:
+                verb = verbs[i]
+                agent_q = self.get_agent_nl_question(self.verb_list[verb])
+                place_q = self.get_place_nl_question(self.verb_list[verb])
+
+            else:
+                agent_q = "who is the agent"
+                place_q = "where is the place"
+
+            role_nl_qs = [agent_q, place_q]
+
+            role_qs_all.extend(role_nl_qs)
+
+        for q in role_qs_all:
+            length = len(q.split())
+            if length > max_len:
+                max_len = length
+
+        rquestion_tokens = []
+        for entry in role_qs_all:
+            if len(entry) > 0:
+                tokens = self.roleq_dict.tokenize(entry, False)
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.roleq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.roleq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_agent_roleqs(self, batch_size, verbs):
+        role_qs_all = []
+        max_len = 0
+        for i in range(batch_size):
+            if verbs is not None:
+                verb = verbs[i]
+                agent_q = self.get_agent_nl_question(self.verb_list[verb])
+
+            else:
+                agent_q = "who is the agent"
+
+            role_nl_qs = [agent_q]
+
+            role_qs_all.extend(role_nl_qs)
+
+        for q in role_qs_all:
+            length = len(q.split())
+            if length > max_len:
+                max_len = length
+
+        rquestion_tokens = []
+        for entry in role_qs_all:
+            if len(entry) > 0:
+                tokens = self.roleq_dict.tokenize(entry, False)
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.roleq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.roleq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_place_roleqs(self, batch_size, verbs):
+        role_qs_all = []
+        max_len = 0
+        for i in range(batch_size):
+            if verbs is not None:
+                verb = verbs[i]
+                place_q = self.get_place_nl_question(self.verb_list[verb])
+
+            else:
+                place_q = "where is the place"
+
+            role_nl_qs = [place_q]
+
+            role_qs_all.extend(role_nl_qs)
+
+        for q in role_qs_all:
+            length = len(q.split())
+            if length > max_len:
+                max_len = length
+
+        rquestion_tokens = []
+        for entry in role_qs_all:
+            if len(entry) > 0:
+                tokens = self.roleq_dict.tokenize(entry, False)
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.roleq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.roleq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_verbq_with_agentplace(self, batch_size, agent_place_ids):
+        batch_size = batch_size
+        all_qs = []
+        max_len = 0
+
+        for i in range(batch_size):
+            current_labels = agent_place_ids[i]
+            agent_name = self.label_list[current_labels[0]]
+
+            place_name = self.label_list[current_labels[1]]
+
+            if len(agent_name) > 0 and len(place_name) > 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
+            elif len(place_name) > 0 and len(agent_name) == 0:
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the action happening at the ' + place_eng_name
+            elif len(agent_name) > 0 and len(place_name) == 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                question = 'what is the '+ agent_eng_name + ' doing'
+            else:
+                question = 'what is the action happening'
+
+            length = len(question.split())
+            if length > max_len:
+                max_len = length
+            all_qs.append(question)
+        rquestion_tokens = []
+        for entry in all_qs:
+            if len(entry) > 0:
+                tokens = self.verbq_dict.tokenize(entry, False)
+                #print('question', entry, tokens)
+
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.verbq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.verbq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_verbq_with_agentplace_special(self, batch_size, agent_id, place_id):
+        batch_size = batch_size
+        all_qs = []
+        max_len = 0
+
+        for i in range(batch_size):
+            agent_name = self.agent_label_list[agent_id[i]]
+
+            place_name = self.place_label_list[place_id[i]]
+
+            if len(agent_name) > 0 and len(place_name) > 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
+            elif len(place_name) > 0 and len(agent_name) == 0:
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the action happening at the ' + place_eng_name
+            elif len(agent_name) > 0 and len(place_name) == 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                question = 'what is the '+ agent_eng_name + ' doing'
+            else:
+                question = 'what is the action happening'
+
+            length = len(question.split())
+            if length > max_len:
+                max_len = length
+            all_qs.append(question)
+        rquestion_tokens = []
+        for entry in all_qs:
+            if len(entry) > 0:
+                tokens = self.verbq_dict.tokenize(entry, False)
+                #print('question', entry, tokens)
+
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.verbq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.verbq_dict.padding_idx] * (max_len)
                 rquestion_tokens.append(torch.tensor(tokens))
 
         return torch.stack(rquestion_tokens,0)
