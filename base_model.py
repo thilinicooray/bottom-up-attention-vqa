@@ -832,7 +832,36 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
+class BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract(nn.Module):
+    def __init__(self, cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
+        super(BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract, self).__init__()
+        self.conv = cnn
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att = v_att
+        self.q_net = q_net
+        self.v_net = v_net
+        self.classifier = classifier
+        self.encoder = encoder
+        self.role_module = role_module
+        self.num_iter = num_iter
 
+    def forward(self, image, gt_verbs, labels):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        #iter 0 with general q\
+        #ENCODE THE IMAGE USING CNN on the fly
+        img_features = self.conv(image)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+        v = img_features.view(batch_size, n_channel, -1)
+        v = v.permute(0, 2, 1)
+
+        return v
 
 def build_baseline0(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
@@ -945,6 +974,20 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_VerbIterCNN( cnn, conv_exp, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
+
+def build_baseline0grid_imsitu_verbiter_resnetfeatextract(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
+    print('words count verbiter:', encoder.verbq_dict.ntoken)
+    cnn = resnet_152_features()
+
+    w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+    role_module = role_module
+    return BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
 
 '''def build_baseline0_newatt(dataset, num_hid):
