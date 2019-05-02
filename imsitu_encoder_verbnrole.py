@@ -698,9 +698,9 @@ class imsitu_encoder():
             else:
                 agent_q = "who is the agent"
 
-            role_nl_qs = [agent_q]
+            #role_nl_qs = [agent_q]
 
-            role_qs_all.extend(role_nl_qs)
+            role_qs_all.append(agent_q)
 
         for q in role_qs_all:
             length = len(q.split())
@@ -735,9 +735,9 @@ class imsitu_encoder():
             else:
                 place_q = "where is the place"
 
-            role_nl_qs = [place_q]
+            #role_nl_qs = [place_q]
 
-            role_qs_all.extend(role_nl_qs)
+            role_qs_all.append(place_q)
 
         for q in role_qs_all:
             length = len(q.split())
