@@ -226,7 +226,7 @@ class imsitu_loader_roleq_buatt(data.Dataset):
 
 
 
-    def tokenize(self, questions, max_length=15):
+    def tokenize(self, questions, max_length=5):
         rquestion_tokens = []
         """Tokenizes the questions.
 
