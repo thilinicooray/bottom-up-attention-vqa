@@ -846,7 +846,7 @@ class BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
 
-    def forward(self, image, gt_verbs, labels):
+    def forward(self, image):
         """Forward
 
         v: [batch, org img grid]
