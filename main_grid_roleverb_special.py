@@ -340,12 +340,14 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['w_emb', 'classifier'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['w_emb', 'agent_module','place_module', 'classifier'])
         model_name = 'pre_trained_buatt'
 
-        utils_imsitu.set_trainable(model, True)
+        print('loading agent module ...')
         utils_imsitu.load_net(args.agent_module, [model.agent_module])
+        print('loading place module ...')
         utils_imsitu.load_net(args.place_module, [model.place_module])
+        utils_imsitu.set_trainable(model, True)
         utils_imsitu.set_trainable(model.agent_module, False)
         utils_imsitu.set_trainable(model.place_module, False)
         #flt img param
@@ -355,7 +357,6 @@ def main():
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
                 ]
-
         if True:
             utils_imsitu.set_trainable(model.w_emb, True)
             opts.append({'params': model.w_emb.parameters()})
