@@ -57,11 +57,32 @@ class imsitu_encoder():
 
         for verb, values in role_questions.items():
             roles = values['roles']
+            verb_name = self.verb2word_map[verb][0]
+
+            has_agent = False
+            agent_role = None
+            if 'agent' in roles.keys():
+                agent_role = 'agent'
+                has_agent = True
+            else:
+                for role1 in roles.keys():
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        has_agent = True
+                        break
+
             for role, info in roles.items():
-                question = info['question']
+                #question = info['question']
+
+                if has_agent and role == agent_role:
+                    question = 'who is the ' + role + ' ' + verb_name
+                elif role == 'place':
+                    question = 'where is the ' + role + ' ' + verb_name
+                else:
+                    question = 'what is the ' + role + ' ' + verb_name
+
                 self.vrole_question[verb+'_'+role] = question
-                words = nltk.word_tokenize(question)
-                words = words[:-1] #ignore ? mark
+                words = question.split()
                 if len(words) > self.max_q_word_count:
                     self.max_q_word_count = len(words)
                 #print('q words :', words)
