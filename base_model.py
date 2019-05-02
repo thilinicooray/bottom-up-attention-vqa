@@ -190,7 +190,7 @@ class BaseModelGrid_Imsitu(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_Agent(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_ans_classes):
         super(BaseModelGrid_Imsitu_Agent, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
@@ -199,6 +199,7 @@ class BaseModelGrid_Imsitu_Agent(nn.Module):
         self.v_net = v_net
         self.classifier = classifier
         self.encoder = encoder
+        self.num_ans_classes = num_ans_classes
 
     def forward(self, v, q, labels, verb):
         """Forward
@@ -246,7 +247,7 @@ class BaseModelGrid_Imsitu_Agent(nn.Module):
         loss = 0
         for i in range(batch_size):
             for index in range(gt_labels.size()[1]):
-                loss += utils_imsitu.cross_entropy_loss(role_label_pred[i], gt_labels[i,index] ,len(self.encoder.agent_label_list))
+                loss += utils_imsitu.cross_entropy_loss(role_label_pred[i], gt_labels[i,index] ,self.num_ans_classes)
 
         final_loss = loss/batch_size
         #print('loss :', final_loss)
@@ -874,7 +875,7 @@ def build_baseline0grid_imsitu_agent(dataset, num_hid, num_ans_classes, encoder)
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_Agent( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder)
+    return BaseModelGrid_Imsitu_Agent( w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_ans_classes)
 
 def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)
