@@ -526,7 +526,7 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
 
         self.role_img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'imsitu_%s_imgid2idx_prev.pkl' % name), 'rb'))
-        print('loading role features from h5 file')
+        print('loading role img features from h5 file')
         h5_path = os.path.join(dataroot, 'imsitu_%s_prev.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.role_features = np.array(hf.get('image_features'))
@@ -535,7 +535,7 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
 
         self.verb_img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'verb_imsitu_%s_imgid2idx.pkl' % name), 'rb'))
-        print('loading features from h5 file')
+        print('loading verb img features from h5 file')
         h5_path = os.path.join(dataroot, 'verb_imsitu_%s.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.verb_features = np.array(hf.get('image_features'))

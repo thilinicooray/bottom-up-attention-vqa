@@ -1296,7 +1296,7 @@ def build_baseline0grid_imsitu_agent(dataset, num_hid, num_ans_classes, encoder)
 
 def build_baseline0grid_imsitu_singlerole(dataset, num_hid, num_ans_classes, encoder):
     print('words count :', encoder.roleq_dict.ntoken)
-    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
+    w_emb = WordEmbedding(encoder.roleq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])
