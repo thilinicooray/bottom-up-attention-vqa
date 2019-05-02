@@ -316,7 +316,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     dev_set = json.load(open(dataset_folder + '/' + args.dev_file))
-    dev_set = imsitu_loader_verb_buatt_bothfeat(imgset_folder, dev_set, encoder, 'dev', encoder.dev_transform)
+    dev_set = imsitu_loader_verb_buatt_bothfeat(imgset_folder, dev_set, encoder, 'val', encoder.dev_transform)
     dev_loader = torch.utils.data.DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     test_set = json.load(open(dataset_folder + '/' + args.test_file))
