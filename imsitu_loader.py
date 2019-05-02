@@ -288,30 +288,23 @@ class imsitu_loader_roleq_buatt_agent(data.Dataset):
 
 
 
-    def tokenize(self, questions, max_length=5):
+    def tokenize(self, question, max_length=5):
         rquestion_tokens = []
         """Tokenizes the questions.
 
         This will add q_token in each entry of the dataset.
         -1 represent nil, and should be treated as padding_idx in embedding
         """
-        for entry in questions:
-            print('q :', entry)
-            tokens = self.dictionary.tokenize(entry, False)
-            tokens = tokens[:max_length]
-            if len(tokens) < max_length:
-                # Note here we pad in front of the sentence
-                padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
-                tokens = tokens + padding
-            utils.assert_eq(len(tokens), max_length)
-            rquestion_tokens.append(torch.tensor(tokens))
-
-        role_padding_count = self.encoder.max_role_count - len(rquestion_tokens)
-
-        #todo : how to handle below sequence making for non roles properly?
-        for i in range(role_padding_count):
-            padding = [self.dictionary.padding_idx] * (max_length)
-            rquestion_tokens.append(torch.tensor(padding))
+        #for entry in questions:
+        print('q :', question)
+        tokens = self.dictionary.tokenize(question, False)
+        tokens = tokens[:max_length]
+        if len(tokens) < max_length:
+            # Note here we pad in front of the sentence
+            padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
+            tokens = tokens + padding
+        utils.assert_eq(len(tokens), max_length)
+        rquestion_tokens.append(torch.tensor(tokens))
 
         return torch.stack(rquestion_tokens,0)
 

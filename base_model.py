@@ -210,7 +210,7 @@ class BaseModelGrid_Imsitu_Agent(nn.Module):
         """
 
         img = v
-
+        print('inside model :', img.size(), q.size())
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
