@@ -20,6 +20,7 @@ class imsitu_encoder():
         self.verb2_role_dict = {}
         self.label_list = []
         self.agent_label_list = []
+        self.place_label_list = []
         label_frequency = {}
         self.max_role_count = 0
         self.question_words = {}
@@ -98,7 +99,10 @@ class imsitu_encoder():
                 self.verb2_role_dict[current_verb] = []
             roles = img['frames'][0].keys()
             has_agent = False
+            has_place = False
             agent_role = None
+            if 'place' in roles:
+                has_place = True
             if 'agent' in roles:
                 agent_role = 'agent'
                 has_agent = True
@@ -128,6 +132,10 @@ class imsitu_encoder():
                     if label not in self.agent_label_list:
                         if has_agent and role == agent_role:
                             self.agent_label_list.append(label)
+
+                    if label not in self.place_label_list:
+                        if has_place and role == 'place':
+                            self.place_label_list.append(label)
 
         print('train set stats: \n\t verb count:', len(self.verb_list), '\n\t role count:',len(self.role_list),
               '\n\t label count:', len(self.label_list) ,
@@ -192,6 +200,15 @@ class imsitu_encoder():
         verb = self.verb_list.index(item['verb'])
         role_nl_qs, has_agent, agent_role = self.get_agent_nl_question(item['verb'])
         labels = self.get_agent_ids(item['frames'], has_agent, agent_role )
+
+        #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
+        #assuming labels are also in order of roles in encoder
+        return verb, role_nl_qs, labels
+
+    def encode_placeq(self, item):
+        verb = self.verb_list.index(item['verb'])
+        role_nl_qs, has_place, place_role = self.get_place_nl_question(item['verb'])
+        labels = self.get_place_ids(item['frames'], has_place, place_role)
 
         #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
         #assuming labels are also in order of roles in encoder
@@ -409,6 +426,24 @@ class imsitu_encoder():
 
         return question, has_agent, agent_role
 
+    def get_place_nl_question(self, verb):
+        current_role_list = self.verb2_role_dict[verb]
+
+        has_place = False
+        place_role = None
+        if 'place' in current_role_list:
+            place_role = 'place'
+            has_place = True
+
+
+        if has_place:
+            question = self.vrole_question[verb+'_'+place_role]
+
+        else:
+            question = "where is the place"
+
+        return question, has_place, place_role
+
     def get_label_ids(self, frames):
         all_frame_id_list = []
         for frame in frames:
@@ -450,6 +485,24 @@ class imsitu_encoder():
             all_frame_agent_list.append(label_id)
 
         return torch.tensor(all_frame_agent_list)
+
+    def get_place_ids(self, frames, has_place, place_role):
+        all_frame_place_list = []
+        for frame in frames:
+            if has_place:
+                label = frame[place_role]
+
+                if label in self.place_label_list:
+                    label_id = self.place_label_list.index(label)
+                else:
+                    label_id = self.place_label_list.index('UNK')
+
+            else:
+                label_id = len(self.place_label_list)
+
+            all_frame_place_list.append(label_id)
+
+        return torch.tensor(all_frame_place_list)
 
     def get_adj_matrix(self, verb_ids):
         adj_matrix_list = []
