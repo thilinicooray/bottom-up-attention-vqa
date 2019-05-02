@@ -475,7 +475,7 @@ class BaseModelGrid_Imsitu_Role4VerbNew(nn.Module):
         img = img.expand(2,img.size(0), img.size(1), img.size(2))
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * 2, -1, v.size(2))
-        q = q.view(batch_size* self.encoder.max_role_count, -1)
+        q = q.view(batch_size* 2, -1)
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
