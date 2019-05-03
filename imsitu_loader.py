@@ -533,21 +533,22 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
 
         self.role_features = torch.from_numpy(self.role_features)
 
-        self.verb_img_id2idx = cPickle.load(
+        '''self.verb_img_id2idx = cPickle.load(
             open(os.path.join(dataroot, 'verb_imsitu_%s_imgid2idx.pkl' % name), 'rb'))
         print('loading verb img features from h5 file')
         h5_path = os.path.join(dataroot, 'verb_imsitu_%s.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.verb_features = np.array(hf.get('image_features'))
 
-        self.verb_features = torch.from_numpy(self.verb_features)
+        self.verb_features = torch.from_numpy(self.verb_features)'''
 
     def __getitem__(self, index):
         _id = self.ids[index]
         ann = self.annotations[_id]
 
         role_img_feat = self.role_features[self.role_img_id2idx[_id]]
-        verb_img_feat = self.verb_features[self.verb_img_id2idx[_id]]
+        #verb_img_feat = self.verb_features[self.verb_img_id2idx[_id]]
+        verb_img_feat = self.role_features[self.role_img_id2idx[_id]]
 
         verb, labels = self.encoder.encode_verb_only(ann)
 
