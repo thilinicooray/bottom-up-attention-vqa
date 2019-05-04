@@ -223,7 +223,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
             del  v_img, r_img, verb_predict, verb, labels
-            break
+            #break
 
     #return top1, top5, val_loss/mx
 
