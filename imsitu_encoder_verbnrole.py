@@ -33,6 +33,7 @@ class imsitu_encoder():
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
         self.created_verbq_dict = {}
+        self.verb_details = {}
 
         self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
                             'seller', 'boaters', 'blocker', 'farmer']
@@ -113,6 +114,8 @@ class imsitu_encoder():
                         agent_role = role1
                         has_agent = True
                         break
+
+            self.verb_details[current_verb] = {'has_agent' : has_agent, 'has_place':has_place}
 
             for frame in img['frames']:
                 for role,label in frame.items():
@@ -773,6 +776,66 @@ class imsitu_encoder():
             agent_name = self.label_list[current_labels[0]]
 
             place_name = self.label_list[current_labels[1]]
+
+            if len(agent_name) > 0 and len(place_name) > 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
+            elif len(place_name) > 0 and len(agent_name) == 0:
+                place_eng_name = self.obj_label2eng[place_name]
+                question = 'what is the action happening at the ' + place_eng_name
+            elif len(agent_name) > 0 and len(place_name) == 0:
+                agent_eng_name = self.obj_label2eng[agent_name]
+                question = 'what is the '+ agent_eng_name + ' doing'
+            else:
+                question = 'what is the action happening'
+
+            self.created_verbq_dict[im_id] = question
+
+            length = len(question.split())
+            if length > max_len:
+                max_len = length
+            all_qs.append(question)
+        rquestion_tokens = []
+        for entry in all_qs:
+            if len(entry) > 0:
+                tokens = self.verbq_dict.tokenize(entry, False)
+                #print('question', entry, tokens)
+
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.verbq_dict.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.verbq_dict.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def get_verbq_with_agentplace_with_verb(self, img_id, batch_size, agent_place_ids, verbs):
+        batch_size = batch_size
+        all_qs = []
+        max_len = 0
+
+        for i in range(batch_size):
+            im_id = img_id[i]
+            current_labels = agent_place_ids[i]
+
+            curr_verb_id = verbs[i]
+            verb_name = self.verb_list[curr_verb_id]
+            verb_infor_agent_place = self.verb_details[verb_name]
+
+            agent_name = self.label_list[current_labels[0]]
+
+            place_name = self.label_list[current_labels[1]]
+
+            if not verb_infor_agent_place['has_place']:
+                place_name = ''
+            if not verb_infor_agent_place['has_agent']:
+                agent_name = ''
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.obj_label2eng[agent_name]
