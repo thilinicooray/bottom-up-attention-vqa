@@ -924,13 +924,14 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
-    def get_verbq_idx(self, verb_ids, label_ids):
+    def get_verbq_idx(self, img_id, verb_ids, label_ids):
         batch_size = verb_ids.size(0)
         all_qs = []
         max_len = 0
         agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
                        'seller', 'boaters', 'blocker', 'farmer']
         for i in range(batch_size):
+            im_id = img_id[i]
             curr_verb_id = verb_ids[i]
             current_labels = label_ids[i]
             verb_name = self.verb_list[curr_verb_id]
@@ -972,6 +973,8 @@ class imsitu_encoder():
                 question = 'what is the '+ agent_eng_name + ' doing'
             else:
                 question = 'what is the action happening'
+
+            self.created_verbq_dict[im_id] = question
 
             length = len(question.split())
             if length > max_len:

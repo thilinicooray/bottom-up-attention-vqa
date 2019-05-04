@@ -75,7 +75,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            verb_predict, loss1 = pmodel(v_img, r_img, verb, labels)
+            verb_predict, loss1 = pmodel(img_id, v_img, r_img, verb, labels)
             loss = loss1
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
@@ -212,7 +212,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            verb_predict = model.forward_eval(img_id, v_img, r_img, verb, labels)
+            verb_predict = model.forward(img_id, v_img, r_img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
