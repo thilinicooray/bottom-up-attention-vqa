@@ -779,7 +779,7 @@ class BaseModelGrid_Imsitu_VerbRoleVerb_General(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
 
-    def forward(self, v_verb, v_role, gt_verbs, labels):
+    def forward(self, img_id, v_verb, v_role, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -816,7 +816,7 @@ class BaseModelGrid_Imsitu_VerbRoleVerb_General(nn.Module):
             role_pred = self.role_module.forward_noq(v_role, verbs)
             label_idx = torch.max(role_pred,-1)[1]
 
-            q = self.encoder.get_verbq_with_agentplace(batch_size, label_idx)
+            q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
 
             if torch.cuda.is_available():
                 q = q.to(torch.device('cuda'))
@@ -856,7 +856,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
 
-    def forward(self, v_verb, v_role, gt_verbs, labels):
+    def forward(self, img_id, v_verb, v_role, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -870,7 +870,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General(nn.Module):
         role_pred = self.role_module.forward_noq(v_role)
         label_idx = torch.max(role_pred,-1)[1]
 
-        q = self.encoder.get_verbq_with_agentplace(batch_size, label_idx)
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
 
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
@@ -918,7 +918,7 @@ class BaseModelGrid_Imsitu_VerbRoleVerb_Special(nn.Module):
         self.place_module = place_module
         self.num_iter = num_iter
 
-    def forward(self, v_verb, v_role, gt_verbs, labels):
+    def forward(self, img_id,v_verb, v_role, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -957,7 +957,7 @@ class BaseModelGrid_Imsitu_VerbRoleVerb_Special(nn.Module):
             place_pred = self.place_module.forward_noq("place", v_role, verbs)
             place_idx = torch.max(place_pred,-1)[1]
 
-            q = self.encoder.get_verbq_with_agentplace_special(batch_size, agent_idx, place_idx)
+            q = self.encoder.get_verbq_with_agentplace_special(img_id,batch_size, agent_idx, place_idx)
 
             if torch.cuda.is_available():
                 q = q.to(torch.device('cuda'))
@@ -998,7 +998,7 @@ class BaseModelGrid_Imsitu_RoleVerb_Special(nn.Module):
         self.place_module = place_module
         self.num_iter = num_iter
 
-    def forward(self, v_verb, v_role, gt_verbs, labels):
+    def forward(self, img_id,v_verb, v_role, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -1014,7 +1014,7 @@ class BaseModelGrid_Imsitu_RoleVerb_Special(nn.Module):
         place_pred = self.place_module.forward_noq("place", v_role)
         place_idx = torch.max(place_pred,-1)[1]
 
-        q = self.encoder.get_verbq_with_agentplace_special(batch_size, agent_idx, place_idx)
+        q = self.encoder.get_verbq_with_agentplace_special(img_id,batch_size, agent_idx, place_idx)
 
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))

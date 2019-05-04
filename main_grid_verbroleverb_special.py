@@ -212,7 +212,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            verb_predict, _ = model(v_img, r_img, verb, labels)
+            verb_predict, _ = model(img_id, v_img, r_img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -374,10 +374,10 @@ def main():
         if len(args.resume_model) == 0:
             raise Exception('[pretrained module] not specified')
         utils_imsitu.load_net(args.resume_model, [model])
-        utils_imsitu.load_net(args.role_module, [model.role_module])
+        #utils_imsitu.load_net(args.role_module, [model.role_module])
         optimizer_select = 0
         model_name = 'resume_all'
-        utils_imsitu.set_trainable(model, True)
+        #utils_imsitu.set_trainable(model, True)
         optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     else:
@@ -420,7 +420,7 @@ def main():
                                                    utils_imsitu.format_dict(top5_avg, '{:.2f}', '5-')))
 
         #write results to csv file
-        role_dict = top1.role_dict
+        '''role_dict = top1.role_dict
         fail_val_all = top1.value_all_dict
         pass_val_dict = top1.vall_all_correct
 
@@ -431,7 +431,11 @@ def main():
             json.dump(fail_val_all, fp, indent=4)
 
         with open('pass_val_all.json', 'w') as fp:
-            json.dump(pass_val_dict, fp, indent=4)
+            json.dump(pass_val_dict, fp, indent=4)'''
+
+        q_dict = encoder.created_verbq_dict
+        with open('createdq_verbroleverbspecial.json', 'w') as fp:
+            json.dump(q_dict, fp, indent=4)
 
         print('Writing predictions to file completed !')
 

@@ -32,6 +32,7 @@ class imsitu_encoder():
         self.obj_label2eng = json.load(open('data/allwords4verbq1.json'))
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
+        self.created_verbq_dict = {}
 
         self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
                             'seller', 'boaters', 'blocker', 'farmer']
@@ -761,12 +762,13 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
-    def get_verbq_with_agentplace(self, batch_size, agent_place_ids):
+    def get_verbq_with_agentplace(self, img_id, batch_size, agent_place_ids):
         batch_size = batch_size
         all_qs = []
         max_len = 0
 
         for i in range(batch_size):
+            im_id = img_id[i]
             current_labels = agent_place_ids[i]
             agent_name = self.label_list[current_labels[0]]
 
@@ -784,6 +786,8 @@ class imsitu_encoder():
                 question = 'what is the '+ agent_eng_name + ' doing'
             else:
                 question = 'what is the action happening'
+
+            self.created_verbq_dict[im_id] = question
 
             length = len(question.split())
             if length > max_len:
@@ -808,12 +812,13 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
-    def get_verbq_with_agentplace_special(self, batch_size, agent_id, place_id):
+    def get_verbq_with_agentplace_special(self, img_id, batch_size, agent_id, place_id):
         batch_size = batch_size
         all_qs = []
         max_len = 0
 
         for i in range(batch_size):
+            im_id = img_id[i]
             agent_name = self.agent_label_list[agent_id[i]]
 
             place_name = self.place_label_list[place_id[i]]
@@ -830,6 +835,8 @@ class imsitu_encoder():
                 question = 'what is the '+ agent_eng_name + ' doing'
             else:
                 question = 'what is the action happening'
+
+            self.created_verbq_dict[im_id] = question
 
             length = len(question.split())
             if length > max_len:
