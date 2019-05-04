@@ -75,7 +75,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            verb_predict, loss1 = pmodel(img_id, v_img, r_img, verb, labels)
+            verb_predict, loss1 = pmodel(v_img, r_img, verb, labels)
             loss = loss1
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
@@ -151,7 +151,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 max_score = max(dev_score_list)
 
                 if max_score == dev_score_list[-1]:
-                    torch.save(model.state_dict(), model_dir + "/{}_verbroleverb_general_{}.model".format( model_name, model_saving_name))
+                    torch.save(model.state_dict(), model_dir + "/{}_roleverb_general_{}.model".format( model_name, model_saving_name))
                     print ('New best model saved! {0}'.format(max_score))
 
                 #eval on the trainset
@@ -212,7 +212,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            verb_predict, _ = model.forward_eval(img_id, v_img, r_img, verb, labels)
+            verb_predict, _ = model(img_id, v_img, r_img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -254,7 +254,7 @@ def main():
 
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--num_hid', type=int, default=1024)
-    parser.add_argument('--model', type=str, default='baseline0grid_imsitu_verbroleverb_general_gtq_train')
+    parser.add_argument('--model', type=str, default='baseline0grid_imsitu_roleverb_general_gtq_train')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
@@ -372,7 +372,7 @@ def main():
         #utils_imsitu.load_net(args.role_module, [model.role_module])
         optimizer_select = 0
         model_name = 'resume_all'
-        utils_imsitu.set_trainable(model, True)
+        #utils_imsitu.set_trainable(model, True)
         optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     else:
@@ -427,9 +427,8 @@ def main():
 
         with open('pass_val_all.json', 'w') as fp:
             json.dump(pass_val_dict, fp, indent=4)'''
-
         q_dict = encoder.created_verbq_dict
-        with open('createdq_verbroleverbgeneral.json', 'w') as fp:
+        with open('createdq_roleverbgeneral.json', 'w') as fp:
             json.dump(q_dict, fp, indent=4)
 
         print('Writing predictions to file completed !')
