@@ -557,6 +557,47 @@ class imsitu_loader_verb_buatt_bothfeat(data.Dataset):
     def __len__(self):
         return len(self.annotations)
 
+class imsitu_loader_verb_buatt_bothfeatreal(data.Dataset):
+    def __init__(self, img_dir, annotation_file, encoder, name, transform=None, dataroot='data'):
+        self.img_dir = img_dir
+        self.annotations = annotation_file
+        self.ids = list(self.annotations.keys())
+        self.encoder = encoder
+        self.transform = transform
+
+        self.role_img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'imsitu_%s_imgid2idx_prev.pkl' % name), 'rb'))
+        print('loading role img features from h5 file')
+        h5_path = os.path.join(dataroot, 'imsitu_%s_prev.hdf5' % name)
+        with h5py.File(h5_path, 'r') as hf:
+            self.role_features = np.array(hf.get('image_features'))
+
+        self.role_features = torch.from_numpy(self.role_features)
+
+        self.verb_img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'verb_imsitu_%s_imgid2idx.pkl' % name), 'rb'))
+        print('loading verb img features from h5 file')
+        h5_path = os.path.join(dataroot, 'verb_imsitu_%s.hdf5' % name)
+        with h5py.File(h5_path, 'r') as hf:
+            self.verb_features = np.array(hf.get('image_features'))
+
+        self.verb_features = torch.from_numpy(self.verb_features)
+
+    def __getitem__(self, index):
+        _id = self.ids[index]
+        ann = self.annotations[_id]
+
+        role_img_feat = self.role_features[self.role_img_id2idx[_id]]
+        verb_img_feat = self.verb_features[self.verb_img_id2idx[_id]]
+        #verb_img_feat = self.role_features[self.role_img_id2idx[_id]]
+
+        verb, labels = self.encoder.encode_verb_only(ann)
+
+        return _id, verb_img_feat, role_img_feat, verb, labels
+
+    def __len__(self):
+        return len(self.annotations)
+
 class imsitu_loader_verb_buatt_iter4cnn(data.Dataset):
     def __init__(self, img_dir, annotation_file, encoder, name, transform=None, dataroot='data'):
         self.img_dir = img_dir
