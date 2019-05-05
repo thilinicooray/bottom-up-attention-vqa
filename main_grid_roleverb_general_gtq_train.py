@@ -427,9 +427,15 @@ def main():
 
         with open('pass_val_all.json', 'w') as fp:
             json.dump(pass_val_dict, fp, indent=4)'''
+
         q_dict = encoder.created_verbq_dict
-        with open('createdq_roleverbgeneral.json', 'w') as fp:
+        with open('createdq_roleverbgeneral_gttrain.json', 'w') as fp:
             json.dump(q_dict, fp, indent=4)
+
+        all = top1.all_res
+
+        with open('all_pred_roleverb_general_gttrain.json', 'w') as fp:
+            json.dump(all, fp, indent=4)
 
         print('Writing predictions to file completed !')
 

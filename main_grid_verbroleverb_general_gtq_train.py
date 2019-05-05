@@ -212,7 +212,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            verb_predict, _ = model.forward_eval(img_id, v_img, r_img, verb, labels)
+            verb_predict, _ = model(img_id, v_img, r_img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -429,8 +429,13 @@ def main():
             json.dump(pass_val_dict, fp, indent=4)'''
 
         q_dict = encoder.created_verbq_dict
-        with open('createdq_verbroleverbgeneral.json', 'w') as fp:
+        with open('createdq_verbroleverbgeneral_gttrainval.json', 'w') as fp:
             json.dump(q_dict, fp, indent=4)
+
+        all = top1.all_res
+
+        with open('all_pred_verbroleverb_general_gttrainval.json', 'w') as fp:
+            json.dump(all, fp, indent=4)
 
         print('Writing predictions to file completed !')
 
