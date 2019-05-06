@@ -1213,7 +1213,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
         frame_idx = np.random.randint(3, size=1)
         gt_label_idx = labels[:,frame_idx,:].squeeze()
 
-        q = self.encoder.get_verbq_predtemplate_goldlabels(self, img_id, gt_verbs, gt_label_idx, label_idx)
+        q = self.encoder.get_verbq_predtemplate_goldlabels(img_id, gt_verbs, gt_label_idx, label_idx)
 
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
