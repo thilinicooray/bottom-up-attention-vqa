@@ -432,6 +432,10 @@ def main():
         with open('createdq_roleverbgeneral_gttrain.json', 'w') as fp:
             json.dump(q_dict, fp, indent=4)
 
+        agentplace_dict = encoder.pred_agent_place_dict
+        with open('predagentplace_roleverbgeneral_gttrain.json', 'w') as fp:
+            json.dump(agentplace_dict, fp, indent=4)
+
         all = top1.all_res
 
         with open('all_pred_roleverb_general_gttrain.json', 'w') as fp:

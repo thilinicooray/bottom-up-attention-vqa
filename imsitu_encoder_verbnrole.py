@@ -33,6 +33,7 @@ class imsitu_encoder():
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_labels = json.load(open('data/all_label_mapping.json'))
         self.created_verbq_dict = {}
+        self.pred_agent_place_dict = {}
         self.verb_details = {}
 
         self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
@@ -776,6 +777,8 @@ class imsitu_encoder():
             agent_name = self.label_list[current_labels[0]]
 
             place_name = self.label_list[current_labels[1]]
+
+            self.pred_agent_place_dict[im_id] = {'agent':agent_name, 'place':place_name}
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.obj_label2eng[agent_name]
