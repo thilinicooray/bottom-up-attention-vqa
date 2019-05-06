@@ -1162,6 +1162,74 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
 
         return logits
 
+    def forward_eval_gttemplte_predlabel(self, img_id, v_verb, v_role, gt_verbs, labels):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        #iter 0 with general q
+
+        batch_size = v_verb.size(0)
+        role_pred = self.role_module.forward_noq(v_role)
+        label_idx = torch.max(role_pred,-1)[1]
+
+        frame_idx = np.random.randint(3, size=1)
+        gt_label_idx = labels[:,frame_idx,:].squeeze()
+
+        q = self.encoder.get_verbq_goldtemplate_predlabels(img_id, gt_verbs, gt_label_idx, label_idx)
+
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(v_verb, q_emb)
+        v_emb = (att * v_verb).sum(1) # [batch, v_dim]
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
+
+        return logits
+
+    def forward_eval_predtemplate_gtlabels(self, img_id, v_verb, v_role, gt_verbs, labels):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        #iter 0 with general q
+
+        batch_size = v_verb.size(0)
+        role_pred = self.role_module.forward_noq(v_role)
+        label_idx = torch.max(role_pred,-1)[1]
+
+        frame_idx = np.random.randint(3, size=1)
+        gt_label_idx = labels[:,frame_idx,:].squeeze()
+
+        q = self.encoder.get_verbq_predtemplate_goldlabels(self, img_id, gt_verbs, gt_label_idx, label_idx)
+
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(v_verb, q_emb)
+        v_emb = (att * v_verb).sum(1) # [batch, v_dim]
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
+
+        return logits
+
     def calculate_loss(self, verb_pred, gt_verbs):
 
         batch_size = verb_pred.size()[0]
