@@ -781,7 +781,7 @@ class imsitu_encoder():
             current_beam = top5[i]
             beam_agents = []
             beam_places = []
-            for beamid in range(5):
+            for beamid in range(10):
                 beam_agent = self.label_list[current_beam[0][beamid]]
                 beam_place = self.label_list[current_beam[1][beamid]]
 

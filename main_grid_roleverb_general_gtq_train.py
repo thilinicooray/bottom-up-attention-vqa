@@ -437,7 +437,7 @@ def main():
             json.dump(agentplace_dict, fp, indent=4)
 
         topk_agentplace_dict = encoder.topk_agentplace_details
-        with open('pred_top5_agentplace_roleverbgeneral_gttrain.json', 'w') as fp:
+        with open('pred_top10_agentplace_roleverbgeneral_gttrain.json', 'w') as fp:
             json.dump(topk_agentplace_dict, fp, indent=4)
 
         all = top1.all_res

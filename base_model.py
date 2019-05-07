@@ -1147,7 +1147,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
 
         #get a beam
         sorted_val, sorted_idx = torch.sort(role_pred, -1, True)
-        top5 = sorted_idx[:,:,:5]
+        top5 = sorted_idx[:,:,:10]
 
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx, top5)
 
