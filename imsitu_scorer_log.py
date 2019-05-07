@@ -942,17 +942,11 @@ class imsitu_scorer():
         #encoded predictions should be batch x verbs x values #assumes the are the same order as the references
         #encoded reference should be batch x 1+ references*roles,values (sorted)
 
-        with open('data/pred_correct_img.txt') as f:
-            content = f.readlines()
-        selected_list = [x.strip() for x in content]
-
         batch_size = verb_predict.size()[0]
         for i in range(batch_size):
             verb_pred = verb_predict[i]
             gt_verb = gt_verbs[i]
             current_id = img_id[i]
-            if current_id not in selected_list:
-                continue
 
             #print('check sizes:', verb_pred.size(), gt_verb.size(), label_pred.size(), gt_label.size())
             sorted_idx = torch.sort(verb_pred, 0, True)[1]
