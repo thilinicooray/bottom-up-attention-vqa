@@ -35,6 +35,7 @@ class imsitu_encoder():
         self.created_verbq_dict = {}
         self.pred_agent_place_dict = {}
         self.verb_details = {}
+        self.topk_agentplace_details = {}
 
         self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
                             'seller', 'boaters', 'blocker', 'farmer']
@@ -778,12 +779,18 @@ class imsitu_encoder():
 
             place_name = self.label_list[current_labels[1]]
             current_beam = top5[i]
+            beam_agents = []
+            beam_places = []
             for beamid in range(5):
                 beam_agent = self.label_list[current_beam[0][beamid]]
                 beam_place = self.label_list[current_beam[1][beamid]]
-                print('max agent place:', beamid, im_id, agent_name, place_name, beam_agent, beam_place)
+
+                beam_agents.append(beam_agent)
+                beam_places.append(beam_place)
+                #print('max agent place:', beamid, im_id, agent_name, place_name, beam_agent, beam_place)
 
             self.pred_agent_place_dict[im_id] = {'agent':agent_name, 'place':place_name}
+            self.topk_agentplace_details[im_id] = {'agents':beam_agents, 'places':beam_places}
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.obj_label2eng[agent_name]
