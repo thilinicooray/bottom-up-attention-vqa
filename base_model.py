@@ -1145,7 +1145,11 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
         role_pred = self.role_module.forward_noq(v_role)
         label_idx = torch.max(role_pred,-1)[1]
 
-        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+        #get a beam
+        sorted_val, sorted_idx = torch.sort(role_pred, -1, True)
+        top5 = sorted_idx[:,:,:5]
+
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx, top5)
 
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))

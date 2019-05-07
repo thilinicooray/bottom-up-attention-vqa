@@ -766,7 +766,7 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
-    def get_verbq_with_agentplace(self, img_id, batch_size, agent_place_ids):
+    def get_verbq_with_agentplace(self, img_id, batch_size, agent_place_ids, top5):
         batch_size = batch_size
         all_qs = []
         max_len = 0
@@ -777,6 +777,11 @@ class imsitu_encoder():
             agent_name = self.label_list[current_labels[0]]
 
             place_name = self.label_list[current_labels[1]]
+            current_beam = top5[i]
+            for beamid in range(5):
+                beam_agent = self.label_list[current_beam[0][beamid]]
+                beam_place = self.label_list[current_beam[1][beamid]]
+                print('max agent place:', beamid, im_id, agent_name, place_name, beam_agent, beam_place)
 
             self.pred_agent_place_dict[im_id] = {'agent':agent_name, 'place':place_name}
 
