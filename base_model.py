@@ -1487,11 +1487,10 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
         #iter 0 with general q\
         #ENCODE THE IMAGE USING CNN on the fly
         conv_out = self.conv(image)
-        batch_size, n_channel, conv_h, conv_w = conv_out.size()
-        conv_out = conv_out.view(batch_size, n_channel, -1)
-        conv_out = conv_out.permute(0, 2, 1)
         v = self.conv_exp(conv_out)
-
+        batch_size, n_channel, conv_h, conv_w = v.size()
+        v = v.view(batch_size, n_channel, -1)
+        v = v.permute(0, 2, 1)
 
         q = self.encoder.get_generalq()
         if torch.cuda.is_available():
@@ -1856,9 +1855,15 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
     print('words count verbiter:', encoder.verbq_dict.ntoken)
     cnn = vgg16_modified()
     conv_exp = nn.Sequential(
-        nn.Linear(512, 2048),
+        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
+        nn.BatchNorm2d(2048),
         nn.ReLU()
     )
+    #init conv_exp
+    resnet = tv.models.resnet50(pretrained=True)
+    conv_exp[0].weight.data.copy_(resnet.layer4[2].conv3.weight.data)
+    conv_exp[1].weight.data.copy_(resnet.layer4[2].bn3.weight.data)
+
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
