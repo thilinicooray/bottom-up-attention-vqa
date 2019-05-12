@@ -1486,10 +1486,12 @@ class BaseModelGrid_Imsitu_VerbIterCNN(nn.Module):
         """
         #iter 0 with general q\
         #ENCODE THE IMAGE USING CNN on the fly
-        img_features = self.conv_exp(self.conv(image))
-        batch_size, n_channel, conv_h, conv_w = img_features.size()
-        v = img_features.view(batch_size, n_channel, -1)
-        v = v.permute(0, 2, 1)
+        conv_out = self.conv(image)
+        batch_size, n_channel, conv_h, conv_w = conv_out.size()
+        conv_out = conv_out.view(batch_size, n_channel, -1)
+        conv_out = conv_out.permute(0, 2, 1)
+        v = self.conv_exp(conv_out)
+
 
         q = self.encoder.get_generalq()
         if torch.cuda.is_available():
