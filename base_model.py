@@ -1857,7 +1857,7 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
     cnn = vgg16_modified()
     conv_exp = nn.Sequential(
         nn.Linear(512, 2048),
-        nn.BatchNorm1d(2048),
+        nn.BatchNorm2d(2048),
         nn.ReLU()
     )
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
