@@ -1854,7 +1854,7 @@ def build_baseline0grid_imsitu_verbiterCNN(dataset, num_hid, num_ans_classes, en
     print('words count verbiter:', encoder.verbq_dict.ntoken)
     cnn = vgg16_modified()
     conv_exp = nn.Sequential(
-        nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
+        nn.Linear(512, 2048),
     )
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
