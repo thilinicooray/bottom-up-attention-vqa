@@ -341,7 +341,6 @@ def main():
         utils_imsitu.set_trainable(model, True)
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
-        utils_imsitu.set_trainable(model.classifier, True)
         #flt img param
 
         opts = [{'params': model.classifier.parameters()},
@@ -349,6 +348,7 @@ def main():
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
                 {'params': model.conv.parameters(), 'lr': 5e-5},
+                {'params': model.conv_exp.parameters()},
                 ]
 
         if True:
