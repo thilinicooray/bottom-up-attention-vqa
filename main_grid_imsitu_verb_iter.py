@@ -356,10 +356,10 @@ def main():
                 {'params': model.conv_exp.parameters()}
                 ]
 
-        '''if True:
+        if True:
             utils_imsitu.set_trainable(model.w_emb, True)
             opts.append({'params': model.w_emb.parameters()})
-        if True:
+        '''if True:
             utils_imsitu.set_trainable(model.q_emb, True)
             opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})'''
 
