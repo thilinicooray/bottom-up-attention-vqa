@@ -338,25 +338,30 @@ def main():
         utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv', 'conv_exp', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
-        utils_imsitu.set_trainable(model, True)
+        utils_imsitu.set_trainable(model, False)
         utils_imsitu.load_net(args.role_module, [model.role_module])
-        utils_imsitu.set_trainable(model.role_module, False)
-        utils_imsitu.set_trainable(model.conv, False)
+        utils_imsitu.set_trainable(model.classifier, True)
+        utils_imsitu.set_trainable(model.conv_exp, True)
         #flt img param
 
-        opts = [{'params': model.classifier.parameters()},
+        '''opts = [{'params': model.classifier.parameters()},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
+                {'params': model.conv.parameters(), 'lr': 5e-5},
                 {'params': model.conv_exp.parameters()},
+                ]'''
+
+        opts = [{'params': model.classifier.parameters()},
+                {'params': model.conv_exp.parameters()}
                 ]
 
-        if True:
+        '''if True:
             utils_imsitu.set_trainable(model.w_emb, True)
             opts.append({'params': model.w_emb.parameters()})
         if True:
             utils_imsitu.set_trainable(model.q_emb, True)
-            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})
+            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})'''
 
         optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
