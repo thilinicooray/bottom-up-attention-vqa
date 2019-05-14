@@ -236,6 +236,7 @@ def main():
     parser.add_argument('--pretrained_buatt_model', type=str, default='', help='pretrained verb module')
     parser.add_argument('--train_role', action='store_true', help='cnn fix, verb fix, role train from the scratch')
     parser.add_argument('--use_pretrained_buatt', action='store_true', help='cnn fix, verb finetune, role train from the scratch')
+    parser.add_argument('--use_pretrained_additionallayer_model', action='store_true', help='cnn fix, verb finetune, role train from the scratch')
     parser.add_argument('--finetune_cnn', action='store_true', help='cnn finetune, verb finetune, role train from the scratch')
     parser.add_argument('--output_dir', type=str, default='./trained_models', help='Location to output the model')
     parser.add_argument('--evaluate', action='store_true', help='Only use the testing mode')
@@ -365,6 +366,42 @@ def main():
 
         optimizer = torch.optim.Adamax(opts, lr=1e-3)
         #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
+
+    if args.use_pretrained_additionallayer_model:
+        print('Use pretrained from: {}'.format(args.pretrained_buatt_model))
+        if len(args.pretrained_buatt_model) == 0:
+            raise Exception('[pretrained buatt module] not specified')
+        #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
+        #model.load_state_dict(model_data.get('model_state', model_data))
+
+        #utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['conv', 'conv_exp', 'w_emb', 'classifier'])
+        model_name = 'pre_trained_additionallayer'
+        utils_imsitu.load_net(args.resume_model, [model])
+        utils_imsitu.set_trainable(model, True)
+
+        utils_imsitu.set_trainable(model.role_module, False)
+        #flt img param
+
+        opts = [{'params': model.classifier.parameters(), 'lr': 1e-4},
+                {'params': model.v_att.parameters(), 'lr': 5e-5},
+                {'params': model.q_net.parameters(), 'lr': 5e-5},
+                {'params': model.v_net.parameters(), 'lr': 5e-5},
+                {'params': model.conv.parameters(), 'lr': 5e-5},
+                {'params': model.conv_exp.parameters(), 'lr': 1e-4},
+                ]
+
+        '''opts = [{'params': model.classifier.parameters()},
+                {'params': model.conv_exp.parameters()}
+                ]'''
+
+        if True:
+            utils_imsitu.set_trainable(model.w_emb, True)
+            opts.append({'params': model.w_emb.parameters()})
+        if True:
+            utils_imsitu.set_trainable(model.q_emb, True)
+            opts.append({'params': model.q_emb.parameters(), 'lr': 5e-4})
+
+        optimizer = torch.optim.Adamax(opts, lr=1e-3)
 
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
