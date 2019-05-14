@@ -382,12 +382,12 @@ def main():
         utils_imsitu.set_trainable(model.role_module, False)
         #flt img param
 
-        opts = [{'params': model.classifier.parameters(), 'lr': 1e-4},
+        opts = [{'params': model.classifier.parameters()},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
                 {'params': model.conv.parameters(), 'lr': 5e-5},
-                {'params': model.conv_exp.parameters(), 'lr': 1e-4},
+                {'params': model.conv_exp.parameters()},
                 ]
 
         '''opts = [{'params': model.classifier.parameters()},
