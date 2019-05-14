@@ -369,7 +369,7 @@ def main():
 
     if args.use_pretrained_additionallayer_model:
         print('Use pretrained from: {}'.format(args.pretrained_buatt_model))
-        if len(args.pretrained_buatt_model) == 0:
+        if len(args.resume_model) == 0:
             raise Exception('[pretrained buatt module] not specified')
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
