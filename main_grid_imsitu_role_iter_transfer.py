@@ -326,6 +326,20 @@ def main():
 
         utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], [ 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
+
+        utils_imsitu.set_trainable(model, True)
+        #utils_imsitu.set_trainable(model.classifier, True)
+        #utils_imsitu.set_trainable(model.w_emb, True)
+        #utils_imsitu.set_trainable(model.q_emb, True)
+        optimizer = torch.optim.Adamax([
+            {'params': model.classifier.parameters()},
+            {'params': model.w_emb.parameters()},
+            {'params': model.q_emb.parameters(), 'lr': 5e-4},
+            {'params': model.v_att.parameters(), 'lr': 5e-5},
+            {'params': model.q_net.parameters(), 'lr': 5e-5},
+            {'params': model.v_net.parameters(), 'lr': 5e-5},
+        ], lr=1e-3)
+
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
         args.train_all = True
@@ -337,19 +351,13 @@ def main():
     else:
         print('Training from the scratch.')
         model_name = 'train_full'
+        utils_imsitu.set_trainable(model, True)
+        #utils_imsitu.set_trainable(model.classifier, True)
+        #utils_imsitu.set_trainable(model.w_emb, True)
+        #utils_imsitu.set_trainable(model.q_emb, True)
+        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
 
-    utils_imsitu.set_trainable(model, True)
-    #utils_imsitu.set_trainable(model.classifier, True)
-    #utils_imsitu.set_trainable(model.w_emb, True)
-    #utils_imsitu.set_trainable(model.q_emb, True)
-    optimizer = torch.optim.Adamax([
-        {'params': model.classifier.parameters()},
-        {'params': model.w_emb.parameters()},
-        {'params': model.q_emb.parameters(), 'lr': 5e-4},
-        {'params': model.v_att.parameters(), 'lr': 5e-5},
-        {'params': model.q_net.parameters(), 'lr': 5e-5},
-        {'params': model.v_net.parameters(), 'lr': 5e-5},
-    ], lr=1e-3)
+
 
     #utils_imsitu.set_trainable(model, True)
     #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
