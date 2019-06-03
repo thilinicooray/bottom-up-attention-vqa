@@ -335,9 +335,9 @@ def main():
             {'params': model.classifier.parameters()},
             {'params': model.w_emb.parameters(), 'lr': 1e-4},
             {'params': model.q_emb.parameters(), 'lr': 1e-4},
-            {'params': model.v_att.parameters(), 'lr': 5e-5},
-            {'params': model.q_net.parameters(), 'lr': 5e-5},
-            {'params': model.v_net.parameters(), 'lr': 5e-5},
+            {'params': model.v_att.parameters(), 'lr': 1e-4},
+            {'params': model.q_net.parameters(), 'lr': 1e-4},
+            {'params': model.v_net.parameters(), 'lr': 1e-4},
         ], lr=1e-3)
 
     elif args.resume_training:
