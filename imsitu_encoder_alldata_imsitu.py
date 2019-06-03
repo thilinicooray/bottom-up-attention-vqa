@@ -549,8 +549,8 @@ class imsitu_encoder():
             role_dict = {}
             for j in range(len(current_role_list)):
                 label = self.label_list[current_labels[j]]
-                #remember to add 'UNK' as a key to labelid2nlword
-                label_name = self.all_words[self.labelid2nlword[label]] if label in self.labelid2nlword else label
+                #remember to add 'UNK' as a key to labelid2nlword and all labels must be inside the dict
+                label_name = self.all_words[self.labelid2nlword[label]]
                 role_dict[current_role_list[j].upper()] = label_name
 
             for i in range(len(current_role_list)):
@@ -562,12 +562,14 @@ class imsitu_encoder():
                 all_tot = []
 
                 for word in split_temp:
+                    if word == 'agentparts':
+                        print('HERERRERERERRE  ', template)
                     final_word = self.all_words[word] if word in self.all_words else word
                     all_tot.append(final_word)
 
                 updated_template = ' '.join(all_tot)
 
-                print('template :', template, updated_template)
+                #print('template :', template, updated_template)
 
                 length = len(updated_template.split())
                 if length > max_len:
