@@ -310,10 +310,10 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
             #frame_idx = np.random.randint(3, size=1)
             #label_idx = labels[:,frame_idx,:].squeeze()
 
-            verb_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
             if torch.cuda.is_available():
-                q = verb_q_idx.to(torch.device('cuda'))
+                q = role_q_idx.to(torch.device('cuda'))
 
         loss = None
         if self.training:
