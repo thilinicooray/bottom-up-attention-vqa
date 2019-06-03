@@ -549,7 +549,7 @@ class imsitu_encoder():
             role_dict = {}
             for j in range(len(current_role_list)):
                 label = self.label_list[current_labels[j]]
-                label_name = self.all_words[label] if label in self.all_words else label
+                label_name = self.all_words[self.labelid2nlword[label]] if label in self.labelid2nlword else label
                 role_dict[current_role_list[j].upper()] = label_name
 
             for i in range(len(current_role_list)):
