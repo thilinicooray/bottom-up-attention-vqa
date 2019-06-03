@@ -562,7 +562,7 @@ class imsitu_encoder():
                 all_tot = []
 
                 for word in split_temp:
-                    final_word = self.all_words[word] if word in self.labelid2nlword else word
+                    final_word = self.all_words[word] if word in self.all_words else word
                     all_tot.append(final_word)
 
                 updated_template = ' '.join(all_tot)
