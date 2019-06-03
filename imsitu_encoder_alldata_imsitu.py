@@ -556,12 +556,21 @@ class imsitu_encoder():
                 org_template = role_q_templates[current_role_list[i]]
                 template = org_template.format(**role_dict)
 
-                #print('template :', template)
+                #transform all according to correct word forms
+                split_temp = template.split()
+                all_tot = []
 
-                length = len(template.split())
+                for word in split_temp:
+                    all_tot.append(self.all_words[word])
+
+                updated_template = ' '.join(all_tot)
+
+                print('template :', template, updated_template)
+
+                length = len(updated_template.split())
                 if length > max_len:
                     max_len = length
-                current_verb_qs.append(template)
+                current_verb_qs.append(updated_template)
             all_qs.append(current_verb_qs)
 
         all_new_list = []
