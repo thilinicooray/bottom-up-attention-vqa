@@ -324,7 +324,7 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['classifier'])
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
