@@ -333,8 +333,8 @@ def main():
         #utils_imsitu.set_trainable(model.q_emb, True)
         optimizer = torch.optim.Adamax([
             {'params': model.classifier.parameters()},
-            {'params': model.w_emb.parameters()},
-            {'params': model.q_emb.parameters(), 'lr': 5e-4},
+            {'params': model.w_emb.parameters(), 'lr': 1e-4},
+            {'params': model.q_emb.parameters(), 'lr': 1e-4},
             {'params': model.v_att.parameters(), 'lr': 5e-5},
             {'params': model.q_net.parameters(), 'lr': 5e-5},
             {'params': model.v_net.parameters(), 'lr': 5e-5},

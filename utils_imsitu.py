@@ -619,6 +619,10 @@ def load_net_ban(fname, net_list, prefix_list = None, remove_list = None):
                     if v.size() == param.size():
                         v.copy_(param)
                         #print('[Copied]: {}'.format(k))
+                    #copy only vqa words to here, the rest are imsitu words
+                    elif k == 'module.w_emb.emb.weight':
+                        v[:19901].copy_(param)
+                        print('successfully copied word emb')
                     else:
                         print('size differences :', v.size(), param.size())
                         print('[Size Missed]: {}'.format(k))
