@@ -419,8 +419,8 @@ class imsitu_encoder():
         role_padding_count = self.max_role_count - len(roles)
 
         for i in range(role_padding_count):
-            pad = torch.zeros(self.get_num_labels() + 1)
-            pad[-1] = 1.0
+            pad = torch.zeros(self.get_num_labels())
+            pad[self.label_list.index("")] = 1.0
             all_role_list.append(pad)
 
         scores = torch.stack(all_role_list,0)
@@ -429,7 +429,7 @@ class imsitu_encoder():
         return scores
 
     def get_label_score_values(self, counts):
-        current_role_scorevec = torch.zeros(self.get_num_labels() + 1)
+        current_role_scorevec = torch.zeros(self.get_num_labels())
 
         for k, v in counts.items():
             score = 0
