@@ -497,7 +497,6 @@ class BaseModelGrid_Imsitu_RoleIter_IndiLoss(nn.Module):
             logits = self.classifier(joint_repr)
 
             if self.training:
-                print('size match :', logits.size(), labels.size())
                 losses.append(self.calculate_loss(logits, labels))
 
             role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
