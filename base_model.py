@@ -479,6 +479,7 @@ class BaseModelGrid_Imsitu_RoleIter_IndiLoss(nn.Module):
             img = img.transpose(0,1)
             img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
             q = q.view(batch_size* self.encoder.max_role_count, -1)
+            labels = labels.view(batch_size* self.encoder.max_role_count, -1)
 
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -1816,7 +1817,7 @@ def build_baseline0grid_imsitu_roleiter_indiloss(dataset, num_hid, num_ans_class
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        num_hid, 2 * num_hid, num_ans_classes + 1, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_IndiLoss(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu4verb(dataset, num_hid, num_ans_classes, encoder, num_iter):
