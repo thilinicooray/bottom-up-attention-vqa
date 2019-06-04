@@ -180,7 +180,7 @@ class imsitu_encoder():
 
         #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
         #assuming labels are also in order of roles in encoder
-        return verb, role_nl_qs, labels
+        return verb, role_nl_qs, labels, label_scores
 
     def encode_with_rolenames(self, item):
         verb = self.verb_list.index(item['verb'])
@@ -411,8 +411,6 @@ class imsitu_encoder():
                     label_counts[label_id] = 1
 
             current_role_scorevec = self.get_label_score_values(label_counts)
-            curid, count = next(iter(label_counts.items()))
-            print('test scores', label_counts, curid, current_role_scorevec[curid])
             all_role_list.append(current_role_scorevec)
 
         role_padding_count = self.max_role_count - len(roles)
