@@ -175,8 +175,8 @@ class imsitu_encoder():
     def encode_roleonly_indiloss(self, item):
         verb = self.verb_list.index(item['verb'])
         role_nl_qs = self.get_role_nl_questions(item['verb'])
-        labels = self.get_label_ids(item['frames'])
-        label_scores = self.get_label_scores(item['frames']) #zero vector of size vocab, filled with score for correct nouns
+        labels = self.get_label_ids(item['verb'], item['frames'])
+        label_scores = self.get_label_scores(item['verb'], item['frames']) #zero vector of size vocab, filled with score for correct nouns
 
         #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
         #assuming labels are also in order of roles in encoder
@@ -371,11 +371,14 @@ class imsitu_encoder():
 
         return questions
 
-    def get_label_ids(self, frames):
+    def get_label_ids(self, verb, frames):
         all_frame_id_list = []
+        roles = self.verb2_role_dict[verb]
         for frame in frames:
             label_id_list = []
-            for role,label in frame.items():
+
+            for role in roles:
+                label = frame[role]
                 #use UNK when unseen labels come
                 if label in self.label_list:
                     label_id = self.label_list.index(label)
@@ -395,9 +398,9 @@ class imsitu_encoder():
 
         return labels
 
-    def get_label_scores(self, frames):
+    def get_label_scores(self, verb, frames):
         all_role_list = []
-        roles = frames[0].keys()
+        roles = self.verb2_role_dict[verb]
 
         for role in roles:
             label_counts = {}
