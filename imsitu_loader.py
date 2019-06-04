@@ -268,6 +268,68 @@ class imsitu_loader_roleq_buatt(data.Dataset):
     def __len__(self):
         return len(self.annotations)
 
+class imsitu_loader_buatt_roleonly_indiloss(data.Dataset):
+    def __init__(self, img_dir, annotation_file, encoder, dictionary, name, transform=None, dataroot='data'):
+        self.img_dir = img_dir
+        self.annotations = annotation_file
+        self.ids = list(self.annotations.keys())
+        self.encoder = encoder
+        self.dictionary = dictionary
+        self.transform = transform
+
+        self.img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'imsitu_%s_imgid2idx_prev.pkl' % name), 'rb'))
+        print('loading features from h5 file')
+        h5_path = os.path.join(dataroot, 'imsitu_%s_prev.hdf5' % name)
+        with h5py.File(h5_path, 'r') as hf:
+            self.features = np.array(hf.get('image_features'))
+
+        self.features = torch.from_numpy(self.features)
+
+
+
+    def tokenize(self, questions, max_length=5):
+        rquestion_tokens = []
+        """Tokenizes the questions.
+
+        This will add q_token in each entry of the dataset.
+        -1 represent nil, and should be treated as padding_idx in embedding
+        """
+        for entry in questions:
+            tokens = self.dictionary.tokenize(entry, False)
+            tokens = tokens[:max_length]
+            if len(tokens) < max_length:
+                # Note here we pad in front of the sentence
+                padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
+                tokens = tokens + padding
+            utils.assert_eq(len(tokens), max_length)
+            rquestion_tokens.append(torch.tensor(tokens))
+
+        role_padding_count = self.encoder.max_role_count - len(rquestion_tokens)
+
+        #todo : how to handle below sequence making for non roles properly?
+        for i in range(role_padding_count):
+            padding = [self.dictionary.padding_idx] * (max_length)
+            rquestion_tokens.append(torch.tensor(padding))
+
+        return torch.stack(rquestion_tokens,0)
+
+    def __getitem__(self, index):
+        _id = self.ids[index]
+        ann = self.annotations[_id]
+        img = self.features[self.img_id2idx[_id]]
+        '''img = Image.open(os.path.join(self.img_dir, _id)).convert('RGB')
+        #transform must be None in order to give it as a tensor
+        if self.transform is not None: img = self.transform(img)'''
+
+        verb, nl_qs, labels, label_scores = self.encoder.encode_roleonly_indiloss(ann)
+        questions = self.tokenize(nl_qs)
+
+        return _id, img, verb, questions, labels, label_scores
+
+    def __len__(self):
+        return len(self.annotations)
+
 class imsitu_loader_roleq_buatt_agent(data.Dataset):
     def __init__(self, img_dir, annotation_file, encoder, dictionary, name, transform=None, dataroot='data'):
         self.img_dir = img_dir

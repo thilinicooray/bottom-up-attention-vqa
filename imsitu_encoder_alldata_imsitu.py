@@ -172,6 +172,16 @@ class imsitu_encoder():
         #assuming labels are also in order of roles in encoder
         return verb, role_nl_qs, labels
 
+    def encode_roleonly_indiloss(self, item):
+        verb = self.verb_list.index(item['verb'])
+        role_nl_qs = self.get_role_nl_questions(item['verb'])
+        labels = self.get_label_ids(item['frames'])
+        label_scores = self.get_label_scores(item['frames']) #zero vector of size vocab, filled with score for correct nouns
+
+        #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
+        #assuming labels are also in order of roles in encoder
+        return verb, role_nl_qs, labels
+
     def encode_with_rolenames(self, item):
         verb = self.verb_list.index(item['verb'])
         role_names = self.get_role_names(item['verb'])
@@ -384,6 +394,54 @@ class imsitu_encoder():
         labels = torch.stack(all_frame_id_list,0)
 
         return labels
+
+    def get_label_scores(self, frames):
+        all_role_list = []
+        roles = frames[0].keys()
+
+        for role in roles:
+            label_counts = {}
+            for frame in frames:
+                label = frame[role]
+                label_id = self.label_list.index(label)
+
+                if label_id in label_counts:
+                    label_counts[label_id] += 1
+                else:
+                    label_counts[label_id] = 1
+
+            current_role_scorevec = self.get_label_score_values(label_counts)
+            curid, count = next(iter(label_counts.items()))
+            print('test scores', label_counts, curid, current_role_scorevec[curid])
+            all_role_list.append(current_role_scorevec)
+
+        role_padding_count = self.max_role_count - len(roles)
+
+        for i in range(role_padding_count):
+            pad = torch.zeros(self.get_num_labels() + 1)
+            pad[-1] = 1.0
+            all_role_list.append(pad)
+
+        scores = torch.stack(all_role_list,0)
+
+
+        return scores
+
+    def get_label_score_values(self, counts):
+        current_role_scorevec = torch.zeros(self.get_num_labels() + 1)
+
+        for k, v in counts.items():
+            score = 0
+            if v == 1:
+                score = 0.3
+            elif v == 2:
+                score = 0.6
+            else:
+                score = 1.0
+
+            current_role_scorevec[k] = score
+
+        return current_role_scorevec
 
     def get_adj_matrix(self, verb_ids):
         adj_matrix_list = []
