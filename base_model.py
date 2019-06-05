@@ -524,7 +524,7 @@ class BaseModelGrid_Imsitu_RoleIter_IndiLoss(nn.Module):
 
         loss = nn.BCEWithLogitsLoss()
         final_loss = loss(role_label_pred, gt_labels)
-        return final_loss*gt_labels.size(1)
+        return final_loss
 
 class BaseModelGrid_Imsitu_Role4VerbNew(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):

@@ -266,6 +266,7 @@ def main():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_iter', type=int, default=1)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
+    parser.add_argument('--weight_decay', type=float, default=0, help='random seed')
 
     #todo: train role module separately with gt verbs
 
@@ -275,6 +276,7 @@ def main():
     n_epoch = args.epochs
     batch_size = args.batch_size
     n_worker = 3
+    decay = args.weight_decay
 
     #dataset_folder = 'imSitu'
     #imgset_folder = 'resized_256'
@@ -343,7 +345,7 @@ def main():
             {'params': model.v_att.parameters(), 'lr': 1e-4},
             {'params': model.q_net.parameters(), 'lr': 1e-4},
             {'params': model.v_net.parameters(), 'lr': 1e-4},
-        ], lr=1e-3)
+        ], lr=1e-3, weight_decay=decay)
 
     elif args.resume_training:
         print('Resume training from: {}'.format(args.resume_model))
@@ -360,7 +362,7 @@ def main():
         #utils_imsitu.set_trainable(model.classifier, True)
         #utils_imsitu.set_trainable(model.w_emb, True)
         #utils_imsitu.set_trainable(model.q_emb, True)
-        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3, weight_decay=decay)
 
 
 
