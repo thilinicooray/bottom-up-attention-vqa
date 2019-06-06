@@ -617,8 +617,8 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
                 beam_role_idx = max_label_idx
                 beam_role_value = max_val
             else:
-                beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx), -1)
-                beam_role_value = torch.cat((beam_role_value.clone(), max_val), -1)
+                beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx.unsqueeze(-1)), -1)
+                beam_role_value = torch.cat((beam_role_value.clone(), max_val.unsqueeze(-1)), -1)
 
         print('after all combo ', beam_role_idx.size(), beam_role_value.size())
 
