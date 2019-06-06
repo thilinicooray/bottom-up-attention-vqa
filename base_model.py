@@ -560,7 +560,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
             label_idx = torch.max(role_label_pred,-1)[1]
 
-
+            print('prev label to q maker', label_idx.size())
             role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
             if torch.cuda.is_available():
