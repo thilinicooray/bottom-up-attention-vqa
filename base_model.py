@@ -583,7 +583,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         for k in range(0, combo_size):
             current_label_idx = all_role_combinations[:,k,:]
-            print('current size to make q :', current_label_idx.size())
+            #print('current size to make q :', current_label_idx.size())
 
             role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, current_label_idx)
 
