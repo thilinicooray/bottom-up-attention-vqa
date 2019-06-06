@@ -560,7 +560,6 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
             label_idx = torch.max(role_label_pred,-1)[1]
 
-            print('prev label to q maker', label_idx.size())
             role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
             if torch.cuda.is_available():
@@ -568,7 +567,6 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         # start beam
         sorted_idx = torch.sort(role_label_pred, -1, True)[1]
-        print('sorted ', sorted_idx.size())
         sorted_role_labels = sorted_idx[:,:, :self.beam_size]
         # now need to create batchsize x (beam x beam) x 6 x 1 tensor with all combinations of labels starting from
         # top 1 of all roles ending with top beam of all roles
@@ -576,7 +574,6 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         all_role_combinations = self.get_role_combinations(sorted_role_labels)
 
         combo_size = all_role_combinations.size(1)
-        print('tot combinations :', all_role_combinations.size(), combo_size)
 
         beam_role_idx = None
         beam_role_value = None
@@ -620,26 +617,20 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
                 beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx.unsqueeze(-1)), -1)
                 beam_role_value = torch.cat((beam_role_value.clone(), max_val.unsqueeze(-1)), -1)
 
-        print('after all combo ', beam_role_idx.size(), beam_role_value.size())
 
         best_noun_probs_idx = torch.max(beam_role_value,-1)[1]
-        print('idx best ', best_noun_probs_idx.size())
 
         #linearize all dimentions
         noun_idx = best_noun_probs_idx.view(-1)
         role_idx_lin = beam_role_idx.view(-1, beam_role_idx.size(-1))
-        print('linear sizes ', noun_idx.size(), role_idx_lin.size())
 
         selected_noun_labels = role_idx_lin.gather(1, noun_idx.unsqueeze(1))
-        print('selected :', selected_noun_labels.size())
 
         best_predictions = selected_noun_labels.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
-        print('output final size ', best_predictions.size())
 
         return best_predictions
 
     def get_role_combinations(self, sorted_role_labels):
-        print('input size to make combinations :', sorted_role_labels.size())
 
         final_combo = None
         role = self.encoder.max_role_count
