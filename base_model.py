@@ -631,6 +631,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         print('linear sizes ', noun_idx.size(), role_idx_lin.size())
 
         selected_noun_labels = torch.index_select(role_idx_lin, -1, noun_idx)
+        print('selected :', selected_noun_labels.size())
 
         best_predictions = selected_noun_labels.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         print('output final size ', best_predictions.size())
