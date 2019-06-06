@@ -576,7 +576,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         all_role_combinations = self.get_role_combinations(sorted_role_labels)
 
         combo_size = all_role_combinations.size(1)
-        print('tot combinations :', all_role_combinations.size(), combo_size.size())
+        print('tot combinations :', all_role_combinations.size(), combo_size)
 
         beam_role_idx = None
         beam_role_value = None
