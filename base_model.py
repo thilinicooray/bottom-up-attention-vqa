@@ -448,6 +448,257 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
+class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size):
+        super(BaseModelGrid_Imsitu_RoleIter_Beam, self).__init__()
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att = v_att
+        self.q_net = q_net
+        self.v_net = v_net
+        self.classifier = classifier
+        self.encoder = encoder
+        self.num_iter = num_iter
+        self.beam_size = beam_size
+
+    def forward(self, v, q, labels, gt_verb):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        for i in range(self.num_iter):
+
+            img = v
+
+            img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+            q = q.view(batch_size* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = joint_repr + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            if self.training:
+                losses.append(self.calculate_loss(gt_verb, role_label_pred, labels))
+
+            #label_idx = torch.max(role_label_pred,-1)[1]
+            #do training with GT LABELS
+            frame_idx = np.random.randint(3, size=1)
+            label_idx = labels[:,frame_idx,:].squeeze()
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+        loss = None
+        if self.training:
+            loss_all = torch.stack(losses,0)
+            loss = torch.sum(loss_all, 0)/self.num_iter
+
+
+        return role_label_pred, loss
+
+    def forward_eval(self, v, q, gt_verb):
+        '''
+        rotate normally until num iter -1
+        then come out of loop, take out of num iter -1
+        get top k (beam) predictions of all roles
+        make k x k combinations of label index, get their respective questions
+        do same processing and get logits.
+
+        for each role, for each q, get max logit and noun label. see which q gave the best logit.
+        record that. select best nouns, only send those to scoring.
+
+        '''
+        prev_rep = None
+        for i in range(self.num_iter - 1):
+
+            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = joint_repr + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+        # start beam
+        sorted_idx = torch.sort(role_label_pred, -1, True)[1]
+        print('sorted ', sorted_idx.size())
+        sorted_role_labels = sorted_idx[:,:, :self.beam_size]
+        # now need to create batchsize x (beam x beam) x 6 x 1 tensor with all combinations of labels starting from
+        # top 1 of all roles ending with top beam of all roles
+
+        all_role_combinations = self.get_role_combinations(sorted_role_labels)
+
+        combo_size = all_role_combinations.size(1)
+        print('tot combinations :', all_role_combinations.size(), combo_size.size())
+
+        beam_role_idx = None
+        beam_role_value = None
+
+        for k in range(0, combo_size):
+            current_label_idx = all_role_combinations[:,k, :, :]
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, current_label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            joint_repr = joint_repr + prev_rep
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            max_val, max_label_idx = torch.max(role_label_pred,-1)
+
+            if k == 0:
+                beam_role_idx = max_label_idx
+                beam_role_value = max_val
+            else:
+                beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx), -1)
+                beam_role_value = torch.cat((beam_role_value.clone(), max_val), -1)
+
+        print('after all combo ', beam_role_idx.size(), beam_role_value.size())
+
+        best_noun_probs_idx = torch.max(beam_role_value,-1)[1]
+        print('idx best ', best_noun_probs_idx.size())
+
+        #linearize all dimentions
+        noun_idx = best_noun_probs_idx.view(-1)
+        role_idx_lin = beam_role_idx.view(-1, beam_role_idx.size(-1))
+        print('linear sizes ', noun_idx.size(), role_idx_lin.size())
+
+        selected_noun_labels = torch.index_select(role_idx_lin, -1, noun_idx)
+
+        best_predictions = selected_noun_labels.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        print('output final size ', best_predictions.size())
+
+        return best_predictions
+
+    def get_role_combinations(self, sorted_role_labels):
+        print('input size to make combinations :', sorted_role_labels.size())
+
+        final_combo = None
+        role = self.encoder.max_role_count
+        value = self.beam_size
+        tot = value ** role
+
+        for i in range(role):
+            role_num = i+1
+            exp = value**(role-role_num)
+            repeat = tot//(exp*value)
+
+            current = sorted_role_labels
+            new_current = current
+            if exp != 1:
+                new_current = new_current.unsqueeze(-1)
+                new_current = new_current.expand(new_current.size(0),-1, exp)
+                new_current = new_current.contiguous().view(new_current.size(0),-1)
+
+            if repeat != 1:
+                new_current = new_current.unsqueeze(1)
+                new_current = new_current.expand(new_current.size(0),repeat, -1)
+                new_current = new_current.contiguous().view(new_current.size(0),-1)
+
+            if i == 0:
+                final_combo = new_current.unsqueeze(-1)
+            else:
+                final_combo = torch.cat((final_combo.clone(), new_current.unsqueeze(-1)), -1)
+
+        return final_combo
+
+
+    def forward_noq(self, v, verb):
+        q = self.encoder.get_role_q_by_verb(verb)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        role_label_pred, _ = self.forward_eval(v, q, None, verb)
+
+        return role_label_pred
+
+    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
+
+        batch_size = role_label_pred.size()[0]
+
+        loss = 0
+        for i in range(batch_size):
+            for index in range(gt_labels.size()[1]):
+                frame_loss = 0
+                #verb_loss = utils.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
+                for j in range(0, self.encoder.max_role_count):
+                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
+                frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
+                #print('frame loss', frame_loss, 'verb loss', verb_loss)
+                loss += frame_loss
+
+
+        final_loss = loss/batch_size
+        #print('loss :', final_loss)
+        return final_loss
+
 class BaseModelGrid_Imsitu_RoleIter_IndiLoss(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_IndiLoss, self).__init__()
@@ -1807,6 +2058,17 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+
+def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size):
+    print('words count :', dataset.dictionary.ntoken)
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+    return BaseModelGrid_Imsitu_RoleIter_Beam(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size)
 
 def build_baseline0grid_imsitu_roleiter_indiloss(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)

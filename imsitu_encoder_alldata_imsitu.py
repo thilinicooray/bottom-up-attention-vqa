@@ -56,7 +56,7 @@ class imsitu_encoder():
             roles = values['roles']
             verb_name = self.all_words[verb]
 
-            has_agent = False
+            '''has_agent = False
             agent_role = None
             if 'agent' in roles.keys():
                 agent_role = 'agent'
@@ -66,12 +66,12 @@ class imsitu_encoder():
                     if role1 in self.agent_roles[1:]:
                         agent_role = role1
                         has_agent = True
-                        break
+                        break'''
 
             for role, info in roles.items():
                 #question = info['question']
 
-                if has_agent and role == agent_role:
+                if role in self.agent_roles:
                     question = 'who is the ' + self.all_words[role] + ' ' + verb_name
                 elif role == 'place':
                     question = 'where is the ' + self.all_words[role] + ' ' + verb_name
