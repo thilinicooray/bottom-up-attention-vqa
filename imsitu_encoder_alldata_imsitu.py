@@ -390,7 +390,7 @@ class imsitu_encoder():
             role_padding_count = self.max_role_count - len(label_id_list)
 
             for i in range(role_padding_count):
-                label_id_list.append(self.get_num_labels())
+                label_id_list.append(self.label_list.index(""))
 
             all_frame_id_list.append(torch.tensor(label_id_list))
 
