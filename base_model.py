@@ -649,7 +649,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
             exp = value**(role-role_num)
             repeat = tot//(exp*value)
 
-            current = sorted_role_labels
+            current = sorted_role_labels[:,i]
             new_current = current
             if exp != 1:
                 new_current = new_current.unsqueeze(-1)
