@@ -1595,7 +1595,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         att_ctx = self.v_att_ctx(v_verb, ctx_combined)
         v_emb_ctx = (att_ctx * v_verb).sum(1)
         v_repr_ctx = self.v_net_ctx(v_emb_ctx)
-        q_repr_ctx = self.dropout(self.q_net_ctx(ctx_combined))
+        q_repr_ctx = self.q_net_ctx(ctx_combined)
 
 
         label_idx = torch.max(role_pred,-1)[1]
