@@ -973,8 +973,9 @@ class BaseModelGrid_Imsitu_Role4VerbNew(nn.Module):
             q = q.to(torch.device('cuda'))
 
         role_label_rep = self.forward_reponly(v, q)
+        role_label = self.forward(v, q)
 
-        return role_label_rep
+        return role_label_rep, role_label
 
 class BaseModelGrid_Imsitu_SingleRole(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_ans_classes):
@@ -1581,14 +1582,12 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         #iter 0 with general q
 
         batch_size = v_verb.size(0)
-        role_pred = self.role_module.forward_noq_reponly(v_role)
-        combined_ctx = torch.sum(role_pred, 1)
+        role_pred_rep, role_pred = self.role_module.forward_noq_reponly(v_role)
+        combined_ctx = torch.sum(role_pred_rep, 1)
 
-        q = self.encoder.get_generalq()
-        if torch.cuda.is_available():
-            q = q.to(torch.device('cuda'))
+        label_idx = torch.max(role_pred,-1)[1]
 
-        q = q.expand(batch_size, q.size(0))
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
 
@@ -1599,7 +1598,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         v_emb = (att * v_verb).sum(1) # [batch, v_dim]
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
-        joint_repr_prev = q_repr * v_repr * combined_ctx
+        joint_repr_prev = q_repr * combined_ctx * v_repr
         logits = self.classifier(joint_repr_prev)
 
         loss1 = self.calculate_loss(logits, gt_verbs)
