@@ -1812,7 +1812,6 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train_Beam(nn.Module):
 
         batch_size = v_verb.size(0)
         role_pred = self.role_module.forward_noq(v_role)
-        label_idx = torch.max(role_pred,-1)[1]
 
         #get a beam
 
@@ -1866,10 +1865,10 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train_Beam(nn.Module):
         joint_repr_prev = q_repr * v_repr
         logits = self.classifier(joint_repr_prev)
 
-        return logits
+        return logits, None
 
     def get_role_combinations(self, sorted_role_labels):
-
+        print('input to verb beam ', sorted_role_labels.size())
         final_combo = None
         role = self.encoder.max_role_count
         value = self.beam_size
