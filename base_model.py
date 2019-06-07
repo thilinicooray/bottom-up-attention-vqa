@@ -1822,7 +1822,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train_Beam(nn.Module):
         # top 1 of all roles ending with top beam of all roles
 
         all_role_combinations_tot = self.get_role_combinations(sorted_role_labels)
-        all_role_combinations = all_role_combinations_tot[:, :self.upperlimit, :]
+        all_role_combinations = all_role_combinations_tot
 
 
         #get the noun weights of last layer of classifier
