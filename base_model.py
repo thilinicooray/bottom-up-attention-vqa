@@ -1826,7 +1826,8 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train_Beam(nn.Module):
 
 
         #get the noun weights of last layer of classifier
-        noun_weights = self.classifier.main[-1].weight
+        noun_weights = self.role_module.classifier.main[-1].weight
+        print('noun type :', type(noun_weights))
 
         #further linearize combo to (batch x combo x 6), 1
         combo_1dim = all_role_combinations.contiguous().view(-1)
