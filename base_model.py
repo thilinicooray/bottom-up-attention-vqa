@@ -709,7 +709,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         dot_prod_all = tot_each_combo * img_match_combo
         print('dot_prod_all',dot_prod_all.size())
 
-        cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+        cos = nn.CosineSimilarity(dim=-1, eps=1e-6)
         cos_out = cos(tot_each_combo, img_match_combo)
         print('cos_out',cos_out.size())
 
