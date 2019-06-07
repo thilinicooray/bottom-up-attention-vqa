@@ -449,7 +449,7 @@ class BaseModelGrid_Imsitu_RoleIter(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size, upperlimit):
         super(BaseModelGrid_Imsitu_RoleIter_Beam, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
@@ -460,6 +460,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
         self.beam_size = beam_size
+        self.upperlimit = upperlimit
 
     def forward(self, v, q, labels, gt_verb):
         """Forward
@@ -683,7 +684,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         # top 1 of all roles ending with top beam of all roles
 
         all_role_combinations_tot = self.get_role_combinations(sorted_role_labels)
-        all_role_combinations = all_role_combinations_tot[:, :100, :]
+        all_role_combinations = all_role_combinations_tot[:, :self.upperlimit, :]
 
 
         combo_size = all_role_combinations.size(1)
@@ -2164,7 +2165,7 @@ def build_baseline0grid_imsitu_roleiter(dataset, num_hid, num_ans_classes, encod
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
-def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size):
+def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
@@ -2173,7 +2174,8 @@ def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, 
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter_Beam(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size)
+    return BaseModelGrid_Imsitu_RoleIter_Beam(w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter,
+                                              beam_size, upperlimit)
 
 def build_baseline0grid_imsitu_roleiter_indiloss(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)

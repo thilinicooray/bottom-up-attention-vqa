@@ -259,6 +259,7 @@ def main():
     parser.add_argument('--num_iter', type=int, default=1)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--beam_size', type=int, default=1, help='beam size')
+    parser.add_argument('--upperlimit', type=int, default=1, help='upper limit')
 
     #todo: train role module separately with gt verbs
 
@@ -289,7 +290,7 @@ def main():
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter,
-                                             args.beam_size)
+                                             args.beam_size. args.upperlimit)
 
     model.w_emb.init_embedding(w_emb_path)
 
