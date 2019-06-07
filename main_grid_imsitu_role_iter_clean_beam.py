@@ -347,6 +347,7 @@ def main():
         utils_imsitu.load_net(args.resume_model, [model])
         optimizer_select = 0
         model_name = 'resume_all'
+        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
     else:
         print('Training from the scratch.')
         model_name = 'train_full'
