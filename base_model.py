@@ -695,6 +695,15 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         selected_embeddings = torch.index_select(noun_weights, 0, combo_1dim)
         print('selected comba embd',selected_embeddings.size() )
 
+        rearrage_embed = selected_embeddings.view(all_role_combinations.size(0), all_role_combinations.size(1),all_role_combinations.size(2), -1)
+        print('rearrage_embed',rearrage_embed.size())
+
+        tot_each_combo = torch.sum(rearrage_embed, 2)
+        print('tot_each_combo',tot_each_combo.size())
+        img_tot = torch.sum(v, 1)
+        print('img_tot',img_tot.size())
+        
+
         beam_role_idx = None
         beam_role_value = None
 
