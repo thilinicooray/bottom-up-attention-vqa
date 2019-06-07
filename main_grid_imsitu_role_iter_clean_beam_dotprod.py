@@ -290,7 +290,7 @@ def main():
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter,
-                                             args.beam_size. args.upperlimit)
+                                             args.beam_size, args.upperlimit)
 
     model.w_emb.init_embedding(w_emb_path)
 
