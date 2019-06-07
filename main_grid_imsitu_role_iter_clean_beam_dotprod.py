@@ -215,8 +215,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 questions = torch.autograd.Variable(questions)
                 labels = torch.autograd.Variable(labels)
 
-            #role_predict = model.forward_eval_dotproduct(img, questions, verb)
-            role_predict, loss1 = model(img, questions, labels, verb)
+            role_predict = model.forward_eval_dotproduct(img, questions, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             top1.add_point_noun_log(img_id, verb, role_predict, labels)
