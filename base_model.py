@@ -1576,6 +1576,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         self.encoder = encoder
         self.role_module = role_module
         self.num_iter = num_iter
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, img_id, v_verb, v_role, gt_verbs, labels):
         """Forward
@@ -1594,7 +1595,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         att_ctx = self.v_att_ctx(v_verb, ctx_combined)
         v_emb_ctx = (att_ctx * v_verb).sum(1)
         v_repr_ctx = self.v_net_ctx(v_emb_ctx)
-        q_repr_ctx = self.q_net_ctx(ctx_combined)
+        q_repr_ctx = self.dropout(self.q_net_ctx(ctx_combined))
 
 
         label_idx = torch.max(role_pred,-1)[1]
@@ -1612,7 +1613,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         v_repr = self.v_net(v_emb)
         joint_repr_prev = q_repr * v_repr
         joint_repr_ctx = q_repr_ctx * v_repr_ctx
-        joint_repr_tot = self.transform(torch.cat([joint_repr_prev, joint_repr_ctx], -1))
+        joint_repr_tot = self.dropout(self.transform(torch.cat([joint_repr_prev, joint_repr_ctx], -1)))
         logits = self.classifier(joint_repr_tot)
 
         loss1 = self.calculate_loss(logits, gt_verbs)
