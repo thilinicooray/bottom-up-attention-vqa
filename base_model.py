@@ -706,16 +706,16 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         img_match_combo = img_tot.expand(img_tot.size(0),all_role_combinations.size(1), img_tot.size(-1))
         print('img_match_combo',img_match_combo.size())
 
-        dot_prod_all = tot_each_combo * img_match_combo
-        print('dot_prod_all',dot_prod_all.size())
+        '''dot_prod_all = tot_each_combo * img_match_combo
+        print('dot_prod_all',dot_prod_all.size())'''
 
         cos = nn.CosineSimilarity(dim=-1, eps=1e-6)
         cos_out = cos(tot_each_combo, img_match_combo)
         print('cos_out',cos_out.size())
 
 
-        max_prod = torch.max(dot_prod_all,-2)[1]
-        print('max_prod',max_prod.size())
+        '''max_prod = torch.max(dot_prod_all,-2)[1]
+        print('max_prod',max_prod.size())'''
 
 
 
