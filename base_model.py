@@ -691,32 +691,23 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         #further linearize combo to (batch x combo x 6), 1
         combo_1dim = all_role_combinations.contiguous().view(-1)
-        print('linear comba ',combo_1dim.size() )
         selected_embeddings = torch.index_select(noun_weights, 0, combo_1dim)
-        print('selected comba embd',selected_embeddings.size() )
 
         rearrage_embed = selected_embeddings.view(all_role_combinations.size(0), all_role_combinations.size(1),all_role_combinations.size(2), -1)
-        print('rearrage_embed',rearrage_embed.size())
 
         tot_each_combo = torch.sum(rearrage_embed, 2)
-        print('tot_each_combo',tot_each_combo.size())
         img_tot = torch.sum(v, 1)
-        print('img_tot',img_tot.size())
         img_tot = img_tot.unsqueeze(1)
         img_match_combo = img_tot.expand(img_tot.size(0),all_role_combinations.size(1), img_tot.size(-1))
-        print('img_match_combo',img_match_combo.size())
 
         '''dot_prod_all = tot_each_combo * img_match_combo
         print('dot_prod_all',dot_prod_all.size())'''
 
         cos = nn.CosineSimilarity(dim=-1, eps=1e-6)
         cos_out = cos(tot_each_combo, img_match_combo)
-        print('cos_out',cos_out.size(), cos_out)
         best_sim = torch.max(cos_out,-1)[1]
-        print('best sim combos', best_sim.size(), best_sim)
 
         best_combo = torch.gather(all_role_combinations, 1, best_sim.view(-1, 1).unsqueeze(2).repeat(1, 1, 6))
-        print('best_combo', best_combo.size())
 
         best_label_idx = best_combo.squeeze()
 

@@ -222,7 +222,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             top5.add_point_noun_log(img_id, verb, role_predict, labels)
 
             del role_predict, img, verb, labels
-            break
+            #break
 
     #return top1, top5, val_loss/mx
 
