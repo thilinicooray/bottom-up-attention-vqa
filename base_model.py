@@ -1598,7 +1598,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         v_emb = (att * v_verb).sum(1) # [batch, v_dim]
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
-        joint_repr_prev = q_repr * combined_ctx * v_repr
+        joint_repr_prev = q_repr * v_repr
         logits = self.classifier(joint_repr_prev)
 
         loss1 = self.calculate_loss(logits, gt_verbs)
