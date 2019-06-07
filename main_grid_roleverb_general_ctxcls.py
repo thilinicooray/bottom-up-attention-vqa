@@ -350,6 +350,7 @@ def main():
         opts = [{'params': model.classifier.parameters()},
                 {'params': model.q_emb_ctx.parameters()},
                 {'params': model.v_att_ctx.parameters()},
+                {'params': model.v_net_ctx.parameters()},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
                 {'params': model.v_net.parameters(), 'lr': 5e-5},
