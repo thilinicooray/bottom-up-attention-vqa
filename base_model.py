@@ -1559,7 +1559,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier,
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier,q_emb_ctx,
                  v_att_ctx, v_net_ctx, q_net_ctx, encoder, role_module, num_iter):
         super(BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls, self).__init__()
         self.w_emb = w_emb
@@ -1568,10 +1568,11 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
-        #self.q_emb_ctx = q_emb_ctx
+        self.q_emb_ctx = q_emb_ctx
         self.v_att_ctx = v_att_ctx
         self.v_net_ctx = v_net_ctx
         self.q_net_ctx = q_net_ctx
+        self.transform = nn.Linear(2048, 1024)
         self.encoder = encoder
         self.role_module = role_module
         self.num_iter = num_iter
@@ -1588,8 +1589,8 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
 
         batch_size = v_verb.size(0)
         role_pred_rep, role_pred = self.role_module.forward_noq_reponly(v_role)
-        #ctx_combined = self.q_emb_ctx(role_pred_rep)
-        ctx_combined = torch.sum(role_pred_rep, 1)
+        ctx_combined = self.q_emb_ctx(role_pred_rep)
+        #ctx_combined = torch.sum(role_pred_rep, 1)
         att_ctx = self.v_att_ctx(v_verb, ctx_combined)
         v_emb_ctx = (att_ctx * v_verb).sum(1)
         v_repr_ctx = self.v_net_ctx(v_emb_ctx)
@@ -1609,8 +1610,10 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         v_emb = (att * v_verb).sum(1) # [batch, v_dim]
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
-        joint_repr_prev = q_repr * v_repr + q_repr_ctx * v_repr_ctx
-        logits = self.classifier(joint_repr_prev)
+        joint_repr_prev = q_repr * v_repr
+        joint_repr_ctx = q_repr_ctx * v_repr_ctx
+        joint_repr_tot = self.transform(torch.cat([joint_repr_prev, joint_repr_ctx], -1))
+        logits = self.classifier(joint_repr_tot)
 
         loss1 = self.calculate_loss(logits, gt_verbs)
 
@@ -2556,7 +2559,7 @@ def build_baseline0grid_imsitu_roleverb_general_ctxcls(dataset, num_hid, num_ans
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
-    return BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls( w_emb, q_emb, v_att, q_net, v_net, classifier,
+    return BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls( w_emb, q_emb, v_att, q_net, v_net, classifier,q_emb_ctx,
                                                          v_att_ctx, v_net_ctx, q_net_ctx, encoder, role_module, num_iter)
 
 def build_baseline0grid_imsitu_roleverb_general_gtq_train(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
