@@ -711,11 +711,11 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         cos = nn.CosineSimilarity(dim=-1, eps=1e-6)
         cos_out = cos(tot_each_combo, img_match_combo)
-        print('cos_out',cos_out.size())
+        print('cos_out',cos_out.size(), cos_out)
         best_sim = torch.max(cos_out,-1)[1]
         print('best sim combos', best_sim.size(), best_sim)
 
-        best_combo = all_role_combinations.gather(1, best_sim.unsqueeze(1))
+        best_combo = torch.gather(all_role_combinations, 1, best_sim.view(-1, 1).unsqueeze(2).repeat(1, 1, 6))
         print('best_combo', best_combo.size())
 
 
