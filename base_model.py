@@ -630,6 +630,121 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         return best_predictions
 
+    def forward_eval_dotproduct(self, v, q, gt_verb):
+        '''
+        rotate normally until num iter -1
+        then come out of loop, take out of num iter -1
+        get top k (beam) predictions of all roles
+        make k x k combinations of label index, get their respective questions
+        do same processing and get logits.
+
+        for each role, for each q, get max logit and noun label. see which q gave the best logit.
+        record that. select best nouns, only send those to scoring.
+
+        '''
+        prev_rep = None
+        for i in range(self.num_iter - 1):
+
+            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = joint_repr + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+        # start beam
+        sorted_idx = torch.sort(role_label_pred, -1, True)[1]
+        sorted_role_labels = sorted_idx[:,:, :self.beam_size]
+        # now need to create batchsize x (beam x beam) x 6 x 1 tensor with all combinations of labels starting from
+        # top 1 of all roles ending with top beam of all roles
+
+        all_role_combinations = self.get_role_combinations(sorted_role_labels)
+
+        combo_size = all_role_combinations.size(1)
+
+        #get the noun weights of last layer of classifier
+        noun_weights = self.classifier.main[-1].weight
+        print('size of noun weights', noun_weights.size())
+
+        beam_role_idx = None
+        beam_role_value = None
+
+        for k in range(0, combo_size):
+            current_label_idx = all_role_combinations[:,k,:]
+            #print('current size to make q :', current_label_idx.size())
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, current_label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+
+            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            joint_repr = joint_repr + prev_rep
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            max_val, max_label_idx = torch.max(role_label_pred,-1)
+
+            if k == 0:
+                beam_role_idx = max_label_idx.unsqueeze(-1)
+                beam_role_value = max_val.unsqueeze(-1)
+            else:
+                beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx.unsqueeze(-1)), -1)
+                beam_role_value = torch.cat((beam_role_value.clone(), max_val.unsqueeze(-1)), -1)
+
+
+        best_noun_probs_idx = torch.max(beam_role_value,-1)[1]
+
+        #linearize all dimentions
+        noun_idx = best_noun_probs_idx.view(-1)
+        role_idx_lin = beam_role_idx.view(-1, beam_role_idx.size(-1))
+
+        selected_noun_labels = role_idx_lin.gather(1, noun_idx.unsqueeze(1))
+
+        best_predictions = selected_noun_labels.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+        return best_predictions
+
     def get_role_combinations(self, sorted_role_labels):
 
         final_combo = None
