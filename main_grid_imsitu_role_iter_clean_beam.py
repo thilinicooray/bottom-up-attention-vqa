@@ -222,7 +222,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             top5.add_point_noun_top1(img_id, verb, role_predict, labels)
 
             del role_predict, img, verb, labels
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -381,7 +381,7 @@ def main():
                                                    utils_imsitu.format_dict(top5_avg, '{:.2f}', '5-')))
 
         #write results to csv file
-        role_dict = top1.role_dict
+        '''role_dict = top1.role_dict
         fail_val_all = top1.value_all_dict
         pass_val_dict = top1.vall_all_correct
 
@@ -394,7 +394,7 @@ def main():
         with open('pass_val_all.json', 'w') as fp:
             json.dump(pass_val_dict, fp, indent=4)
 
-        print('Writing predictions to file completed !')
+        print('Writing predictions to file completed !')'''
 
     elif args.test:
         top1, top5, val_loss = eval(model, test_loader, encoder, args.gpuid, write_to_file = True)
