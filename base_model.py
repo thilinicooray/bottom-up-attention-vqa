@@ -2541,7 +2541,7 @@ def build_baseline0grid_imsitu_roleverb_general_ctxcls(dataset, num_hid, num_ans
     print('words count verbiter:', encoder.verbq_dict.ntoken)
     w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    q_emb_ctx = QuestionEmbedding(num_hid, num_hid, 1, False, 0.0)
+    q_emb_ctx = QuestionEmbedding(num_hid, num_hid * 2, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
     v_att_ctx = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])
