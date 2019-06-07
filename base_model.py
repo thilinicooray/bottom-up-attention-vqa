@@ -1868,9 +1868,8 @@ class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train_Beam(nn.Module):
         return logits, None
 
     def get_role_combinations(self, sorted_role_labels):
-        print('input to verb beam ', sorted_role_labels.size())
         final_combo = None
-        role = self.encoder.max_role_count
+        role = sorted_role_labels.size(1)
         value = self.beam_size
         tot = value ** role
 
