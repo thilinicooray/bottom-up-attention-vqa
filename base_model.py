@@ -688,6 +688,8 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
 
         #get the noun weights of last layer of classifier
         noun_weights = self.classifier.main[-1].weight
+        if isinstance(self.classifier.main[-1], nn.Linear):
+            print('this is correct')
         print('size of noun weights', noun_weights.size())
 
         beam_role_idx = None
