@@ -218,8 +218,8 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             role_predict = model.forward_eval_dotproduct(img, questions, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
-            top1.add_point_noun_top1(img_id, verb, role_predict, labels)
-            top5.add_point_noun_top1(img_id, verb, role_predict, labels)
+            top1.add_point_noun_log(img_id, verb, role_predict, labels)
+            top5.add_point_noun_log(img_id, verb, role_predict, labels)
 
             del role_predict, img, verb, labels
             break

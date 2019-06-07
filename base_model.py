@@ -718,67 +718,36 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         best_combo = torch.gather(all_role_combinations, 1, best_sim.view(-1, 1).unsqueeze(2).repeat(1, 1, 6))
         print('best_combo', best_combo.size())
 
-
-        '''max_prod = torch.max(dot_prod_all,-2)[1]
-        print('max_prod',max_prod.size())'''
+        best_label_idx = best_combo.squeeze()
 
 
+        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, best_label_idx)
 
+        if torch.cuda.is_available():
+            q = role_q_idx.to(torch.device('cuda'))
 
-        beam_role_idx = None
-        beam_role_value = None
+        img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
 
-        for k in range(0, combo_size):
-            current_label_idx = all_role_combinations[:,k,:]
-            #print('current size to make q :', current_label_idx.size())
+        q = q.view(v.size(0)* self.encoder.max_role_count, -1)
 
-            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, current_label_idx)
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-            if torch.cuda.is_available():
-                q = role_q_idx.to(torch.device('cuda'))
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
 
-            img = v.expand(self.encoder.max_role_count,v.size(0), v.size(1), v.size(2))
-            img = img.transpose(0,1)
-            img = img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, v.size(2))
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr = q_repr * v_repr
+        joint_repr = joint_repr + prev_rep
 
-            q = q.view(v.size(0)* self.encoder.max_role_count, -1)
+        logits = self.classifier(joint_repr)
 
-            w_emb = self.w_emb(q)
-            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
-            att = self.v_att(img, q_emb)
-            v_emb = (att * img).sum(1) # [batch, v_dim]
-
-            q_repr = self.q_net(q_emb)
-            v_repr = self.v_net(v_emb)
-            joint_repr = q_repr * v_repr
-            joint_repr = joint_repr + prev_rep
-
-            logits = self.classifier(joint_repr)
-
-            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
-
-            max_val, max_label_idx = torch.max(role_label_pred,-1)
-
-            if k == 0:
-                beam_role_idx = max_label_idx.unsqueeze(-1)
-                beam_role_value = max_val.unsqueeze(-1)
-            else:
-                beam_role_idx = torch.cat((beam_role_idx.clone(), max_label_idx.unsqueeze(-1)), -1)
-                beam_role_value = torch.cat((beam_role_value.clone(), max_val.unsqueeze(-1)), -1)
-
-
-        best_noun_probs_idx = torch.max(beam_role_value,-1)[1]
-
-        #linearize all dimentions
-        noun_idx = best_noun_probs_idx.view(-1)
-        role_idx_lin = beam_role_idx.view(-1, beam_role_idx.size(-1))
-
-        selected_noun_labels = role_idx_lin.gather(1, noun_idx.unsqueeze(1))
-
-        best_predictions = selected_noun_labels.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
-
-        return best_predictions
+        return role_label_pred
 
     def get_role_combinations(self, sorted_role_labels):
 
