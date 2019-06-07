@@ -1583,6 +1583,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
 
         batch_size = v_verb.size(0)
         role_pred_rep, role_pred = self.role_module.forward_noq_reponly(v_role)
+        print('rep sizes ', role_pred_rep.size())
         combined_ctx = torch.sum(role_pred_rep, 1)
 
         label_idx = torch.max(role_pred,-1)[1]
@@ -1598,6 +1599,7 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         v_emb = (att * v_verb).sum(1) # [batch, v_dim]
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
+        print('ctx sizes ', q_repr.size(), combined_ctx.size())
         joint_repr_prev = q_repr * combined_ctx * v_repr
         logits = self.classifier(joint_repr_prev)
 
