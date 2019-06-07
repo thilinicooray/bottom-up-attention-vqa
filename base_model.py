@@ -682,7 +682,9 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         # now need to create batchsize x (beam x beam) x 6 x 1 tensor with all combinations of labels starting from
         # top 1 of all roles ending with top beam of all roles
 
-        all_role_combinations = self.get_role_combinations(sorted_role_labels)
+        all_role_combinations_tot = self.get_role_combinations(sorted_role_labels)
+        all_role_combinations = all_role_combinations_tot[:, 100]
+
 
         combo_size = all_role_combinations.size(1)
 
