@@ -715,7 +715,7 @@ class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
         best_sim = torch.max(cos_out,-1)[1]
         print('best sim combos', best_sim.size(), best_sim)
 
-        best_combo = torch.index_select(all_role_combinations, 1, best_sim)
+        best_combo = all_role_combinations.gather(1, best_sim.unsqueeze(1))
         print('best_combo', best_combo.size())
 
 
