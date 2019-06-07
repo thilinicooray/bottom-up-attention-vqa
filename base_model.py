@@ -955,7 +955,7 @@ class BaseModelGrid_Imsitu_Role4VerbNew(nn.Module):
         v_repr = self.v_net(v_emb)
         joint_repr = q_repr * v_repr
 
-        return joint_repr
+        return joint_repr.contiguous().view(v.size(0), 2, -1)
 
 
     def forward_noq(self, v, verb=None):
