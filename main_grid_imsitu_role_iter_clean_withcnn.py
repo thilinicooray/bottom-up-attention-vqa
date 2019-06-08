@@ -105,7 +105,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #start debugger
             #import pdb; pdb.set_trace()
 
-            print('grad check :')
+            ''''print('grad check :')
             for f in model.convnet.resnet.conv1.parameters():
                 print('data is')
                 print(f.data)
@@ -114,7 +114,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
 
             print('========================================================================================')
             print('========================================================================================')
-            print('========================================================================================')
+            print('========================================================================================')'''
 
 
             optimizer.step()
