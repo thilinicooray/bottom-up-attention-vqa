@@ -109,12 +109,12 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             optimizer.step()
             optimizer.zero_grad()
 
-            '''print('grad check :')
-            for f in model.parameters():
+            print('grad check :')
+            for f in model.convnet.parameters():
                 print('data is')
                 print(f.data)
                 print('grad is')
-                print(f.grad)'''
+                print(f.grad)
 
             train_loss += loss.item()
 
@@ -329,7 +329,7 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
-        #utils_imsitu.set_trainable(model.classifier, True)
+        utils_imsitu.set_trainable(model.convnet, True)
         #utils_imsitu.set_trainable(model.w_emb, False)
         #utils_imsitu.set_trainable(model.q_emb, True)
         optimizer = torch.optim.Adamax([
