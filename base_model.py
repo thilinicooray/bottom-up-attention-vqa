@@ -488,6 +488,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         self.classifier = classifier
         self.encoder = encoder
         self.num_iter = num_iter
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, v, q, labels, gt_verb):
 
@@ -519,7 +520,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
             v_repr = self.v_net(v_emb)
             joint_repr = q_repr * v_repr
             if i != 0:
-                joint_repr = joint_repr + prev_rep
+                joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr
 
             logits = self.classifier(joint_repr)
