@@ -10,6 +10,19 @@ from dataset import Dictionary
 def create_dictionary(dataroot):
     dictionary = Dictionary()
     questions = []
+    files = [
+        'imsitu_questions_prev.json'
+    ]
+
+    for path in files:
+        question_path = os.path.join(dataroot, path)
+        q_data = json.load(open(question_path))
+
+        for verb, values in q_data.items():
+            roles = values['roles']
+            for role, info in roles.items():
+                question = info['question']
+                dictionary.tokenize(question, True)
 
     #add all collected words from imsitu. contains both overlaps with vqa as well as new words
     imsitu_words_path = os.path.join(dataroot, 'allnverbsall_imsitu_words_nl2glovematching.json')
