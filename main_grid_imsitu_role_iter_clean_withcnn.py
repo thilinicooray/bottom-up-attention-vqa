@@ -105,16 +105,17 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #start debugger
             #import pdb; pdb.set_trace()
 
-
-            optimizer.step()
-            optimizer.zero_grad()
-
             print('grad check :')
             for f in model.convnet.parameters():
                 print('data is')
                 print(f.data)
                 print('grad is')
                 print(f.grad)
+
+
+            optimizer.step()
+            optimizer.zero_grad()
+
 
             train_loss += loss.item()
 
@@ -325,11 +326,11 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['w_emb', 'classifier'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['convnet', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
-        utils_imsitu.set_trainable(model.convnet, True)
+        #utils_imsitu.set_trainable(model.convnet, True)
         #utils_imsitu.set_trainable(model.w_emb, False)
         #utils_imsitu.set_trainable(model.q_emb, True)
         optimizer = torch.optim.Adamax([
