@@ -1,6 +1,6 @@
 import torch
 from imsitu_encoder_alldata_imsitu import imsitu_encoder
-from imsitu_loader import imsitu_loader_roleq_buatt
+from imsitu_loader import imsitu_loader_roleq_buatt_with_cnn
 from imsitu_scorer_log import imsitu_scorer
 import json
 import os
@@ -288,7 +288,7 @@ def main():
     w_emb_path = 'data/glove6b_init_imsitu_final_300d.npy'
     encoder = imsitu_encoder(train_set, imsitu_roleq, dictionary)
 
-    train_set = imsitu_loader_roleq_buatt(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
+    train_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter)
@@ -300,11 +300,11 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     dev_set = json.load(open(dataset_folder + '/' + args.dev_file))
-    dev_set = imsitu_loader_roleq_buatt(imgset_folder, dev_set, encoder, dictionary, 'val', encoder.dev_transform)
+    dev_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, dev_set, encoder, dictionary, 'val', encoder.dev_transform)
     dev_loader = torch.utils.data.DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     test_set = json.load(open(dataset_folder + '/' + args.test_file))
-    test_set = imsitu_loader_roleq_buatt(imgset_folder, test_set, encoder, dictionary, 'test', encoder.dev_transform)
+    test_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, test_set, encoder, dictionary, 'test', encoder.dev_transform)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     if not os.path.exists(args.output_dir):
