@@ -26,7 +26,7 @@ class imsitu_encoder():
         self.vrole_question = {}
         self.dictionary = dict
         self.q_templates = json.load(open('data/role_detailed_templates.json'))
-        self.all_words = json.load(open('data/allnverbs_imsitu_words_nl2vqamatching.json'))
+        self.all_words = json.load(open('data/allnverbsall_imsitu_words_nl2glovematching.json'))
         self.labelid2nlword = json.load(open('data/all_imsitu_words_id2nl.json'))
 
         self.agent_roles = ['agent', 'individuals','brancher', 'agenttype', 'gatherers', 'agents', 'teacher', 'traveler', 'mourner',
