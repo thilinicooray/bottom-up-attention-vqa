@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -226,7 +226,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top5.add_point_noun(verb, role_predict, labels)
 
             del role_predict, img, verb, labels
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -333,12 +333,13 @@ def main():
         #utils_imsitu.set_trainable(model.w_emb, False)
         #utils_imsitu.set_trainable(model.q_emb, True)
         optimizer = torch.optim.Adamax([
+            {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
-            {'params': model.w_emb.parameters(), 'lr': 1e-4},
+            {'params': model.w_emb.parameters()},
             {'params': model.q_emb.parameters(), 'lr': 1e-4},
-            {'params': model.v_att.parameters(), 'lr': 1e-4},
-            {'params': model.q_net.parameters(), 'lr': 1e-4},
-            {'params': model.v_net.parameters(), 'lr': 1e-4},
+            {'params': model.v_att.parameters(), 'lr': 5e-5},
+            {'params': model.q_net.parameters(), 'lr': 5e-5},
+            {'params': model.v_net.parameters(), 'lr': 5e-5}
         ], lr=1e-3)
 
     elif args.resume_training:
