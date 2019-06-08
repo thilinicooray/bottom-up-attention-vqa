@@ -53,7 +53,7 @@ class resnet_modified_medium(nn.Module):
         x = self.resnet.layer4(x)
 
         x = self.dropout2d(x)
-        print('resnet out' , x.size())
+        #print('resnet out' , x.size())
 
         return x
 
