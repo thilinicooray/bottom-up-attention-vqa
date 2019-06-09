@@ -251,9 +251,9 @@ def main():
     parser.add_argument('--dataset_folder', type=str, default='./imSitu', help='Location of annotations')
     parser.add_argument('--imgset_dir', type=str, default='./resized_256', help='Location of original images')
     parser.add_argument('--frcnn_feat_dir', type=str, help='Location of output from detectron')
-    parser.add_argument('--train_file', default="train_new_2000_all.json", type=str, help='trainfile name')
-    parser.add_argument('--dev_file', default="dev_new_2000_all.json", type=str, help='dev file name')
-    parser.add_argument('--test_file', default="test_new_2000_all.json", type=str, help='test file name')
+    parser.add_argument('--train_file', default="train_freq2000.json", type=str, help='trainfile name')
+    parser.add_argument('--dev_file', default="dev_freq2000.json", type=str, help='dev file name')
+    parser.add_argument('--test_file', default="test_freq2000.json", type=str, help='test file name')
     parser.add_argument('--model_saving_name', type=str, help='save name of the outpul model')
 
     parser.add_argument('--epochs', type=int, default=500)
@@ -324,11 +324,11 @@ def main():
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
 
-    torch.manual_seed(1234)
+    torch.manual_seed(args.seed)
     if args.gpuid >= 0:
         #print('GPU enabled')
         model.cuda()
-        torch.cuda.manual_seed(1234)
+        torch.cuda.manual_seed(args.seed)
         torch.backends.cudnn.deterministic = True
 
     if args.use_pretrained_buatt:
