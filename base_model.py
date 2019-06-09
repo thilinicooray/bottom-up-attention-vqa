@@ -1843,7 +1843,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
-        v = img_org.permute(0, 2, 1)
+        img_org = img_org.permute(0, 2, 1)
 
         losses = []
         prev_rep = None
@@ -1860,8 +1860,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-            att = self.v_att(v, q_emb)
-            v_emb = (att * v).sum(1) # [batch, v_dim]
+            att = self.v_att(img_org, q_emb)
+            v_emb = (att * img_org).sum(1) # [batch, v_dim]
 
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
