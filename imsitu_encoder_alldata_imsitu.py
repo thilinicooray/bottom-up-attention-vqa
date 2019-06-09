@@ -754,14 +754,14 @@ class imsitu_encoder():
             place_name = self.label_list[current_labels[1]]
 
             if len(agent_name) > 0 and len(place_name) > 0:
-                agent_eng_name = self.labelid2nlword[agent_name]
-                place_eng_name = self.labelid2nlword[place_name]
+                agent_eng_name = self.all_words[self.labelid2nlword[agent_name]]
+                place_eng_name = self.all_words[self.labelid2nlword[place_name]]
                 question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
             elif len(place_name) > 0 and len(agent_name) == 0:
-                place_eng_name = self.labelid2nlword[place_name]
+                place_eng_name = self.all_words[self.labelid2nlword[place_name]]
                 question = 'what is the action happening at the ' + place_eng_name
             elif len(agent_name) > 0 and len(place_name) == 0:
-                agent_eng_name = self.labelid2nlword[agent_name]
+                agent_eng_name = self.all_words[self.labelid2nlword[agent_name]]
                 question = 'what is the '+ agent_eng_name + ' doing'
             else:
                 question = 'what is the action happening'
