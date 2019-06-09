@@ -549,6 +549,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         return role_label_pred, loss
 
     def forward_agent_place_only(self, v, q, gt_verb=None, is_general=False):
+        role_count = 2
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
@@ -563,10 +564,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
 
             img = v
 
-            img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+            img = img.expand(role_count,img.size(0), img.size(1), img.size(2))
             img = img.transpose(0,1)
-            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
-            q = q.view(batch_size* self.encoder.max_role_count, -1)
+            img = img.contiguous().view(batch_size * role_count, -1, v.size(2))
+            q = q.view(batch_size* role_count, -1)
 
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -583,7 +584,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
 
             logits = self.classifier(joint_repr)
 
-            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+            role_label_pred = logits.contiguous().view(v.size(0), role_count, -1)
 
             label_idx = torch.max(role_label_pred,-1)[1]
             #for gt labels
