@@ -548,6 +548,73 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
 
         return role_label_pred, loss
 
+    def forward_agent_place_only(self, v, q, gt_verb=None, is_general=False):
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        for i in range(self.num_iter):
+
+            img = v
+
+            img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+            q = q.view(batch_size* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+            #for gt labels
+            #frame_idx = np.random.randint(3, size=1)
+            #label_idx = labels[:,frame_idx,:].squeeze()
+
+            if is_general:
+
+                role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+                if torch.cuda.is_available():
+                    q = role_q_idx.to(torch.device('cuda'))
+            else:
+                return role_label_pred
+
+
+
+        return role_label_pred
+
+    def forward_noq(self, v, verb=None):
+        q = self.encoder.get_agent_place_roleqs(v.size(0), verb)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        if verb is None:
+            role_label_pred = self.forward_agent_place_only(v, q, None, False)
+        else:
+            role_label_pred = self.forward_agent_place_only(v, q, verb, True)
+
+        return role_label_pred
+
     def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
         batch_size = role_label_pred.size()[0]
@@ -1755,6 +1822,86 @@ class BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
+class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
+    def __init__(self, convnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
+        super(BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN, self).__init__()
+        self.convnet = convnet
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att = v_att
+        self.q_net = q_net
+        self.v_net = v_net
+        self.classifier = classifier
+        self.encoder = encoder
+        self.role_module = role_module
+        self.num_iter = num_iter
+
+
+    def forward(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_pred = self.role_module.forward_noq(v)
+        for i in range(self.num_iter):
+
+
+            label_idx = torch.max(role_pred,-1)[1]
+            q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+            if torch.cuda.is_available():
+                q = q.to(torch.device('cuda'))
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(v, q_emb)
+            v_emb = (att * v).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            if self.training:
+                losses.append(self.calculate_loss(logits, gt_verbs))
+
+            verb_idx = torch.max(logits,-1)[1]
+
+            role_pred = self.role_module.forward_noq(v, verb_idx)
+
+
+        loss = None
+        if self.training:
+            loss_all = torch.stack(losses,0)
+            loss = torch.sum(loss_all, 0)/self.num_iter
+
+
+        return logits, loss
+
+    def calculate_loss(self, verb_pred, gt_verbs):
+
+        batch_size = verb_pred.size()[0]
+        loss = 0
+        #print('eval pred verbs :', pred_verbs)
+        for i in range(batch_size):
+            verb_loss = 0
+            verb_loss += utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+            loss += verb_loss
+
+
+        final_loss = loss/batch_size
+        return final_loss
+
 class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
         super(BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train, self).__init__()
@@ -2693,6 +2840,19 @@ def build_baseline0grid_imsitu_roleverb_general_ctxcls(dataset, num_hid, num_ans
     role_module = role_module
     return BaseModelGrid_Imsitu_RoleVerb_General_Ctxcls( w_emb, q_emb, v_att, q_net, v_net, classifier,q_emb_ctx,
                                                          v_att_ctx, v_net_ctx, encoder, role_module, num_iter)
+
+def build_baseline0grid_imsitu_roleverb_general_with_cnn(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
+    print('words count verbiter:', encoder.verbq_dict.ntoken)
+    covnet = resnet_modified_medium()
+    w_emb = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+    role_module = role_module
+    return BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
 def build_baseline0grid_imsitu_roleverb_general_gtq_train(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
     print('words count verbiter:', encoder.verbq_dict.ntoken)
