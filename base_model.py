@@ -1827,6 +1827,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
         self.encoder = encoder
         self.role_module = role_module
         self.num_iter = num_iter
+        self.dropout = nn.Dropout(0.3)
 
 
     def forward(self, img_id, v, gt_verbs, labels):
