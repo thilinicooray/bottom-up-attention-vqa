@@ -548,6 +548,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
 
         return role_label_pred, loss
 
+    #todo : handle multiple iter. NOW only 1 iter is possible
     def forward_agent_place_only(self, v, q, gt_verb=None, is_general=False):
         role_count = 2
 
@@ -560,46 +561,36 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         losses = []
         prev_rep = None
         batch_size = v.size(0)
-        for i in range(self.num_iter):
+        #for i in range(self.num_iter):
 
-            img = v
+        img = v
 
-            img = img.expand(role_count,img.size(0), img.size(1), img.size(2))
-            img = img.transpose(0,1)
-            img = img.contiguous().view(batch_size * role_count, -1, v.size(2))
-            q = q.view(batch_size* role_count, -1)
+        img = img.expand(role_count,img.size(0), img.size(1), img.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * role_count, -1, v.size(2))
+        q = q.view(batch_size* role_count, -1)
 
-            w_emb = self.w_emb(q)
-            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-            att = self.v_att(img, q_emb)
-            v_emb = (att * img).sum(1) # [batch, v_dim]
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
 
-            q_repr = self.q_net(q_emb)
-            v_repr = self.v_net(v_emb)
-            joint_repr = q_repr * v_repr
-            if i != 0:
-                joint_repr = self.dropout(joint_repr) + prev_rep
-            prev_rep = joint_repr
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr = q_repr * v_repr
+        if i != 0:
+            joint_repr = self.dropout(joint_repr) + prev_rep
+        prev_rep = joint_repr
 
-            logits = self.classifier(joint_repr)
+        logits = self.classifier(joint_repr)
 
-            role_label_pred = logits.contiguous().view(v.size(0), role_count, -1)
+        role_label_pred = logits.contiguous().view(v.size(0), role_count, -1)
 
-            label_idx = torch.max(role_label_pred,-1)[1]
-            #for gt labels
-            #frame_idx = np.random.randint(3, size=1)
-            #label_idx = labels[:,frame_idx,:].squeeze()
-
-            if is_general:
-
-                role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
-
-                if torch.cuda.is_available():
-                    q = role_q_idx.to(torch.device('cuda'))
-            else:
-                return role_label_pred
-
+        label_idx = torch.max(role_label_pred,-1)[1]
+        #for gt labels
+        #frame_idx = np.random.randint(3, size=1)
+        #label_idx = labels[:,frame_idx,:].squeeze()
 
 
         return role_label_pred
