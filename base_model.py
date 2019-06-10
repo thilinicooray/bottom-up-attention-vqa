@@ -490,7 +490,51 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
 
-    def forward(self, v, q, labels, gt_verb):
+    def forward(self, v, q1, labels, gt_verb):
+
+        loss = None
+
+        frame_idx = np.random.randint(3, size=1)
+        label_idx = labels[:,frame_idx,:].squeeze()
+
+        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+        if torch.cuda.is_available():
+            q = role_q_idx.to(torch.device('cuda'))
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+        q = q.view(batch_size* self.encoder.max_role_count, -1)
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr = q_repr * v_repr
+        logits = self.classifier(joint_repr)
+
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+        if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+
+        return role_label_pred, loss
+
+
+    def forward_pred(self, v, q, labels, gt_verb):
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
