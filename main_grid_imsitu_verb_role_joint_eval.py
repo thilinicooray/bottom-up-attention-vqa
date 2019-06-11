@@ -97,8 +97,6 @@ def main():
     parser.add_argument('--num_iter_verb', type=int, default=1)
     parser.add_argument('--num_iter_role', type=int, default=1)
 
-    parser.add_argument('--role_module', type=str, default='', help='pretrained role module')
-
     #verb special args
 
     #todo: train role module separately with gt verbs
