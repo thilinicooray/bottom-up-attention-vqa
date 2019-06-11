@@ -1873,8 +1873,49 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
 
-
     def forward(self, img_id, v, gt_verbs, labels):
+        """Forward
+
+        v: [batch, org img grid]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        #iter 0 with general q
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        img = v
+
+        frame_idx = np.random.randint(3, size=1)
+        label_idx = labels[:,frame_idx,:].squeeze()
+        q = self.encoder.get_verbq_idx(img_id, gt_verbs, label_idx)
+
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr_prev = q_repr * v_repr
+        logits = self.classifier(joint_repr_prev)
+
+        loss = None
+
+        if self.training:
+            loss = self.calculate_loss(logits, gt_verbs)
+
+        return logits, loss
+
+    def forward_pred(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
