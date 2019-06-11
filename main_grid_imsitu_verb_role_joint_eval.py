@@ -26,7 +26,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
     with torch.no_grad():
         mx = len(dev_loader)
         for i, (img_id, img, verb, questions, labels) in enumerate(dev_loader):
-            #prit("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
+            print("{}/{} batches\r".format(i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
 
