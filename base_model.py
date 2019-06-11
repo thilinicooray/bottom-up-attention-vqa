@@ -2741,7 +2741,7 @@ class BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(nn.Module):
 
         role_pred_topk = None
 
-        verb_pred = self.verb_module(img_id, v, gt_verbs, labels)
+        verb_pred, _ = self.verb_module(img_id, v, gt_verbs, labels)
 
         sorted_idx = torch.sort(verb_pred, 1, True)[1]
         verbs = sorted_idx[:,:topk]
@@ -2752,7 +2752,7 @@ class BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(nn.Module):
             if torch.cuda.is_available():
                 questions = questions.to(torch.device('cuda'))
 
-            role_pred = self.role_module(v, questions,labels, verbs[:,k])
+            role_pred, _ = self.role_module(v, questions,labels, verbs[:,k])
 
             if k == 0:
                 idx = torch.max(role_pred,-1)[1]
