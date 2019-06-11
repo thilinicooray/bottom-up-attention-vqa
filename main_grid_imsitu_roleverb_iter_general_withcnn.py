@@ -365,7 +365,7 @@ def main():
             raise Exception('[pretrained module] not specified')
         utils_imsitu.load_net(args.resume_model, [model])
         #this allows to use different role modules if we want at test time
-        utils_imsitu.load_net(args.role_module, [model.role_module])
+        #utils_imsitu.load_net(args.role_module, [model.role_module])
         optimizer_select = 0
         model_name = 'resume_all'
         #utils_imsitu.set_trainable(model, True)
