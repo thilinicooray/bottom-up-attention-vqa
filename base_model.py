@@ -1873,7 +1873,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -1915,7 +1915,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
 
         return logits, loss
 
-    def forward_pred(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
@@ -2721,6 +2721,50 @@ class BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract(nn.Module):
 
         return v
 
+
+class BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(nn.Module):
+    def __init__(self, encoder, verb_module, role_module):
+        super(BaseModelGrid_Imsitu_Verb_Role_Joint_Eval, self).__init__()
+
+        self.encoder = encoder
+        self.verb_module = verb_module
+        self.role_module = role_module
+
+
+    def train_preprocess(self):
+        return self.train_transform
+
+    def dev_preprocess(self, ):
+        return self.dev_transform
+
+    def forward(self, img_id, v, gt_verbs, labels, topk=5):
+
+        role_pred_topk = None
+
+        verb_pred = self.verb_module(img_id, v, gt_verbs, labels)
+
+        sorted_idx = torch.sort(verb_pred, 1, True)[1]
+        verbs = sorted_idx[:,:topk]
+
+        for k in range(0,topk):
+            questions = self.encoder.get_role_nl_questions_batch(verbs[:,k])
+            print('question size :', questions.size())
+            if torch.cuda.is_available():
+                questions = questions.to(torch.device('cuda'))
+
+            role_pred = self.role_module(v, questions,labels, verbs[:,k])
+
+            if k == 0:
+                idx = torch.max(role_pred,-1)[1]
+                role_pred_topk = idx
+            else:
+                idx = torch.max(role_pred,-1)[1]
+                role_pred_topk = torch.cat((role_pred_topk.clone(), idx), 1)
+            if self.gpu_mode >= 0:
+                torch.cuda.empty_cache()
+
+        return verbs, role_pred_topk
+
 def build_baseline0(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
@@ -3019,6 +3063,9 @@ def build_baseline0grid_imsitu_verbiter_resnetfeatextract(dataset, num_hid, num_
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_VerbIter_Resnet_FeatExtract( cnn, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
+
+def build_baseline0grid_imsitu_verb_role_joint_eval(dataset, encoder, verb_module, role_module):
+    return BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(encoder, verb_module, role_module)
 
 
 '''def build_baseline0_newatt(dataset, num_hid):

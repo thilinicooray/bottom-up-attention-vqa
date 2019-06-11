@@ -371,6 +371,53 @@ class imsitu_encoder():
 
         return questions
 
+    def get_role_nl_questions_batch(self, verb_ids):
+
+        batch_size = verb_ids.size(0)
+        all_qs = []
+        max_len = 0
+
+
+
+        for i in range(batch_size):
+            curr_verb_id = verb_ids[i]
+            verb_name = self.verb_list[curr_verb_id]
+            current_role_list = self.verb2_role_dict[verb_name]
+            questions = []
+
+            for role in current_role_list:
+                question = self.vrole_question[verb_name+'_'+role]
+                length = len(question.split())
+                if length > max_len:
+                    max_len = length
+                questions.append(question)
+            all_qs.append(questions)
+
+        all_new_list = []
+        for q_list in all_qs:
+            rquestion_tokens = []
+            for entry in q_list:
+                #print('tokeningzing :', entry)
+                tokens = self.dictionary.tokenize(entry, False)
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.dictionary.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+            role_padding_count = self.max_role_count - len(rquestion_tokens)
+
+            #todo : how to handle below sequence making for non roles properly?
+            for i in range(role_padding_count):
+                padding = [self.dictionary.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(padding))
+
+            all_new_list.append(torch.stack(rquestion_tokens,0))
+
+        return torch.stack(all_new_list,0)
+
     def get_label_ids(self, verb, frames):
         all_frame_id_list = []
         roles = self.verb2_role_dict[verb]
