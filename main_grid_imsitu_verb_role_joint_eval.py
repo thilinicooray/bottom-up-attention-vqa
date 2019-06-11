@@ -53,8 +53,8 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             verb_predict, role_predict = model(img_id, img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
-            top1.add_point_eval5_log_sorted(id, verb_predict, verb, role_predict, labels)
-            top5.add_point_eval5_log_sorted(id, verb_predict, verb, role_predict, labels)
+            top1.add_point_eval5_log_sorted(img_id, verb_predict, verb, role_predict, labels)
+            top5.add_point_eval5_log_sorted(img_id, verb_predict, verb, role_predict, labels)
 
             del  img, verb_predict, verb, labels
             #break
