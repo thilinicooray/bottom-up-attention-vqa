@@ -2748,7 +2748,6 @@ class BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(nn.Module):
 
         for k in range(0,topk):
             questions = self.encoder.get_role_nl_questions_batch(verbs[:,k])
-            print('question size :', questions.size())
             if torch.cuda.is_available():
                 questions = questions.to(torch.device('cuda'))
 
@@ -2760,7 +2759,7 @@ class BaseModelGrid_Imsitu_Verb_Role_Joint_Eval(nn.Module):
             else:
                 idx = torch.max(role_pred,-1)[1]
                 role_pred_topk = torch.cat((role_pred_topk.clone(), idx), 1)
-            if self.gpu_mode >= 0:
+            if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
         return verbs, role_pred_topk

@@ -134,12 +134,6 @@ def main():
     verb_constructor = 'build_%s' % 'baseline0grid_imsitu_roleverb_general_with_cnn'
     verb_model = getattr(base_model, verb_constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model, args.num_iter_verb)
 
-
-
-    #utils_imsitu.load_net(args.role_module, [role_model])
-    #utils_imsitu.set_trainable(role_model, False)
-    print('role model loaded')
-
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, encoder, verb_model, role_model)
 
