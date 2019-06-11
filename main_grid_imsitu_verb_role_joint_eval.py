@@ -158,33 +158,6 @@ def main():
         torch.cuda.manual_seed(args.seed)
         torch.backends.cudnn.deterministic = True
 
-    if args.use_pretrained_buatt:
-        print('Use pretrained from: {}'.format(args.pretrained_buatt_model))
-        if len(args.pretrained_buatt_model) == 0:
-            raise Exception('[pretrained buatt module] not specified')
-        #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
-        #model.load_state_dict(model_data.get('model_state', model_data))
-
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['convnet', 'w_emb', 'role_module', 'classifier'])
-        model_name = 'pre_trained_buatt'
-
-        utils_imsitu.set_trainable(model, True)
-        utils_imsitu.load_net(args.role_module, [model.role_module])
-        utils_imsitu.set_trainable(model.role_module, False)
-        #flt img param
-
-        opts = [{'params': model.convnet.parameters(), 'lr': 5e-5},
-                {'params': model.classifier.parameters()},
-                {'params': model.w_emb.parameters()},
-                {'params': model.q_emb.parameters(), 'lr': 1e-4},
-                {'params': model.v_att.parameters(), 'lr': 5e-5},
-                {'params': model.q_net.parameters(), 'lr': 5e-5},
-                {'params': model.v_net.parameters(), 'lr': 5e-5}
-                ]
-
-        optimizer = torch.optim.Adamax(opts, lr=1e-3)
-        #optimizer = torch.optim.SGD(opts, lr=0.001, momentum=0.9)
-
     elif args.resume_training:
         print('Resume training ')
         args.train_all = True
