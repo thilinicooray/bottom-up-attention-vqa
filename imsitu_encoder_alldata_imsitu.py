@@ -393,6 +393,7 @@ class imsitu_encoder():
                 questions.append(question)
             all_qs.append(questions)
 
+        max_len = 5
         all_new_list = []
         for q_list in all_qs:
             rquestion_tokens = []
