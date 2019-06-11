@@ -158,7 +158,7 @@ def main():
         torch.cuda.manual_seed(args.seed)
         torch.backends.cudnn.deterministic = True
 
-    elif args.resume_training:
+    if args.resume_training:
         print('Resume training ')
         args.train_all = True
         '''if len(args.resume_model) == 0:
