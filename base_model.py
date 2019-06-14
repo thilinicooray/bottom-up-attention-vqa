@@ -490,7 +490,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
 
-    def forward(self, v, q1, labels, gt_verb):
+    def forward_gt(self, v, q1, labels, gt_verb):
 
         loss = None
 
@@ -534,7 +534,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         return role_label_pred, loss
 
 
-    def forward_pred(self, v, q, labels, gt_verb):
+    def forward(self, v, q, labels, gt_verb):
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
@@ -1873,7 +1873,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
 
         v: [batch, org img grid]
@@ -1915,7 +1915,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
 
         return logits, loss
 
-    def forward_pred(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
