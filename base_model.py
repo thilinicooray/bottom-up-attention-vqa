@@ -2054,6 +2054,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
+        self.resize_img_flat = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2101,6 +2102,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
         print('avg pool out :', img_feat_flat.size())
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
