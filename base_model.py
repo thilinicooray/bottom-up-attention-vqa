@@ -2103,7 +2103,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
         img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
-        print('avg pool out :', img_feat_flat.size())
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
@@ -2116,7 +2115,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
-            print('role_pred combo size ', role_rep_combo.size())
+            ext_ctx = img_feat_flat * role_rep_combo
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
@@ -2135,7 +2134,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr
 
-            logits = self.classifier(joint_repr)
+            combo_rep = joint_repr * ext_ctx
+
+            logits = self.classifier(combo_rep)
 
             if self.training:
                 losses.append(self.calculate_loss(logits, gt_verbs))
