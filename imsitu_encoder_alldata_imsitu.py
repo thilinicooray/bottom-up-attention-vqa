@@ -165,12 +165,12 @@ class imsitu_encoder():
 
     def encode_ban(self, item):
         verb = self.verb_list.index(item['verb'])
-        role_nl_qs = self.get_role_nl_questions(item['verb'])
+        #role_nl_qs = self.get_role_nl_questions(item['verb'])
         labels = self.get_label_ids(item['verb'], item['frames'])
 
         #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
         #assuming labels are also in order of roles in encoder
-        return verb, role_nl_qs, labels
+        return verb, labels
 
     def encode_roleonly_indiloss(self, item):
         verb = self.verb_list.index(item['verb'])

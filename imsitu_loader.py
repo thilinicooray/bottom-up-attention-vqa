@@ -310,10 +310,10 @@ class imsitu_loader_roleq_buatt_with_cnn(data.Dataset):
         #transform must be None in order to give it as a tensor
         if self.transform is not None: img = self.transform(img)
 
-        verb, nl_qs, labels = self.encoder.encode_ban(ann)
-        questions = self.tokenize(nl_qs)
+        verb, labels = self.encoder.encode_ban(ann)
+        #questions = self.tokenize(nl_qs)
 
-        return _id, img, verb, questions, labels
+        return _id, img, verb, labels
 
     def __len__(self):
         return len(self.annotations)
