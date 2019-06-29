@@ -2130,12 +2130,12 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
-            joint_repr = q_repr * v_repr
+            joint_repr = q_repr * v_repr + ext_ctx
             if i != 0:
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr
 
-            combo_rep = joint_repr + ext_ctx
+            combo_rep = joint_repr
 
             logits = self.classifier(combo_rep)
 
