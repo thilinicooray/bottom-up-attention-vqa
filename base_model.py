@@ -2055,7 +2055,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.resize_fina_ctxrep = nn.Linear(2048, 1024)
+        #self.resize_fina_ctxrep = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
