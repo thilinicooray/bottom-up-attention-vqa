@@ -2055,7 +2055,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.resize_fina_ctxrep = nn.Linear(2048, 1024)
+        #self.resize_fina_ctxrep = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2116,7 +2116,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
-            ext_ctx = img_feat_flat * role_rep_combo
+            ext_ctx = img_feat_flat + role_rep_combo
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
@@ -2135,7 +2135,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr
 
-            combo_rep = self.resize_fina_ctxrep(torch.cat([joint_repr, ext_ctx], -1))
+            combo_rep = joint_repr + ext_ctx
 
             logits = self.classifier(combo_rep)
 
