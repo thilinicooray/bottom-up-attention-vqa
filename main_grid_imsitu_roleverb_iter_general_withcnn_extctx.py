@@ -431,14 +431,14 @@ def main():
 
         topk_agentplace_dict = encoder.topk_agentplace_details
         with open('pred_top10_agentplace_roleverbgeneral_gttrain.json', 'w') as fp:
-            json.dump(topk_agentplace_dict, fp, indent=4)
+            json.dump(topk_agentplace_dict, fp, indent=4)'''
 
         all = top1.all_res
 
-        with open('all_pred_roleverb_general_gttrain.json', 'w') as fp:
+        with open('top1_pred_gt'+args.model_saving_name+'.json', 'w') as fp:
             json.dump(all, fp, indent=4)
 
-        print('Writing predictions to file completed !')'''
+        print('Writing predictions to file completed !')
 
     elif args.test:
         top1, top5, val_loss = eval(model, test_loader, encoder, args.gpuid, write_to_file = True)
