@@ -2056,6 +2056,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
         self.resize_ans_rep = nn.Linear(1024, 2048)
+        self.new_avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.resize_new_img_flat = nn.Linear(2048, 1024)
+
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2124,6 +2127,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 history_img = prev_rep_exp * img_org
                 added_new = history_img + img_org
                 img_org1 = added_new
+                history = self.resize_new_img_flat(self.new_avgpool(history_img))
 
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2144,6 +2148,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             prev_rep = joint_repr'''
 
             combo_rep = joint_repr + ext_ctx
+            if i != 0:
+                combo_rep = combo_rep + history
             prev_rep = combo_rep
 
             logits = self.classifier(combo_rep)
