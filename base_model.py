@@ -732,6 +732,265 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
+class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
+    def __init__(self, convnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
+        super(BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX, self).__init__()
+        self.convnet = convnet
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att = v_att
+        self.q_net = q_net
+        self.v_net = v_net
+        self.classifier = classifier
+        self.encoder = encoder
+        self.num_iter = num_iter
+        self.dropout = nn.Dropout(0.3)
+
+    def forward_gt(self, v, labels, gt_verb):
+
+        loss = None
+
+        frame_idx = np.random.randint(3, size=1)
+        label_idx = labels[:,frame_idx,:].squeeze()
+
+        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+        if torch.cuda.is_available():
+            q = role_q_idx.to(torch.device('cuda'))
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+        q = q.view(batch_size* self.encoder.max_role_count, -1)
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img, q_emb)
+        v_emb = (att * img).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+        joint_repr = q_repr * v_repr
+        logits = self.classifier(joint_repr)
+
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+        if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+
+        return role_label_pred, loss
+
+
+    def forward(self, v, labels, gt_verb):
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        label_idx = None
+        for i in range(self.num_iter):
+
+            role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+
+            if torch.cuda.is_available():
+                q = role_q_idx.to(torch.device('cuda'))
+
+            img = v
+
+            img = img.expand(self.encoder.max_role_count,img.size(0), img.size(1), img.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+            q = q.view(batch_size* self.encoder.max_role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            if self.training:
+                losses.append(self.calculate_loss(gt_verb, role_label_pred, labels))
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+            #for gt labels
+            #frame_idx = np.random.randint(3, size=1)
+            #label_idx = labels[:,frame_idx,:].squeeze()
+
+
+
+        loss = None
+        if self.training:
+            loss_all = torch.stack(losses,0)
+            loss = torch.sum(loss_all, 0)/self.num_iter
+
+
+        return role_label_pred, loss
+
+    def forward_agent_place_only(self, v, q, gt_verb=None, is_general=False):
+        role_count = 2
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        #todo only 1 iter possible for now. handle it
+        for i in range(self.num_iter):
+
+            img = v
+
+            img = img.expand(role_count,img.size(0), img.size(1), img.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(batch_size * role_count, -1, v.size(2))
+            q = q.view(batch_size* role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), role_count, -1)
+
+            label_idx = torch.max(role_label_pred,-1)[1]
+            #for gt labels
+            #frame_idx = np.random.randint(3, size=1)
+            #label_idx = labels[:,frame_idx,:].squeeze()
+
+
+        return role_label_pred
+
+    def forward_agent_place_only_with_rep(self, v, q, gt_verb=None, is_general=False):
+        role_count = 2
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        #todo only 1 iter possible for now. handle it
+        for i in range(self.num_iter):
+
+            img = v
+
+            img = img.expand(role_count,img.size(0), img.size(1), img.size(2))
+            img = img.transpose(0,1)
+            img = img.contiguous().view(batch_size * role_count, -1, v.size(2))
+            q = q.view(batch_size* role_count, -1)
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            role_label_pred = logits.contiguous().view(v.size(0), role_count, -1)
+            joint_repr_out = joint_repr.contiguous().view(v.size(0), role_count, -1)
+
+            #label_idx = torch.max(role_label_pred,-1)[1]
+            #for gt labels
+            #frame_idx = np.random.randint(3, size=1)
+            #label_idx = labels[:,frame_idx,:].squeeze()
+
+
+        return joint_repr_out, role_label_pred
+
+    def forward_noq(self, v, verb=None):
+        q = self.encoder.get_agent_place_roleqs(v.size(0), verb)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        if verb is None:
+            role_label_pred = self.forward_agent_place_only(v, q, None, False)
+        else:
+            role_label_pred = self.forward_agent_place_only(v, q, verb, True)
+
+        return role_label_pred
+
+    def forward_noq_reponly(self, v, verb=None):
+        q = self.encoder.get_agent_place_roleqs(v.size(0), verb)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        if verb is None:
+            role_rep, role_label_pred = self.forward_agent_place_only_with_rep(v, q, None, False)
+        else:
+            role_rep, role_label_pred = self.forward_agent_place_only_with_rep(v, q, verb, True)
+
+        return role_rep, role_label_pred
+
+    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
+
+        batch_size = role_label_pred.size()[0]
+
+        loss = 0
+        for i in range(batch_size):
+            for index in range(gt_labels.size()[1]):
+                frame_loss = 0
+                #verb_loss = utils.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
+                for j in range(0, self.encoder.max_role_count):
+                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
+                frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
+                #print('frame loss', frame_loss, 'verb loss', verb_loss)
+                loss += frame_loss
+
+
+        final_loss = loss/batch_size
+        #print('loss :', final_loss)
+        return final_loss
+
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size, upperlimit):
         super(BaseModelGrid_Imsitu_RoleIter_Beam, self).__init__()
@@ -2115,8 +2374,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
-            #ext_ctx = img_feat_flat * role_rep_combo
-            ext_ctx = role_rep_combo * img_feat_flat
+            ext_ctx = img_feat_flat * role_rep_combo
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
@@ -3029,6 +3287,18 @@ def build_baseline0grid_imsitu_roleiter_with_cnn(dataset, num_hid, num_ans_class
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
+
+def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, num_iter):
+    print('words count :', dataset.dictionary.ntoken)
+    covnet = resnet_modified_medium()
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    v_att = Attention(2048, q_emb.num_hid, num_hid)
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+    return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)
