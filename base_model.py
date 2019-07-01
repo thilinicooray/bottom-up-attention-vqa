@@ -2055,9 +2055,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.resize_ans_rep = nn.Linear(1024, 2048)
-        self.resize_new_img_flat = nn.Linear(2048, 1024)
-
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2110,7 +2107,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         img_org = img_features.view(batch_size, n_channel, -1)
         img_org = img_org.permute(0, 2, 1)
-        img_org1 = img_org
 
         losses = []
         prev_rep = None
@@ -2119,15 +2115,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
-            ext_ctx = img_feat_flat * role_rep_combo
-
-            if i != 0:
-                prev_rep_exp = self.resize_ans_rep(prev_rep).unsqueeze(1)
-                history_img = prev_rep_exp * img_org
-                added_new = history_img + img_org
-                img_org1 = added_new
-                history = self.resize_new_img_flat(torch.mean(history_img, 1))
-
+            #ext_ctx = img_feat_flat * role_rep_combo
+            ext_ctx = role_rep_combo * img_feat_flat
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
@@ -2136,20 +2125,17 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             w_emb = self.w_emb(q)
             q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-            att = self.v_att(img_org1, q_emb)
-            v_emb = (att * img_org1).sum(1) # [batch, v_dim]
+            att = self.v_att(img_org, q_emb)
+            v_emb = (att * img_org).sum(1) # [batch, v_dim]
 
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
             joint_repr = q_repr * v_repr
-            '''if i != 0:
+            if i != 0:
                 joint_repr = self.dropout(joint_repr) + prev_rep
-            prev_rep = joint_repr'''
+            prev_rep = joint_repr
 
             combo_rep = joint_repr + ext_ctx
-            if i != 0:
-                combo_rep = combo_rep + history
-            prev_rep = combo_rep
 
             logits = self.classifier(combo_rep)
 
