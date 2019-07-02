@@ -859,7 +859,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             for i in range(self.encoder.max_role_count):
                 if i == 0:
                     role_rep_expand_new[:,i] = role_rep_expand[:,i,1:]
-                elif i == self.max_role_count -1:
+                elif i == self.encoder.max_role_count -1:
                     role_rep_expand_new[:,i] = role_rep_expand[:,i,:i]
                 else:
                     role_rep_expand_new[:,i] = torch.cat([role_rep_expand[:,i,:i], role_rep_expand[:,i,i+1:]], 1)
