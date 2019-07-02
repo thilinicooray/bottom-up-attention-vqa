@@ -745,6 +745,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
+        self.resize_img_flat = nn.Linear(2048, 1024)
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -793,13 +794,17 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
     def forward(self, v, labels, gt_verb):
 
         img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        img_feat_flat = img_feat_flat.expand(self.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
+        img_feat_flat = img_feat_flat.transpose(0,1)
+        img_feat_flat = img_feat_flat.contiguous().view(-1, img_feat_flat.size(-1))
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
         v = img_org.permute(0, 2, 1)
 
         losses = []
-        prev_rep = None
         batch_size = v.size(0)
         label_idx = None
         for i in range(self.num_iter):
@@ -825,22 +830,48 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
             joint_repr = q_repr * v_repr
-            if i != 0:
-                joint_repr = self.dropout(joint_repr) + prev_rep
+            '''if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep'''
             prev_rep = joint_repr
 
-            logits = self.classifier(joint_repr)
+            if i != 0:
+                combo_rep = joint_repr + ext_ctx
+
+                logits = self.classifier(combo_rep)
+            else:
+                logits = self.classifier(joint_repr)
 
             role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+            role_rep = prev_rep.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             if self.training:
                 losses.append(self.calculate_loss(gt_verb, role_label_pred, labels))
 
             label_idx = torch.max(role_label_pred,-1)[1]
-            #for gt labels
-            #frame_idx = np.random.randint(3, size=1)
-            #label_idx = labels[:,frame_idx,:].squeeze()
 
+            #for each role its ctx gonna be every other role, excluding it.
+            #we need to arrage it that way, then add image to each of them
+            #then reshape ctx to match original join rep dimentions
+
+            role_rep_expand = role_rep.expand(self.max_role_count, role_rep.size(0), role_rep.size(1), role_rep.size(2))
+            role_rep_expand = role_rep_expand.transpose(0,1)
+            role_rep_expand_new = torch.zeros([batch_size, self.max_role_count, self.max_role_count-1, role_rep.size(2)])
+            for i in range(self.max_role_count):
+                if i == 0:
+                    role_rep_expand_new[:,i] = role_rep_expand[:,i,1:]
+                elif i == self.max_role_count -1:
+                    role_rep_expand_new[:,i] = role_rep_expand[:,i,:i]
+                else:
+                    role_rep_expand_new[:,i] = torch.cat([role_rep_expand[:,i,:i], role_rep_expand[:,i,i+1:]], 1)
+
+            if self.gpu_mode >= 0:
+                role_rep_expand_new = role_rep_expand_new.to(torch.device('cuda'))
+
+
+            role_rep_combo = torch.sum(role_rep_expand_new, 2)
+            role_rep_combo = role_rep_combo.view(-1, role_rep_combo.size(-1))
+            print('new context :', role_rep_combo.size(), img_feat_flat.size())
+            ext_ctx = img_feat_flat * role_rep_combo
 
 
         loss = None
