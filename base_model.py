@@ -864,7 +864,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
                 else:
                     role_rep_expand_new[:,i] = torch.cat([role_rep_expand[:,i,:i], role_rep_expand[:,i,i+1:]], 1)
 
-            if self.gpu_mode >= 0:
+            if torch.cuda.is_available():
                 role_rep_expand_new = role_rep_expand_new.to(torch.device('cuda'))
 
 
