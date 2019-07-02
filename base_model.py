@@ -796,7 +796,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
         img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
-        img_feat_flat = img_feat_flat.expand(self.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
+        img_feat_flat = img_feat_flat.expand(self.encoder.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
         img_feat_flat = img_feat_flat.transpose(0,1)
         img_feat_flat = img_feat_flat.contiguous().view(-1, img_feat_flat.size(-1))
         batch_size, n_channel, conv_h, conv_w = img_features.size()
@@ -853,9 +853,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             #we need to arrage it that way, then add image to each of them
             #then reshape ctx to match original join rep dimentions
 
-            role_rep_expand = role_rep.expand(self.max_role_count, role_rep.size(0), role_rep.size(1), role_rep.size(2))
+            role_rep_expand = role_rep.expand(self.encoder.max_role_count, role_rep.size(0), role_rep.size(1), role_rep.size(2))
             role_rep_expand = role_rep_expand.transpose(0,1)
-            role_rep_expand_new = torch.zeros([batch_size, self.max_role_count, self.max_role_count-1, role_rep.size(2)])
+            role_rep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, role_rep.size(2)])
             for i in range(self.max_role_count):
                 if i == 0:
                     role_rep_expand_new[:,i] = role_rep_expand[:,i,1:]
