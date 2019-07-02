@@ -636,7 +636,7 @@ class imsitu_encoder():
 
     def get_detailed_roleq_idx(self, verb_ids, label_ids):
 
-        if label_ids == None:
+        if label_ids is None:
             #get general roles
             return self.get_role_nl_questions_batch(verb_ids)
 
