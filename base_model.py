@@ -2422,9 +2422,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             if i == 0:
                 v_repr_combo = v_repr
-                partial_ans_stack = v_repr.unsqeeze(1)
+                partial_ans_stack = v_repr.unsqueeze(1)
             else :
-                partial_ans_stack = torch.cat(partial_ans_stack.clone(), v_repr.unsqeeze(1), 1)
+                partial_ans_stack = torch.cat(partial_ans_stack.clone(), v_repr.unsqueeze(1), 1)
+                print('size :', partial_ans_stack.size())
                 v_repr_combo = torch.sum(partial_ans_stack, 1)
 
 
