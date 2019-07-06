@@ -2344,6 +2344,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
+        self.partial_ans_combo_encoder = nn.LSTM(1024, 1024,
+                              batch_first=True, bidirectional=True)
+        self.lstm_proj1 = nn.Linear(1024 * 2, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2425,7 +2428,12 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 partial_ans_stack = v_repr.unsqueeze(1)
             else :
                 partial_ans_stack = torch.cat([partial_ans_stack.clone(), v_repr.unsqueeze(1)], 1)
-                v_repr_combo = torch.sum(partial_ans_stack, 1)
+                #v_repr_combo = torch.sum(partial_ans_stack, 1)
+                self.partial_ans_combo_encoder.flatten_parameters()
+                lstm_out, (h, _) = self.partial_ans_combo_encoder(partial_ans_stack)
+                v_repr_combo = h.permute(1, 0, 2).contiguous().view(batch_size*self.max_role_count, -1)
+                v_repr_combo = self.lstm_proj1(v_repr_combo)
+
 
 
             joint_repr = q_repr * v_repr_combo
