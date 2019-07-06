@@ -2431,7 +2431,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
                 self.partial_ans_combo_encoder.flatten_parameters()
                 lstm_out, (h, _) = self.partial_ans_combo_encoder(partial_ans_stack)
-                v_repr_combo = h.permute(1, 0, 2).contiguous().view(batch_size*self.max_role_count, -1)
+                v_repr_combo = h.permute(1, 0, 2).contiguous().view(batch_size * partial_ans_stack.size(1), -1)
                 v_repr_combo = self.lstm_proj1(v_repr_combo)
 
 
