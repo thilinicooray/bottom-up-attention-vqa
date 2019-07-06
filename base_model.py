@@ -2401,6 +2401,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         prev_rep = None
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+        partial_ans_stack = None
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
@@ -2418,10 +2419,19 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
-            joint_repr = q_repr * v_repr
-            if i != 0:
+
+            if i == 0:
+                v_repr_combo = v_repr
+                partial_ans_stack = v_repr.unsqeeze(1)
+            else :
+                partial_ans_stack = torch.cat(partial_ans_stack.clone(), v_repr.unsqeeze(1), 1)
+                v_repr_combo = torch.sum(partial_ans_stack, 1)
+
+
+            joint_repr = q_repr * v_repr_combo
+            '''if i != 0:
                 joint_repr = self.dropout(joint_repr) + prev_rep
-            prev_rep = joint_repr
+            prev_rep = joint_repr'''
 
             combo_rep = joint_repr + ext_ctx
 
