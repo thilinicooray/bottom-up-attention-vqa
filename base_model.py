@@ -2431,7 +2431,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            rep = self.relu(self.rep_ctx_project(torch.cat([joint_repr , ext_ctx],-1))) * joint_repr
+            rep = self.relu(self.rep_ctx_project(torch.cat([joint_repr , ext_ctx],-1))) + joint_repr
 
             if i == 0:
                 combo_rep = rep
