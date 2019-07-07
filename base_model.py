@@ -2344,7 +2344,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.rep_ctx_project = nn.Linear(2048, 1024)
+        self.rep_ctx_project = nn.Linear(1024, 1024)
         self.combo_att = Attention(1024, 1024, 1024)
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
