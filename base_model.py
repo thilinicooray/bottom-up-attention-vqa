@@ -2344,9 +2344,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.partial_ans_combo_encoder = nn.LSTM(1024, 1024,
-                              batch_first=True, bidirectional=True)
-        self.lstm_proj1 = nn.Linear(1024 * 2, 1024)
+        self.combo_att = Attention(1024, 1024, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2404,7 +2402,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         prev_rep = None
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
-        partial_ans_stack = None
+        partial_combo_stack = None
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
@@ -2423,25 +2421,22 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             q_repr = self.q_net(q_emb)
             v_repr = self.v_net(v_emb)
 
-            if i == 0:
-                v_repr_combo = v_repr
-                partial_ans_stack = v_repr.unsqueeze(1)
-            else :
-                partial_ans_stack = torch.cat([partial_ans_stack.clone(), v_repr.unsqueeze(1)], 1)
-                #v_repr_combo = torch.sum(partial_ans_stack, 1)
-                self.partial_ans_combo_encoder.flatten_parameters()
-                lstm_out, (h, _) = self.partial_ans_combo_encoder(partial_ans_stack)
-                v_repr_combo = h.permute(1, 0, 2).contiguous().view(batch_size, -1)
-                v_repr_combo = self.lstm_proj1(v_repr_combo)
 
-
-
-            joint_repr = q_repr * v_repr_combo
+            joint_repr = q_repr * v_repr
             '''if i != 0:
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            combo_rep = joint_repr + ext_ctx
+            rep = joint_repr + ext_ctx
+
+            if i == 0:
+                combo_rep = rep
+                partial_combo_stack = rep.unsqueeze(1)
+            else :
+                partial_combo_stack = torch.cat([partial_combo_stack.clone(), v_repr.unsqueeze(1)], 1)
+                combo_weights = self.combo_att(partial_combo_stack, img_feat_flat)
+                combo_rep = (combo_weights * partial_combo_stack).sum(1)
+                #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
             logits = self.classifier(combo_rep)
 
