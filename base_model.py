@@ -2442,7 +2442,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
                 partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
                 combo_weights = self.combo_att(partial_combo_stack, q_repr)
-                combo_rep = rep + (combo_weights * partial_combo_stack).sum(1)
+                combo_rep = (combo_weights * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
             logits = self.classifier(combo_rep)
