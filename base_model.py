@@ -2346,6 +2346,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
         self.rep_ctx_project = nn.Linear(1024, 1024)
         self.combo_att = Attention(1024, 1024, 1024)
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2428,7 +2430,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            rep = nn.Tanh(self.rep_ctx_project(joint_repr + ext_ctx)) + joint_repr
+            rep = self.tanh(self.rep_ctx_project(joint_repr + ext_ctx)) + joint_repr
 
             if i == 0:
                 combo_rep = rep
