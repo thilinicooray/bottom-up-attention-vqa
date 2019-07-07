@@ -2344,11 +2344,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.rep_ctx_project = nn.Linear(1024, 1024)
-        self.combo_after_gating = nn.Linear(1024, 1024)
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
-        self.relu = nn.ReLU()
+        #self.rep_ctx_project = nn.Linear(1024, 1024)
+        self.combo_att = Attention(1024, 1024, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2437,13 +2434,15 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 combo_rep = rep
                 partial_combo_stack = rep.unsqueeze(1)
             else :
-                multi_rep = rep.unsqueeze(1).expand(partial_combo_stack.size(0),partial_combo_stack.size(1), partial_combo_stack.size(-1))
-                combo = torch.sum(self.tanh(self.rep_ctx_project(partial_combo_stack + multi_rep)),1) + rep
-                combo_rep = combo
+                #multi_rep = rep.unsqueeze(1).expand(partial_combo_stack.size(0),partial_combo_stack.size(1), partial_combo_stack.size(-1))
+                #combo = torch.sum(self.tanh(self.rep_ctx_project(partial_combo_stack - multi_rep)),1) + rep
+                #combo_rep = combo
+
+
 
                 partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
-                #combo_weights = self.combo_att(partial_combo_stack, img_feat_flat)
-                #combo_rep = (combo_weights * partial_combo_stack).sum(1)
+                combo_weights = self.combo_att(partial_combo_stack, q_repr)
+                combo_rep = (combo_weights * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
             logits = self.classifier(combo_rep)
