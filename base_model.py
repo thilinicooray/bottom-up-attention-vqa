@@ -2437,8 +2437,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 combo_rep = rep
                 partial_combo_stack = rep.unsqueeze(1)
             else :
-
-
+                multi_rep = rep.unsqueeze(1).expand(partial_combo_stack.size(0),partial_combo_stack.size(1), partial_combo_stack.size(-1))
+                combo = torch.sum(self.tanh(self.rep_ctx_project(partial_combo_stack + multi_rep)),1)
+                combo_rep = combo + rep
 
                 partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
                 #combo_weights = self.combo_att(partial_combo_stack, img_feat_flat)
