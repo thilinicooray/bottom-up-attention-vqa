@@ -2431,15 +2431,18 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            rep = self.rep_ctx_project(joint_repr + ext_ctx) * joint_repr
+            rep = joint_repr + ext_ctx
 
             if i == 0:
                 combo_rep = rep
                 partial_combo_stack = rep.unsqueeze(1)
             else :
-                partial_combo_stack = torch.cat([partial_combo_stack.clone(), v_repr.unsqueeze(1)], 1)
-                combo_weights = self.combo_att(partial_combo_stack, img_feat_flat)
-                combo_rep = (combo_weights * partial_combo_stack).sum(1)
+
+
+
+                partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
+                #combo_weights = self.combo_att(partial_combo_stack, img_feat_flat)
+                #combo_rep = (combo_weights * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
             logits = self.classifier(combo_rep)
