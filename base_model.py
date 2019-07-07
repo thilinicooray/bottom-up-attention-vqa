@@ -2347,6 +2347,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.rep_ctx_project = nn.Linear(1024, 1024)
         self.combo_att_q = Attention(1024, 1024, 1024)
         self.combo_att_img = Attention(1024, 1024, 1024)
+        self.sigmoid = nn.Sigmoid()
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2448,7 +2449,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 combo_weights_img = self.combo_att_img(partial_combo_stack, img_feat_flat)
                 combo_rep_img = (combo_weights_img * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
-                combo_rep = combo_rep_q + combo_rep_img
+
+                gate = self.sigmoid(ext_ctx*img_feat_flat)
+
+                combo_rep = gate * combo_rep_q + (1-gate) * combo_rep_img
 
             logits = self.classifier(combo_rep)
 
