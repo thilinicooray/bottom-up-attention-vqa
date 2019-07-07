@@ -2450,7 +2450,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 combo_rep_img = (combo_weights_img * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
-                gate = self.sigmoid(ext_ctx*img_feat_flat)
+                gate = self.sigmoid(q_repr * img_feat_flat)
 
                 combo_rep = gate * combo_rep_q + (1-gate) * combo_rep_img
 
