@@ -7,6 +7,7 @@ from fc import FCNet
 import torchvision as tv
 import utils_imsitu
 import numpy as np
+import torch.nn.functional as F
 
 class resnet_152_features(nn.Module):
     def __init__(self):
@@ -2345,8 +2346,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
         #self.rep_ctx_project = nn.Linear(1024, 1024)
-        self.combo_att_q = Attention(1024, 1024, 1024)
+        #self.combo_att_q = Attention(1024, 1024, 1024)
         self.combo_att_img = Attention(1024, 1024, 1024)
+        self.combo_att_q = nn.Linear(1024, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
@@ -2443,8 +2445,14 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
 
                 partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
-                combo_weights_q = self.combo_att_q(partial_combo_stack, q_repr)
-                combo_rep_q = (combo_weights_q * partial_combo_stack).sum(1)
+                #combo_weights_q = self.combo_att_q(partial_combo_stack, q_repr)
+                attn4q = partial_combo_stack * q_repr.unsqueeze(1)
+                print('attn4q', attn4q.size())
+                qattn = self.combo_att_q(attn4q).squeeze(2)
+                print('qattn', qattn.size())
+                qattn = F.softmax(qattn, 1).unsqueeze(1)
+                print('qattn', qattn.size())
+                combo_rep_q = (qattn * partial_combo_stack).sum(1)
 
                 combo_weights_img = self.combo_att_img(partial_combo_stack, img_feat_flat)
                 combo_rep_img = (combo_weights_img * partial_combo_stack).sum(1)
