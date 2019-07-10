@@ -2347,8 +2347,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
         #self.rep_ctx_project = nn.Linear(1024, 1024)
         #self.combo_att_q = Attention(1024, 1024, 1024)
-        self.combo_att_img = Attention(1024, 1024, 1024)
+        #self.combo_att_img = Attention(1024, 1024, 1024)
         self.combo_att_q = nn.Linear(1024, 1)
+        self.combo_att_img = nn.Linear(1024, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
@@ -2447,15 +2448,17 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 partial_combo_stack = torch.cat([partial_combo_stack.clone(), rep.unsqueeze(1)], 1)
                 #combo_weights_q = self.combo_att_q(partial_combo_stack, q_repr)
                 attn4q = partial_combo_stack * q_repr.unsqueeze(1)
-                print('attn4q', attn4q.size())
                 qattn = self.combo_att_q(attn4q).squeeze(2)
-                print('qattn', qattn.size())
                 qattn = F.softmax(qattn, 1).unsqueeze(2)
-                print('qattn', qattn.size(), partial_combo_stack.size())
                 combo_rep_q = (qattn * partial_combo_stack).sum(1)
 
-                combo_weights_img = self.combo_att_img(partial_combo_stack, img_feat_flat)
-                combo_rep_img = (combo_weights_img * partial_combo_stack).sum(1)
+                attn4img = partial_combo_stack * img_feat_flat.unsqueeze(1)
+                iattn = self.combo_att_img(attn4img).squeeze(2)
+                iattn = F.softmax(iattn, 1).unsqueeze(2)
+                combo_rep_img = (iattn * partial_combo_stack).sum(1)
+
+                #combo_weights_img = self.combo_att_img(partial_combo_stack, img_feat_flat)
+                #combo_rep_img = (combo_weights_img * partial_combo_stack).sum(1)
                 #v_repr_combo = torch.sum(partial_ans_stack, 1)
 
                 gate = self.sigmoid(q_repr * img_feat_flat)
