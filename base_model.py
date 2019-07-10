@@ -2451,7 +2451,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 qattn = self.combo_att_q(attn4q).squeeze(2)
                 print('qattn', qattn.size())
                 qattn = F.softmax(qattn, 1).unsqueeze(1)
-                print('qattn', qattn.size())
+                print('qattn', qattn.size(), partial_combo_stack.size())
                 combo_rep_q = (qattn * partial_combo_stack).sum(1)
 
                 combo_weights_img = self.combo_att_img(partial_combo_stack, img_feat_flat)
