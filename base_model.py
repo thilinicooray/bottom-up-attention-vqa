@@ -2499,6 +2499,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
         partial_combo_stack = torch.zeros(batch_size,1, 1024)
+        if torch.cuda.is_available():
+            partial_combo_stack = partial_combo_stack.to(torch.device('cuda'))
+
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
 
