@@ -2348,9 +2348,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.rep_ctx_project = nn.Linear(1024, 1024)
         #self.combo_att_q = Attention(1024, 1024, 1024)
         #self.combo_att_img = Attention(1024, 1024, 1024)
-        self.combo_att_q = nn.Linear(1024, 1)
+        #self.combo_att_q = nn.Linear(1024, 1)
         self.combo_att_img = nn.Linear(1024, 1)
         self.sigmoid = nn.Sigmoid()
+        self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2394,7 +2395,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_prev(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2464,6 +2465,73 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 gate = self.sigmoid(q_repr * img_feat_flat)
 
                 combo_rep = gate * combo_rep_q + (1-gate) * combo_rep_img
+
+            logits = self.classifier(combo_rep)
+
+            if self.training:
+                losses.append(self.calculate_loss(logits, gt_verbs))
+
+            verb_idx = torch.max(logits,-1)[1]
+
+            role_rep, role_pred = self.role_module.forward_noq_reponly(v, verb_idx)
+
+
+        loss = None
+        if self.training:
+            loss_all = torch.stack(losses,0)
+            loss = torch.sum(loss_all, 0)/self.num_iter
+
+
+        return logits, loss
+
+    def forward(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+        partial_combo_stack = self.partial_ans0.expand(batch_size, 1, 1024)
+        for i in range(self.num_iter):
+
+            role_rep_combo = torch.sum(role_rep, 1)
+            ext_ctx = img_feat_flat * role_rep_combo
+            label_idx = torch.max(role_pred,-1)[1]
+            q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+            if torch.cuda.is_available():
+                q = q.to(torch.device('cuda'))
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img_org, q_emb)
+            v_emb = (att * img_org).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+
+
+            joint_repr = q_repr * v_repr
+            '''if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr'''
+
+            rep = joint_repr + ext_ctx
+
+            attn4img = partial_combo_stack * img_feat_flat.unsqueeze(1)
+            iattn = self.combo_att_img(attn4img).squeeze(2)
+            iattn = F.softmax(iattn, 1).unsqueeze(2)
+            combo_rep_img = (iattn * partial_combo_stack).sum(1)
+
+            gate = self.sigmoid(q_repr * img_feat_flat)
+            combo_rep = gate * rep + (1-gate) * combo_rep_img
 
             logits = self.classifier(combo_rep)
 
