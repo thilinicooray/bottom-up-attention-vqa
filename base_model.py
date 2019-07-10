@@ -2351,7 +2351,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.combo_att_q = nn.Linear(1024, 1)
         self.combo_att_img = nn.Linear(1024, 1)
         self.sigmoid = nn.Sigmoid()
-        self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
+        #self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2498,7 +2498,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         prev_rep = None
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
-        partial_combo_stack = self.partial_ans0.expand(batch_size, 1, 1024)
+        partial_combo_stack = torch.zeros(batch_size,1, 1024)
+        #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
 
             role_rep_combo = torch.sum(role_rep, 1)
