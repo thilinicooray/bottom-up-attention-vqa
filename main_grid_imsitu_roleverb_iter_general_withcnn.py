@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (img_id, img, verb, questions, labels) in enumerate(train_loader):
+        for i, (img_id, img, verb,  labels) in enumerate(train_loader):
             #prit("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -58,12 +58,10 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             if gpu_mode >= 0:
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
-                questions = torch.autograd.Variable(questions.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
-                questions = torch.autograd.Variable(questions)
                 labels = torch.autograd.Variable(labels)
 
             '''print('all inputs')
@@ -191,7 +189,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
     top5 = imsitu_scorer(encoder, 5, 3)
     with torch.no_grad():
         mx = len(dev_loader)
-        for i, (img_id, img, verb, questions, labels) in enumerate(dev_loader):
+        for i, (img_id, img, verb, labels) in enumerate(dev_loader):
             #prit("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -199,12 +197,10 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             if gpu_mode >= 0:
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
-                questions = torch.autograd.Variable(questions.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
-                questions = torch.autograd.Variable(questions)
                 labels = torch.autograd.Variable(labels)
 
             '''print('all inputs')
