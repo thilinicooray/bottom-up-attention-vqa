@@ -212,12 +212,15 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             print('=========================================================================')
             print(labels)'''
 
-            verb_predict, _ = model(img_id, img, verb, labels)
+            if write_to_file:
+                verb_predict, _, agent_names, place_names = model.forward_eval(img_id, img, verb, labels)
+            else:
+                verb_predict, _ = model(img_id, img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
-                top1.add_point_verb_only_eval(img_id, verb_predict, verb)
-                top5.add_point_verb_only_eval(img_id, verb_predict, verb)
+                top1.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names)
+                top5.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names)
             else:
                 top1.add_point_verb_only_eval(img_id, verb_predict, verb)
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
@@ -436,7 +439,7 @@ def main():
 
         all = top1.all_res
 
-        with open('top1_pred_gt'+args.model_saving_name+'.json', 'w') as fp:
+        with open('top1_pred_4_extctx_comp_'+args.model_saving_name+'.json', 'w') as fp:
             json.dump(all, fp, indent=4)
 
         print('Writing predictions to file completed !')
