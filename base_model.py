@@ -2316,6 +2316,57 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN(nn.Module):
 
         return logits, loss
 
+    def forward_eval(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_pred = self.role_module.forward_noq(v)
+        for i in range(self.num_iter):
+
+
+            label_idx = torch.max(role_pred,-1)[1]
+            q, agent_names, place_names = self.encoder.get_verbq_with_agentplace_eval(img_id, batch_size, label_idx)
+            if torch.cuda.is_available():
+                q = q.to(torch.device('cuda'))
+
+            w_emb = self.w_emb(q)
+            q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+            att = self.v_att(img_org, q_emb)
+            v_emb = (att * img_org).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+            joint_repr = q_repr * v_repr
+            if i != 0:
+                joint_repr = self.dropout(joint_repr) + prev_rep
+            prev_rep = joint_repr
+
+            logits = self.classifier(joint_repr)
+
+            if self.training:
+                losses.append(self.calculate_loss(logits, gt_verbs))
+
+            verb_idx = torch.max(logits,-1)[1]
+
+            role_pred = self.role_module.forward_noq(v, verb_idx)
+
+
+        loss = None
+        if self.training:
+            loss_all = torch.stack(losses,0)
+            loss = torch.sum(loss_all, 0)/self.num_iter
+
+
+        return logits, loss, agent_names, place_names
+
     def calculate_loss(self, verb_pred, gt_verbs):
 
         batch_size = verb_pred.size()[0]
