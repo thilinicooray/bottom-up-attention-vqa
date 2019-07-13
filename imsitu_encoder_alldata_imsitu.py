@@ -884,11 +884,14 @@ class imsitu_encoder():
                 agents_10 = []
                 agent_id_list = current_label_id_10[0]
                 agent_logit_list = current_label_logits_10[0]
+                agent_10_logits = []
 
-                for ag in agent_id_list:
+                for j in range(len(agent_id_list)):
+                    ag = agent_id_list[j]
                     agents_10.append(self.all_words[self.labelid2nlword[self.label_list[ag]]])
+                    agent_10_logits.append(agent_logit_list[j].item())
 
-                agent_10[im_id] = {'names':agents_10, 'logits':agent_logit_list.cpu().numpy()}
+                agent_10[im_id] = {'names':agents_10, 'logits':agent_10_logits}
 
             else:
                 agent_10[im_id] = {'names':[], 'logits':[]}
@@ -897,11 +900,14 @@ class imsitu_encoder():
                 places_10 = []
                 place_id_list = current_label_id_10[1]
                 place_logit_list = current_label_logits_10[1]
+                place_10_logits = []
 
-                for pl in place_id_list:
+                for i in range(len(place_id_list)):
+                    pl = place_id_list[i]
                     places_10.append(self.all_words[self.labelid2nlword[self.label_list[pl]]])
+                    place_10_logits.append(place_logit_list[i].item())
 
-                place_10[im_id] = {'names':places_10, 'logits':place_logit_list.cpu().numpy()}
+                place_10[im_id] = {'names':places_10, 'logits':place_10_logits}
 
             else:
                 place_10[im_id] = {'names':[], 'logits':[]}
