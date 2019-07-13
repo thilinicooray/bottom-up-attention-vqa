@@ -213,14 +213,14 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             print(labels)'''
 
             if write_to_file:
-                verb_predict, _, agent_names, place_names = model.forward_eval(img_id, img, verb, labels)
+                verb_predict, _, agent_names, place_names, agent_10, place_10 = model.forward_eval(img_id, img, verb, labels)
             else:
                 verb_predict, _ = model(img_id, img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
-                top1.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names)
-                top5.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names)
+                top1.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names, agent_10, place_10)
+                top5.add_point_verb_only_eval_eval(img_id, verb_predict, verb, agent_names, place_names, agent_10, place_10)
             else:
                 top1.add_point_verb_only_eval(img_id, verb_predict, verb)
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
