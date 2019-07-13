@@ -2397,7 +2397,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.proj_cat_ctx = nn.Linear(2048, 1024)
+        self.proj_cat_ctx = nn.Linear(1024, 1)
         #self.rep_ctx_project = nn.Linear(1024, 1024)
         #self.combo_att_q = Attention(1024, 1024, 1024)
         #self.combo_att_img = Attention(1024, 1024, 1024)
@@ -2627,10 +2627,19 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
 
-            role_rep_combo = torch.sum(role_rep, 1)
-            ext_ctx = img_feat_flat * role_rep_combo
+            #role_rep_combo = torch.sum(role_rep, 1)
 
-            new_ctx = self.proj_cat_ctx(torch.cat([ext_ctx, img_feat_flat], -1))
+            img_feat_flat = img_feat_flat.unsqueeze(1)
+            img_feat_flat = img_feat_flat.expand(img_feat_flat.size(0), role_rep.size(1), img_feat_flat.size(2))
+
+            ext_ctx = img_feat_flat * role_rep
+            print('ext_ctx', ext_ctx.size())
+            ext_ctx_att = self.proj_cat_ctx(ext_ctx)
+            print('ext_ctx_att', ext_ctx_att.size())
+            weighted_sum_extctx = torch.sum(ext_ctx_att*ext_ctx, 1)
+            print('weighted_sum_extctx', weighted_sum_extctx.size())
+
+            #new_ctx = self.proj_cat_ctx(torch.cat([ext_ctx, img_feat_flat], -1))
 
 
 
@@ -2657,7 +2666,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             #gate = self.sigmoid(q_repr * img_feat_flat)
             #combo_rep = gate * joint_repr + (1-gate) * ext_ctx
 
-            combo_rep = joint_repr + new_ctx
+            combo_rep = joint_repr + weighted_sum_extctx
 
             logits = self.classifier(combo_rep)
 
