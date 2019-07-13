@@ -2633,6 +2633,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             #calc angular cosine between ctx and org image to find the distance between two
             cos_sim = self.cosine_sim(img_feat_flat, ext_ctx)
             ang_distance = torch.div(torch.acos(cos_sim), math.pi)
+            print(cos_sim.size(), ang_distance.size(), img_feat_flat.size())
 
             # get the difference of these two as we want to add that info to context, so that important details of
             # image did not contained in q can be included
