@@ -2401,7 +2401,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.combo_att_img = Attention(1024, 1024, 1024)
         #self.combo_att_q = nn.Linear(1024, 1)
         #self.combo_att_img = nn.Linear(1024, 1)
-        #self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
         #self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
