@@ -2687,6 +2687,12 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             role_rep_combo = torch.sum(role_rep, 1)
             ext_ctx = img_feat_flat * role_rep_combo
             label_idx = torch.max(role_pred,-1)[1]
+
+            label_sfmx, label_id = torch.sort(role_pred, -1, True)
+            print(label_idx.size(),label_sfmx.size(), label_id.size(), role_pred.size() )
+            #label_sfmx_10 = label_sfmx[]
+
+
             q, agents, places = self.encoder.get_verbq_with_agentplace_eval(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
                 q = q.to(torch.device('cuda'))
