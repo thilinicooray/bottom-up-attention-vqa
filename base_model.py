@@ -2689,8 +2689,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             label_idx = torch.max(role_pred,-1)[1]
 
             label_sfmx, label_id = torch.sort(role_pred, -1, True)
-            print(label_idx.size(),label_sfmx.size(), label_id.size(), role_pred.size() )
-            #label_sfmx_10 = label_sfmx[]
+            #print(label_idx.size(),label_sfmx.size(), label_id.size(), role_pred.size() )
+            label_sfmx_10 = label_sfmx[:,:,:10]
+            label_id_10 = label_id[:,:,:10]
+            print(label_sfmx_10[1,0], label_id_10[1,0])
 
 
             q, agents, places = self.encoder.get_verbq_with_agentplace_eval(img_id, batch_size, label_idx)
