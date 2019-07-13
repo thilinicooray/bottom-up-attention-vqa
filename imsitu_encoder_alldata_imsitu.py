@@ -888,7 +888,7 @@ class imsitu_encoder():
                 for ag in agent_id_list:
                     agents_10.append(self.all_words[self.labelid2nlword[self.label_list[ag]]])
 
-                agent_10[im_id] = {'names':agents_10, 'logits':agent_logit_list}
+                agent_10[im_id] = {'names':agents_10, 'logits':agent_logit_list.cpu().numpy()}
 
             else:
                 agent_10[im_id] = {'names':[], 'logits':[]}
