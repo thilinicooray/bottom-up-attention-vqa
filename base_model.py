@@ -2633,11 +2633,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             img_feat_flat = img_feat_flat.expand(img_feat_flat.size(0), role_rep.size(1), img_feat_flat.size(2))
 
             ext_ctx = img_feat_flat * role_rep
-            print('ext_ctx', ext_ctx.size())
             ext_ctx_att = self.proj_cat_ctx(ext_ctx)
-            print('ext_ctx_att', ext_ctx_att.size())
             weighted_sum_extctx = torch.sum(ext_ctx_att*ext_ctx, 1)
-            print('weighted_sum_extctx', weighted_sum_extctx.size())
 
             #new_ctx = self.proj_cat_ctx(torch.cat([ext_ctx, img_feat_flat], -1))
 
