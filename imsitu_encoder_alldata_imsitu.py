@@ -841,12 +841,14 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
-    def get_verbq_with_agentplace_eval(self, img_id, batch_size, agent_place_ids):
+    def get_verbq_with_agentplace_eval(self, img_id, batch_size, agent_place_ids, label_logits_10, label_id_10):
         batch_size = batch_size
         all_qs = []
         max_len = 0
         agent_names = {}
         place_names = {}
+        agent_10 = {}
+        place_10 = {}
 
 
         for i in range(batch_size):
@@ -857,6 +859,9 @@ class imsitu_encoder():
             agent_name = self.label_list[current_labels[0]]
 
             place_name = self.label_list[current_labels[1]]
+
+            current_label_logits_10 = label_logits_10[i]
+            current_label_id_10 = label_id_10[i]
 
             if len(agent_name) > 0 and len(place_name) > 0:
                 agent_eng_name = self.all_words[self.labelid2nlword[agent_name]]
@@ -873,6 +878,34 @@ class imsitu_encoder():
 
             agent_names[im_id] = agent_eng_name
             place_names[im_id] = place_eng_name
+
+
+            if agent_eng_name != "NONE":
+                agents_10 = []
+                agent_id_list = current_label_id_10[0]
+                agent_logit_list = current_label_logits_10[0]
+
+                for ag in agent_id_list:
+                    agents_10.append(self.all_words[self.labelid2nlword[self.label_list[ag]]])
+
+                agent_10[im_id] = {'names':agents_10, 'logits':agent_logit_list}
+
+            else:
+                agent_10[im_id] = {'names':[], 'logits':[]}
+
+            if place_eng_name != "NONE":
+                places_10 = []
+                place_id_list = current_label_id_10[1]
+                place_logit_list = current_label_logits_10[1]
+
+                for pl in place_id_list:
+                    places_10.append(self.all_words[self.labelid2nlword[self.label_list[pl]]])
+
+                place_10[im_id] = {'names':places_10, 'logits':place_logit_list}
+
+            else:
+                place_10[im_id] = {'names':[], 'logits':[]}
+
 
             length = len(question.split())
             if length > max_len:
@@ -895,7 +928,7 @@ class imsitu_encoder():
                 tokens = [self.dictionary.padding_idx] * (max_len)
                 rquestion_tokens.append(torch.tensor(tokens))
 
-        return torch.stack(rquestion_tokens,0), agent_names, place_names
+        return torch.stack(rquestion_tokens,0), agent_names, place_names, agent_10, place_10
 
     def get_verbq_idx(self, img_id, verb_ids, label_ids):
         batch_size = verb_ids.size(0)

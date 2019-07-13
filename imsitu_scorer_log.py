@@ -1077,7 +1077,7 @@ class imsitu_scorer():
 
             self.score_cards.append(score_card)
 
-    def add_point_verb_only_eval_eval(self, img_id, verb_predict, gt_verbs, agent_names, place_names):
+    def add_point_verb_only_eval_eval(self, img_id, verb_predict, gt_verbs, agent_names, place_names, agent_10, place_10):
         #encoded predictions should be batch x verbs x values #assumes the are the same order as the references
         #encoded reference should be batch x 1+ references*roles,values (sorted)
 
@@ -1088,6 +1088,8 @@ class imsitu_scorer():
             current_id = img_id[i]
             pred_agent = agent_names[current_id]
             pred_place = place_names[current_id]
+            current_agent10 = agent_10[current_id]
+            current_place10 = place_10[current_id]
 
             #print('check sizes:', verb_pred.size(), gt_verb.size(), label_pred.size(), gt_label.size())
             sorted_idx = torch.sort(verb_pred, 0, True)[1]
@@ -1106,7 +1108,9 @@ class imsitu_scorer():
                                                           self.encoder.verb_list[sorted_idx[4]]
                                                           ],
                                             'pred_agent': pred_agent,
-                                            'pred_place': pred_place}
+                                            'pred_place': pred_place,
+                                            'top10_agents':current_agent10,
+                                            'top10_places':current_place10}
 
 
             score_card = new_card

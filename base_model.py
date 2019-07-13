@@ -2692,10 +2692,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             #print(label_idx.size(),label_sfmx.size(), label_id.size(), role_pred.size() )
             label_sfmx_10 = label_sfmx[:,:,:10]
             label_id_10 = label_id[:,:,:10]
-            print(label_sfmx_10[1,0], label_id_10[1,0])
+            #print(label_sfmx_10[1,0], label_id_10[1,0])
 
 
-            q, agents, places = self.encoder.get_verbq_with_agentplace_eval(img_id, batch_size, label_idx)
+            q, agents, places, agent_10, place_10 = self.encoder.get_verbq_with_agentplace_eval(img_id, batch_size, label_idx, label_sfmx_10, label_id_10)
             if torch.cuda.is_available():
                 q = q.to(torch.device('cuda'))
 
@@ -2732,7 +2732,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             loss = torch.sum(loss_all, 0)/self.num_iter
 
 
-        return logits, loss, agents, places
+        return logits, loss, agents, places, agent_10, place_10
 
     def calculate_loss(self, verb_pred, gt_verbs):
 
