@@ -901,7 +901,7 @@ class imsitu_encoder():
                 for pl in place_id_list:
                     places_10.append(self.all_words[self.labelid2nlword[self.label_list[pl]]])
 
-                place_10[im_id] = {'names':places_10, 'logits':place_logit_list}
+                place_10[im_id] = {'names':places_10, 'logits':place_logit_list.cpu().numpy()}
 
             else:
                 place_10[im_id] = {'names':[], 'logits':[]}
