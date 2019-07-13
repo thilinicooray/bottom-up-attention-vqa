@@ -349,7 +349,6 @@ def main():
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
                 {'params': model.resize_img_flat.parameters()},
-                {'params': model.combo_att_img.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
