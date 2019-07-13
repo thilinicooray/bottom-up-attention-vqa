@@ -2646,7 +2646,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            combo_rep = joint_repr + ext_ctx
+            gate = self.sigmoid(q_repr * img_feat_flat)
+            combo_rep = gate * joint_repr + (1-gate) * ext_ctx
+
+            #combo_rep = joint_repr + ext_ctx
 
             logits = self.classifier(combo_rep)
 
