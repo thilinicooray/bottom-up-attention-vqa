@@ -8,6 +8,7 @@ import torchvision as tv
 import utils_imsitu
 import numpy as np
 import torch.nn.functional as F
+import math
 
 class resnet_152_features(nn.Module):
     def __init__(self):
@@ -2396,6 +2397,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
+        self.proj_cat_ctx = nn.Linear(2048, 1024)
         #self.rep_ctx_project = nn.Linear(1024, 1024)
         #self.combo_att_q = Attention(1024, 1024, 1024)
         #self.combo_att_img = Attention(1024, 1024, 1024)
@@ -2403,6 +2405,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.combo_att_img = nn.Linear(1024, 1)
         self.sigmoid = nn.Sigmoid()
         #self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
+        self.cosine_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2626,6 +2629,19 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             role_rep_combo = torch.sum(role_rep, 1)
             ext_ctx = img_feat_flat * role_rep_combo
+
+            #calc angular cosine between ctx and org image to find the distance between two
+            cos_sim = self.cosine_sim(img_feat_flat, ext_ctx)
+            ang_distance = torch.div(torch.acos(cos_sim), math.pi)
+
+            # get the difference of these two as we want to add that info to context, so that important details of
+            # image did not contained in q can be included
+            projected_extra_infor_img = img_feat_flat * ang_distance
+
+            new_ctx = self.proj_cat_ctx(torch.cat([projected_extra_infor_img, ext_ctx], -1))
+
+
+
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
             if torch.cuda.is_available():
@@ -2646,10 +2662,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                 joint_repr = self.dropout(joint_repr) + prev_rep
             prev_rep = joint_repr'''
 
-            gate = self.sigmoid(q_repr * img_feat_flat)
-            combo_rep = gate * joint_repr + (1-gate) * ext_ctx
+            #gate = self.sigmoid(q_repr * img_feat_flat)
+            #combo_rep = gate * joint_repr + (1-gate) * ext_ctx
 
-            #combo_rep = joint_repr + ext_ctx
+            combo_rep = joint_repr + new_ctx
 
             logits = self.classifier(combo_rep)
 
