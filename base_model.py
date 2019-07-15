@@ -2397,8 +2397,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.cat_roleverb_ctx = nn.Linear(1024, 2048)
-        self.roleverb_ctx_small = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2714,8 +2712,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             joint_repr = q_repr * v_repr
 
             partial_verb = joint_repr + ext_ctx
-            partial_verb = self.cat_roleverb_ctx(partial_verb)
-            print(partial_verb.size())
 
         logits = self.classifier(partial_verb)
         loss = None

@@ -341,6 +341,7 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
+        print(model)
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
         #flt img param
@@ -349,8 +350,6 @@ def main():
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
                 {'params': model.resize_img_flat.parameters()},
-                {'params': model.cat_roleverb_ctx.parameters()},
-                {'params': model.roleverb_ctx_small.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},
