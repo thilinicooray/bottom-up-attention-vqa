@@ -2620,12 +2620,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
 
-            #role_rep_combo = torch.sum(role_rep, 1)
+            role_rep_combo = torch.sum(role_rep, 1)
 
-            img_feat_flat = img_feat_flat.unsqueeze(1)
-            img_feat_flat = img_feat_flat.expand(img_feat_flat.size(0), role_rep.size(1), img_feat_flat.size(2))
-
-            ext_ctx = img_feat_flat * role_rep
+            ext_ctx = img_feat_flat * role_rep_combo
 
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2702,7 +2699,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
-            print(img_feat_flat.size(), partial_verb.size())
             verb_ctx = img_feat_flat * partial_verb
 
             #join role and verb partial context
