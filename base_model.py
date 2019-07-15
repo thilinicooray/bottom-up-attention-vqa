@@ -2397,7 +2397,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.cat_roleverb_ctx = nn.Linear(2048, 2048)
+        self.cat_roleverb_ctx = nn.Linear(1024, 2048)
         self.roleverb_ctx_small = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
@@ -2702,9 +2702,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             verb_ctx = img_feat_flat * partial_verb
 
             #join role and verb partial context
-            role_verb_ctx = self.cat_roleverb_ctx(torch.cat([role_ctx, verb_ctx], -1))
+            #role_verb_ctx = self.cat_roleverb_ctx(role_ctx + verb_ctx)
 
-            ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
+            #ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
+            ext_ctx = role_ctx + verb_ctx
 
             #img_updated = img_org * role_verb_ctx.unsqueeze(1)
             img_updated = img_org
