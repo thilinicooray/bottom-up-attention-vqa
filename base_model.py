@@ -2715,6 +2715,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             partial_verb = joint_repr + ext_ctx
             partial_verb = self.cat_roleverb_ctx(partial_verb)
+            print(partial_verb.size())
 
         logits = self.classifier(partial_verb)
         loss = None
