@@ -2681,10 +2681,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         prev_rep = None
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
-        partial_verb = torch.zeros([batch_size, 1024]).type(torch.FloatTensor)
-
-        if torch.cuda.is_available():
-            partial_verb = partial_verb.to(torch.device('cuda'))
+        
 
         role_rep_combo = torch.sum(role_rep, 1)
         ext_ctx = img_feat_flat * role_rep_combo
