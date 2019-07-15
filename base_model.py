@@ -2722,9 +2722,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             joint_repr = q_repr * v_repr
 
-            combo_rep = joint_repr + ext_ctx
+            partial_verb = joint_repr + ext_ctx
 
-        logits = self.classifier(combo_rep)
+        logits = self.classifier(partial_verb)
         loss = None
         if self.training:
             loss = self.calculate_loss(logits, gt_verbs)
