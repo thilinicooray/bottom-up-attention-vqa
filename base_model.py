@@ -2687,7 +2687,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             partial_verb = partial_verb.to(torch.device('cuda'))
 
         role_rep_combo = torch.sum(role_rep, 1)
-        role_ctx = img_feat_flat * role_rep_combo
+        ext_ctx = img_feat_flat * role_rep_combo
 
         label_idx = torch.max(role_pred,-1)[1]
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2699,13 +2699,12 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
-            verb_ctx = partial_verb
 
             #join role and verb partial context
             #role_verb_ctx = self.cat_roleverb_ctx(role_ctx + verb_ctx)
 
             #ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
-            ext_ctx = role_ctx + verb_ctx
+            #ext_ctx = role_ctx + verb_ctx
 
             #img_updated = img_org * role_verb_ctx.unsqueeze(1)
             img_updated = img_org
@@ -2719,6 +2718,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             joint_repr = q_repr * v_repr
 
             partial_verb = joint_repr + ext_ctx
+            partial_verb = self.cat_roleverb_ctx(partial_verb)
 
         logits = self.classifier(partial_verb)
         loss = None
@@ -3825,7 +3825,7 @@ def build_baseline0grid_imsitu_roleverb_general_with_cnn_extctx(dataset, num_hid
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        2 * num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
