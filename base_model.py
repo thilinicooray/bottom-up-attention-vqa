@@ -2690,6 +2690,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        img_updated = img_org
 
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
@@ -2701,7 +2702,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             #ext_ctx = role_ctx + verb_ctx
 
             #img_updated = img_org * role_verb_ctx.unsqueeze(1)
-            img_updated = img_org
+
 
             att = self.v_att(img_updated, q_emb)
             v_emb = (att * img_updated).sum(1) # [batch, v_dim]
@@ -2713,6 +2714,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             partial_verb = joint_repr + ext_ctx
             partial_verb_updated = self.classifier.main[0](partial_verb)
+            img_updated = torch.cat([img_org, partial_verb_updated],1)
 
         logits = self.classifier.main[1:](partial_verb_updated)
         loss = None
