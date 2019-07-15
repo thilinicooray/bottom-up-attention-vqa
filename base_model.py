@@ -2699,7 +2699,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         #self.partial_ans0.expand(batch_size, 1, 1024)
         for i in range(self.num_iter):
-            verb_ctx = img_feat_flat * partial_verb
+            verb_ctx = partial_verb
 
             #join role and verb partial context
             #role_verb_ctx = self.cat_roleverb_ctx(role_ctx + verb_ctx)
