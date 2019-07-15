@@ -2397,15 +2397,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.proj_cat_ctx = nn.Linear(1024, 1)
-        #self.rep_ctx_project = nn.Linear(1024, 1024)
-        #self.combo_att_q = Attention(1024, 1024, 1024)
-        #self.combo_att_img = Attention(1024, 1024, 1024)
-        #self.combo_att_q = nn.Linear(1024, 1)
-        #self.combo_att_img = nn.Linear(1024, 1)
-        self.sigmoid = nn.Sigmoid()
-        #self.partial_ans0 = nn.Parameter(torch.zeros(1,1, 1024))
-        self.cosine_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
+        self.cat_roleverb_ctx = nn.Linear(2048, 2048)
+        self.roleverb_ctx_small = nn.Linear(2048, 1024)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2609,7 +2602,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_rolectx(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2633,12 +2626,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             img_feat_flat = img_feat_flat.expand(img_feat_flat.size(0), role_rep.size(1), img_feat_flat.size(2))
 
             ext_ctx = img_feat_flat * role_rep
-            ext_ctx_att = self.proj_cat_ctx(ext_ctx)
-            weighted_sum_extctx = torch.sum(ext_ctx_att*ext_ctx, 1)
-
-            #new_ctx = self.proj_cat_ctx(torch.cat([ext_ctx, img_feat_flat], -1))
-
-
 
             label_idx = torch.max(role_pred,-1)[1]
             q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2663,7 +2650,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             #gate = self.sigmoid(q_repr * img_feat_flat)
             #combo_rep = gate * joint_repr + (1-gate) * ext_ctx
 
-            combo_rep = joint_repr + weighted_sum_extctx
+            combo_rep = joint_repr + ext_ctx
 
             logits = self.classifier(combo_rep)
 
@@ -2683,7 +2670,68 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward_eval(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+        partial_verb = torch.zeros([batch_size, 1024]).type(torch.FloatTensor)
+
+        if torch.cuda.is_available():
+            partial_verb = partial_verb.to(torch.device('cuda'))
+
+        img_feat_flat = img_feat_flat.unsqueeze(1)
+        img_feat_flat = img_feat_flat.expand(img_feat_flat.size(0), role_rep.size(1), img_feat_flat.size(2))
+
+        role_ctx = img_feat_flat * role_rep
+
+        label_idx = torch.max(role_pred,-1)[1]
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        #self.partial_ans0.expand(batch_size, 1, 1024)
+        for i in range(self.num_iter):
+
+            verb_ctx = img_feat_flat * partial_verb
+
+            #join role and verb partial context
+            role_verb_ctx = self.cat_roleverb_ctx(torch.cat([role_ctx, verb_ctx], -1))
+
+            ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
+
+            img_updated = img_org * role_verb_ctx.unsqueeze(1)
+
+            att = self.v_att(img_updated, q_emb)
+            v_emb = (att * img_updated).sum(1) # [batch, v_dim]
+
+            q_repr = self.q_net(q_emb)
+            v_repr = self.v_net(v_emb)
+
+            joint_repr = q_repr * v_repr
+
+            combo_rep = joint_repr + ext_ctx
+
+        logits = self.classifier(combo_rep)
+        loss = None
+        if self.training:
+            loss = self.calculate_loss(logits, gt_verbs)
+
+        return logits, loss
+
+    def forward_eval1(self, img_id, v, gt_verbs, labels): #change this according to the current foreward method
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
