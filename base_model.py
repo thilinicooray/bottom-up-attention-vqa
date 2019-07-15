@@ -2714,7 +2714,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             partial_verb = joint_repr + ext_ctx
             partial_verb_updated = self.classifier.main[0](partial_verb)
-            img_updated = torch.cat([img_org, partial_verb_updated.unsqueeze(1)],1)
+            img_updated = img_org + partial_verb_updated.unsqueeze(1)
 
         logits = self.classifier.main[1:](partial_verb_updated)
         loss = None
