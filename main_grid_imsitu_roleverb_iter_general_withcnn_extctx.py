@@ -341,7 +341,6 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
-        print(model)
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
         #flt img param

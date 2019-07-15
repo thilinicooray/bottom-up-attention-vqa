@@ -2712,8 +2712,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             joint_repr = q_repr * v_repr
 
             partial_verb = joint_repr + ext_ctx
+            partial_verb_updated = self.classifier.main[0](partial_verb)
 
-        logits = self.classifier(partial_verb)
+        logits = self.classifier.main[1:](partial_verb_updated)
         loss = None
         if self.training:
             loss = self.calculate_loss(logits, gt_verbs)
@@ -3818,7 +3819,7 @@ def build_baseline0grid_imsitu_roleverb_general_with_cnn_extctx(dataset, num_hid
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
-        2 * num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
