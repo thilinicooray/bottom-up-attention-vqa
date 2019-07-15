@@ -2706,7 +2706,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
             ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
 
-            img_updated = img_org * role_verb_ctx.unsqueeze(1)
+            #img_updated = img_org * role_verb_ctx.unsqueeze(1)
+            img_updated = img_org
 
             att = self.v_att(img_updated, q_emb)
             v_emb = (att * img_updated).sum(1) # [batch, v_dim]
