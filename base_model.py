@@ -2398,6 +2398,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
+        self.img_reconstructor = FCNet([1024, 1024])
+
+        self.l2_criterion = nn.MSELoss()
+
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
 
@@ -2690,36 +2694,25 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
-        img_updated = img_org
 
-        #self.partial_ans0.expand(batch_size, 1, 1024)
-        for i in range(self.num_iter):
+        att = self.v_att(img_org, q_emb)
+        v_emb = (att * img_org).sum(1) # [batch, v_dim]
 
-            #join role and verb partial context
-            #role_verb_ctx = self.cat_roleverb_ctx(role_ctx + verb_ctx)
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
 
-            #ext_ctx = self.roleverb_ctx_small(role_verb_ctx)
-            #ext_ctx = role_ctx + verb_ctx
+        joint_repr = q_repr * v_repr
 
-            #img_updated = img_org * role_verb_ctx.unsqueeze(1)
+        combo_rep = joint_repr + ext_ctx
+
+        logits = self.classifier(combo_rep)
+
+        recon_img = self.img_reconstructor(combo_rep)
 
 
-            att = self.v_att(img_updated, q_emb)
-            v_emb = (att * img_updated).sum(1) # [batch, v_dim]
-
-            q_repr = self.q_net(q_emb)
-            v_repr = self.v_net(v_emb)
-
-            joint_repr = q_repr * v_repr
-
-            partial_verb = joint_repr + ext_ctx
-            partial_verb_updated = self.classifier.main[0](partial_verb)
-            img_updated = img_org + partial_verb_updated.unsqueeze(1)
-
-        logits = self.classifier.main[1:](partial_verb_updated)
         loss = None
         if self.training:
-            loss = self.calculate_loss(logits, gt_verbs)
+            loss = self.calculate_loss(logits, gt_verbs) + 0.001 * self.l2_criterion(recon_img, img_feat_flat)
 
         return logits, loss
 
