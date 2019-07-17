@@ -3,7 +3,7 @@ import torch.nn as nn
 from attention import Attention, NewAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
-from fc import FCNet
+from fc import FCNet, FCNet_relu
 import torchvision as tv
 import utils_imsitu
 import numpy as np
@@ -2398,7 +2398,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.img_reconstructor = FCNet([1024, 1024])
+        self.img_reconstructor = FCNet_relu([1024, 1024, 1024])
 
         self.l2_criterion = nn.MSELoss()
 
