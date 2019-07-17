@@ -2399,7 +2399,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
 
         self.img_reconstructor = MLP(1024, 1024, 1024,
-                                     num_layers=3)
+                                     num_layers=2, dropout_p=0.2)
 
         self.l2_criterion = nn.MSELoss()
 
