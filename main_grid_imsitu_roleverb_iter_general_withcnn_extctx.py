@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -215,7 +215,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             if write_to_file:
                 verb_predict, _, agent_names, place_names, agent_10, place_10 = model.forward_eval(img_id, img, verb, labels)
             else:
-                verb_predict, _ = model(img_id, img, verb, labels)
+                verb_predict, _ = model.forward_eval(img_id, img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -226,7 +226,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top5.add_point_verb_only_eval(img_id, verb_predict, verb)
 
             del  img, verb_predict, verb, labels
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 
@@ -349,7 +349,8 @@ def main():
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
                 {'params': model.resize_img_flat.parameters()},
-                {'params': model.img_reconstructor.parameters()},
+                {'params': model.mu_answer_encoder.parameters()},
+                {'params': model.logvar_answer_encoder.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},

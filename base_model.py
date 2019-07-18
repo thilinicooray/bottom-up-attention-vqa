@@ -2398,8 +2398,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.img_reconstructor = MLP(1024, 1024, 1024,
-                                     num_layers=2, dropout_p=0.3)
+        #self.img_reconstructor = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.3)
+
+        self.mu_answer_encoder = nn.Linear(1024, 20)
+        self.logvar_answer_encoder = nn.Linear(1024, 20)
 
         self.l2_criterion = nn.MSELoss()
 
@@ -2670,7 +2672,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_muinfo(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2717,6 +2719,127 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             l2 = self.l2_criterion(recon_img, img_feat_flat)
             #print(cros_entropy, l2)
             loss = cros_entropy + l2
+
+        return logits, loss
+
+    def forward(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+
+        role_rep_combo = torch.sum(role_rep, 1)
+        ext_ctx = img_feat_flat * role_rep_combo
+
+        label_idx = torch.max(role_pred,-1)[1]
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img_org, q_emb)
+        v_emb = (att * img_org).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+
+        joint_repr = q_repr * v_repr
+
+        combo_rep = joint_repr + ext_ctx
+
+        mu_wrongq = self.mu_answer_encoder(combo_rep)
+        var_wrongq = self.logvar_answer_encoder(combo_rep)
+
+
+        #============================ gold q calc ==============================
+        frame_idx = np.random.randint(3, size=1)
+        label_idx_gold = labels[:,frame_idx,:].squeeze()
+        q_gold = self.encoder.get_verbq_idx(img_id, gt_verbs, label_idx_gold)
+
+        if torch.cuda.is_available():
+            q_gold = q_gold.to(torch.device('cuda'))
+
+        w_emb_gold = self.w_emb(q_gold)
+        q_emb_gold = self.q_emb(w_emb_gold) # [batch, q_dim]
+
+        att_gold = self.v_att(img_org, q_emb_gold)
+        v_emb_gold = (att_gold * img_org).sum(1) # [batch, v_dim]
+
+        q_repr_gold = self.q_net(q_emb_gold)
+        v_repr_gold = self.v_net(v_emb_gold)
+
+        joint_repr_gold = q_repr_gold * v_repr_gold
+
+        mu_golq = self.mu_answer_encoder(joint_repr_gold)
+        var_goldq = self.logvar_answer_encoder(joint_repr_gold)
+
+
+        logits = self.classifier(joint_repr_gold)
+
+
+        loss = None
+        if self.training:
+            cros_entropy = self.calculate_loss(logits, gt_verbs)
+            kl_loss_wrongq = self.gaussian_KL_loss(mu_wrongq, var_wrongq)
+            kl_loss_goldq = self.gaussian_KL_loss(mu_golq, var_goldq)
+            kl_div = self.compute_two_gaussian_loss(mu_golq, var_goldq, mu_wrongq, var_wrongq)
+
+            print(cros_entropy, kl_loss_wrongq, kl_loss_goldq, kl_div)
+            loss = cros_entropy + kl_loss_wrongq + kl_loss_goldq + kl_div
+
+        return logits, loss
+
+    def forward_eval(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+
+        role_rep_combo = torch.sum(role_rep, 1)
+        ext_ctx = img_feat_flat * role_rep_combo
+
+        label_idx = torch.max(role_pred,-1)[1]
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img_org, q_emb)
+        v_emb = (att * img_org).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+
+        joint_repr = q_repr * v_repr
+
+        combo_rep = joint_repr + ext_ctx
+
+        logits = self.classifier(combo_rep)
+
+        loss = None
+
 
         return logits, loss
 
@@ -2801,6 +2924,43 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         final_loss = loss/batch_size
         return final_loss
+
+    def compute_two_gaussian_loss(self, mu1, logvar1, mu2, logvar2):
+        """Computes the KL loss between the embedding attained from the answers
+        and the categories.
+        KL divergence between two gaussians:
+            log(sigma_2/sigma_1) + (sigma_2^2 + (mu_1 - mu_2)^2)/(2sigma_1^2) - 0.5
+        Args:
+            mu1: Means from first space.
+            logvar1: Log variances from first space.
+            mu2: Means from second space.
+            logvar2: Means from second space.
+        """
+        numerator = logvar1.exp() + torch.pow(mu1 - mu2, 2)
+        fraction = torch.div(numerator, (logvar2.exp() + 1e-8))
+        kl = 0.5 * torch.sum(logvar2 - logvar1 + fraction - 1)
+        return kl / (mu1.size(0) + 1e-8)
+
+    def gaussian_KL_loss(mus, logvars, eps=1e-8):
+        """Calculates KL distance of mus and logvars from unit normal.
+        Args:
+            mus: Tensor of means predicted by the encoder.
+            logvars: Tensor of log vars predicted by the encoder.
+        Returns:
+            KL loss between mus and logvars and the normal unit gaussian.
+        """
+        KLD = -0.5 * torch.sum(1 + logvars - mus.pow(2) - logvars.exp())
+        kl_loss = KLD/(mus.size(0) + eps)
+        """
+        if kl_loss > 100:
+            print kl_loss
+            print KLD
+            print mus.min(), mus.max()
+            print logvars.min(), logvars.max()
+            1/0
+        """
+        return kl_loss
+
 
 class BaseModelGrid_Imsitu_RoleVerb_General_GTq_Train(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter):
