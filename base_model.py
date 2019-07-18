@@ -2941,7 +2941,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         kl = 0.5 * torch.sum(logvar2 - logvar1 + fraction - 1)
         return kl / (mu1.size(0) + 1e-8)
 
-    def gaussian_KL_loss(mus, logvars, eps=1e-8):
+    def gaussian_KL_loss(self, mus, logvars, eps=1e-8):
         """Calculates KL distance of mus and logvars from unit normal.
         Args:
             mus: Tensor of means predicted by the encoder.
