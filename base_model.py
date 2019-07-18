@@ -2850,7 +2850,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         zs = self.reparameterize(mu, log_var)
         decoded_ans = self.ans_decoder(zs)
 
-        logits = self.classifier(combo_rep + decoded_ans)
+        logits = self.classifier(decoded_ans)
 
         loss = None
 
