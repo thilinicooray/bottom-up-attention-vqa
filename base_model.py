@@ -2795,7 +2795,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             kl_loss_goldq = self.gaussian_KL_loss(mu_golq, var_goldq)
             kl_div = self.compute_two_gaussian_loss(mu_golq, var_goldq, mu_wrongq, var_wrongq)
 
-            print(cros_entropy, kl_loss_wrongq, kl_loss_goldq, kl_div)
+            #print(cros_entropy, kl_loss_wrongq, kl_loss_goldq, kl_div)
             loss = cros_entropy + kl_loss_wrongq + kl_loss_goldq + kl_div
 
         return logits, loss
