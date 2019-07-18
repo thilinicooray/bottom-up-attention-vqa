@@ -2835,7 +2835,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         hard_vqa_ans = q_repr * v_repr
 
-        updated_nlpq = self.q_updator(torch.cat([q_repr, role_rep_combo], -1))
+        updated_nlpq = self.q_updator(torch.cat([q_emb, role_rep_combo], -1))
         hybrid_vqa_ans = img_feat_flat * updated_nlpq
 
         combo_rep = hard_vqa_ans + soft_vqa_ans + hybrid_vqa_ans
