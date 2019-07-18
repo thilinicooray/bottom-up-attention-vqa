@@ -2398,10 +2398,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.ans_encoder = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.2)
-        self.mu_answer_encoder = nn.Linear(1024, 100)
-        self.logvar_answer_encoder = nn.Linear(1024, 100)
-        self.ans_decoder = MLP(100, 1024, 1024,num_layers=2, dropout_p=0.2)
+        self.img_reconstructor = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.2)
+        self.q_reconstructor = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.2)
 
         self.l2_criterion = nn.MSELoss()
 
@@ -2844,19 +2842,19 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         combo_rep = hard_vqa_ans + soft_vqa_ans
 
-        encoded_rep = self.ans_encoder(combo_rep)
-        mu = self.mu_answer_encoder(encoded_rep)
-        log_var = self.logvar_answer_encoder(encoded_rep)
-        zs = self.reparameterize(mu, log_var)
-        decoded_ans = self.ans_decoder(zs)
 
-        logits = self.classifier(decoded_ans)
+        logits = self.classifier(combo_rep)
+        recon_img = self.img_reconstructor(combo_rep)
+        recon_q = self.q_reconstructor(combo_rep)
 
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(logits, gt_verbs) + self.l2_criterion(decoded_ans, combo_rep)\
-                   + self.gaussian_KL_loss(mu, log_var)
+            cros_entropy = self.calculate_loss(logits, gt_verbs)
+            l2 = self.l2_criterion(recon_img, img_feat_flat)
+            l2_q = self.l2_criterion(recon_q, soft_vqa_ans)
+            #print(cros_entropy, l2)
+            loss = cros_entropy + l2 + l2_q
 
         return logits, loss
 
