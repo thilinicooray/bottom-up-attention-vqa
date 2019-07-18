@@ -215,7 +215,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             if write_to_file:
                 verb_predict, _, agent_names, place_names, agent_10, place_10 = model.forward_eval(img_id, img, verb, labels)
             else:
-                verb_predict, _ = model.forward_eval(img_id, img, verb, labels)
+                verb_predict, _ = model(img_id, img, verb, labels)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -349,8 +349,7 @@ def main():
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
                 {'params': model.resize_img_flat.parameters()},
-                {'params': model.mu_answer_encoder.parameters()},
-                {'params': model.logvar_answer_encoder.parameters()},
+                {'params': model.q_updator.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
                 {'params': model.q_net.parameters(), 'lr': 5e-5},

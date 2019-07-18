@@ -2397,11 +2397,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
+        self.q_updator = nn.Linear(2048, 1024)
 
         #self.img_reconstructor = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.3)
 
-        self.mu_answer_encoder = nn.Linear(1024, 20)
-        self.logvar_answer_encoder = nn.Linear(1024, 20)
 
         self.l2_criterion = nn.MSELoss()
 
@@ -2722,7 +2721,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_lkdiv(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2802,7 +2801,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward_eval(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2818,7 +2817,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
 
         role_rep_combo = torch.sum(role_rep, 1)
-        ext_ctx = img_feat_flat * role_rep_combo
+        soft_vqa_ans = img_feat_flat * role_rep_combo
 
         label_idx = torch.max(role_pred,-1)[1]
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2834,14 +2833,19 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
 
-        joint_repr = q_repr * v_repr
+        hard_vqa_ans = q_repr * v_repr
 
-        combo_rep = joint_repr + ext_ctx
+        updated_nlpq = self.q_updator(torch.cat([q_repr, role_rep_combo], -1))
+        hybrid_vqa_ans = img_feat_flat * updated_nlpq
+
+        combo_rep = hard_vqa_ans + soft_vqa_ans + hybrid_vqa_ans
 
         logits = self.classifier(combo_rep)
 
         loss = None
 
+        if self.training:
+            loss = self.calculate_loss(logits, gt_verbs)
 
         return logits, loss
 
