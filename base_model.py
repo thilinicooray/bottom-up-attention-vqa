@@ -2758,6 +2758,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         combo_rep = joint_repr + ext_ctx
 
+        logits = self.classifier(combo_rep)
+
         mu_wrongq = self.mu_answer_encoder(combo_rep)
         var_wrongq = self.logvar_answer_encoder(combo_rep)
 
@@ -2785,7 +2787,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         var_goldq = self.logvar_answer_encoder(joint_repr_gold)
 
 
-        logits = self.classifier(joint_repr_gold)
+
 
 
         loss = None
