@@ -138,7 +138,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
 
                 avg_score = top1_avg["verb"] + top1_avg["value"] + top1_avg["value-all"] + top5_avg["verb"] + \
                             top5_avg["value"] + top5_avg["value-all"] + top5_avg["value*"] + top5_avg["value-all*"]
-                avg_score /= 8
+                avg_score = top1_avg["verb"]
 
                 print ('Dev {} average :{:.2f} {} {}'.format(total_steps-1, avg_score*100,
                                                              utils_imsitu.format_dict(top1_avg,'{:.2f}', '1-'),
