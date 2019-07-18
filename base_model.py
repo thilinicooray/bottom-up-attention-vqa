@@ -2397,12 +2397,18 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
-        self.q_updator = nn.Linear(2048, 1024)
 
-        #self.img_reconstructor = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.3)
-
+        self.ans_encoder = MLP(1024, 1024, 1024,num_layers=2, dropout_p=0.2)
+        self.mu_answer_encoder = nn.Linear(1024, 100)
+        self.logvar_answer_encoder = nn.Linear(1024, 100)
+        self.ans_decoder = MLP(100, 1024, 1024,num_layers=2, dropout_p=0.2)
 
         self.l2_criterion = nn.MSELoss()
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5*logvar)
+        eps = torch.randn_like(std)
+        return eps.mul(std).add_(mu)
 
     def forward_gt(self, img_id, v, gt_verbs, labels):
         """Forward
@@ -2835,17 +2841,21 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         hard_vqa_ans = q_repr * v_repr
 
-        updated_nlpq = self.q_updator(torch.cat([q_emb, role_rep_combo], -1))
-        hybrid_vqa_ans = img_feat_flat * updated_nlpq
 
-        combo_rep = hard_vqa_ans + soft_vqa_ans + hybrid_vqa_ans
+        combo_rep = hard_vqa_ans + soft_vqa_ans
 
-        logits = self.classifier(combo_rep)
+        encoded_rep = self.ans_encoder(combo_rep)
+        mu = self.mu_answer_encoder(encoded_rep)
+        log_var = self.logvar_answer_encoder(encoded_rep)
+        zs = self.reparameterize(mu, log_var)
+        decoded_ans = self.ans_decoder(zs)
+
+        logits = self.classifier(combo_rep + decoded_ans)
 
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(logits, gt_verbs)
+            loss = self.calculate_loss(logits, gt_verbs) + self.l2_criterion(decoded_ans, img_feat_flat)
 
         return logits, loss
 
