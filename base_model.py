@@ -2855,7 +2855,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(logits, gt_verbs) + self.l2_criterion(decoded_ans, img_feat_flat)\
+            loss = self.calculate_loss(logits, gt_verbs) + self.l2_criterion(decoded_ans, combo_rep)\
                    + self.gaussian_KL_loss(mu, log_var)
 
         return logits, loss
