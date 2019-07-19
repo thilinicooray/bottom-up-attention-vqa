@@ -2833,7 +2833,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         contextualized_img = self.non_linear_combinator(
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
 
-        soft_vqa_ans = self.avg_poo(contextualized_img).squeeze()
+        soft_vqa_ans = self.avg_pool(contextualized_img).squeeze()
 
         updated_img = contextualized_img
 
@@ -2854,7 +2854,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         hard_vqa_ans = q_repr * v_repr
 
 
-        combo_rep = hard_vqa_ans 
+        combo_rep = hard_vqa_ans
 
 
         logits = self.classifier(combo_rep)
