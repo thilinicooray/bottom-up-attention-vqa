@@ -2833,7 +2833,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
 
         soft_vqa_ans = self.avg_pool(contextualized_img).squeeze()
-        print('output size ', soft_vqa_ans.size())
 
         updated_img = contextualized_img + img_org
 
@@ -2858,17 +2857,13 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
 
         logits = self.classifier(combo_rep)
-        recon_img = self.img_reconstructor(combo_rep)
-        recon_q = self.q_reconstructor(combo_rep)
 
         loss = None
 
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
-            l2 = self.l2_criterion(recon_img, img_feat_flat)
-            l2_q = self.l2_criterion(recon_q, soft_vqa_ans)
             #print(cros_entropy, l2)
-            loss = cros_entropy + l2 + l2_q
+            loss = cros_entropy 
 
         return logits, loss
 
