@@ -2958,8 +2958,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
                  / math.sqrt(d_k)
 
         p_attn = F.softmax(scores, dim = -1)
-        print(p_attn.size(), img_org.size())
-        weighted_img = torch.sum(p_attn*img_org,1)
+        weighted_img = torch.sum(p_attn.transpose(-2, -1)*img_org,1)
         ext_ctx = self.non_linear_combinator(weighted_img * role_resized)
         print(ext_ctx.size())
 
