@@ -2398,10 +2398,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.n_heads = 1
-        self.mu_calc = nn.Linear(1024, 1024)
-        self.logvar_calc = nn.Linear(1024, 1024)
-        #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
+        self.image_constructor = MLP(1024, 1024, 1024, num_layers=2, dropout_p=0.2)
+        self.l2_criterion = nn.MSELoss()
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5*logvar)
@@ -2951,7 +2949,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         role_rep_combo = torch.sum(role_rep, 1)
 
-        ext_ctx =  img_feat_flat * role_rep_combo
+        ext_ctx = img_feat_flat * role_rep_combo
 
         label_idx = torch.max(role_pred,-1)[1]
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
@@ -2971,21 +2969,15 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         combo_rep = joint_repr + ext_ctx
 
-        mu = self.mu_calc(combo_rep)
-        logvar = self.logvar_calc(combo_rep)
+        logits = self.classifier(combo_rep)
 
-        z_space = self.reparameterize(mu, logvar)
-
-        logits = self.classifier(z_space)
-
-
+        image_recon = self.image_constructor(combo_rep*ext_ctx*q_emb)
 
         loss = None
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
-            kl_loss = self.gaussian_KL_loss(mu, logvar)
             #print(cros_entropy, l2)
-            loss = cros_entropy + kl_loss
+            loss = cros_entropy + self.l2_criterion(image_recon, img_feat_flat)
 
         return logits, loss
 
@@ -4056,7 +4048,7 @@ def build_baseline0grid_imsitu_roleverb_general_with_cnn_extctx(dataset, num_hid
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
-        1024, 2 * num_hid, num_ans_classes, 0.5)
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
