@@ -380,7 +380,6 @@ def main():
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
         opts = [{'params': model.classifier.parameters()},
-                {'params': model.context_shaper_ad.parameters()},
                 {'params': model.context_shaper_mul.parameters()},
                 {'params': model.non_linear_combinator.parameters()},
                 {'params': model.v_att.parameters()},

@@ -2399,7 +2399,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
 
         self.n_heads = 4
-        self.context_shaper_ad = nn.Linear(1024, 2048)
         self.context_shaper_mul = nn.Linear(1024, 2048)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
         self.non_linear_combinator = nn.Linear(2048, 2048)
@@ -2831,10 +2830,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         role_resized = self.context_shaper_mul(role_rep_combo)
         ctx_multiheaded_mul = role_resized.view(role_resized.size(0), 1, self.n_heads, role_resized.size(1)//self.n_heads)
         contextualized_multiheaded_img = multi_headed_img * ctx_multiheaded_mul
-
-        role_resized_ad = self.context_shaper_ad(role_rep_combo)
-        ctx_multiheaded_add = role_resized_ad.view(role_resized_ad.size(0), 1, self.n_heads, role_resized_ad.size(1)//self.n_heads)
-        contextualized_multiheaded_img = contextualized_multiheaded_img + ctx_multiheaded_add
 
         contextualized_img = self.non_linear_combinator(
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
