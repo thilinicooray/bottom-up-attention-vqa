@@ -2983,8 +2983,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         loss = None
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
+            kl_loss = self.gaussian_KL_loss(mu, logvar)
             #print(cros_entropy, l2)
-            loss = cros_entropy
+            loss = cros_entropy + kl_loss
 
         return logits, loss
 
