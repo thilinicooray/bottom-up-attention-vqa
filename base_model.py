@@ -2833,9 +2833,10 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         contextualized_img = self.non_linear_combinator(
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
 
-        soft_vqa_ans = self.avg_pool(contextualized_img).squeeze()
+        #soft_vqa_ans = self.avg_poo(contextualized_img).squeeze()
+        soft_vqa_ans = torch.sum(contextualized_img, 1)
 
-        updated_img = contextualized_img 
+        updated_img = contextualized_img
 
         label_idx = torch.max(role_pred,-1)[1]
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
