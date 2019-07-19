@@ -2399,8 +2399,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
 
         self.n_heads = 1
-        self.mu_calc = nn.Linear(1024, 20)
-        self.logvar_calc = nn.Linear(1024, 20)
+        self.mu_calc = nn.Linear(1024, 1024)
+        self.logvar_calc = nn.Linear(1024, 1024)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
 
     def reparameterize(self, mu, logvar):
@@ -4056,7 +4056,7 @@ def build_baseline0grid_imsitu_roleverb_general_with_cnn_extctx(dataset, num_hid
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
-        20, 2 * num_hid, num_ans_classes, 0.5)
+        1024, 2 * num_hid, num_ans_classes, 0.5)
     role_module = role_module
     return BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, role_module, num_iter)
 
