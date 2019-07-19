@@ -382,7 +382,6 @@ def main():
         opts = [{'params': model.classifier.parameters()},
                 {'params': model.context_shaper.parameters()},
                 {'params': model.non_linear_combinator.parameters()},
-                {'params': model.resize_img_flat.parameters()},
                 {'params': model.v_att.parameters()},
                 {'params': model.q_net.parameters()},
                 {'params': model.v_net.parameters()},
