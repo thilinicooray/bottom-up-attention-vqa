@@ -2399,7 +2399,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
 
         self.n_heads = 4
-        self.context_shaper = nn.Linear(1024, 2048)
+        self.context_shaper_ad = nn.Linear(1024, 2048)
+        self.context_shaper_mul = nn.Linear(1024, 2048)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
         self.non_linear_combinator = nn.Linear(2048, 2048)
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1024))
@@ -2827,9 +2828,13 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
 
         role_rep_combo = torch.sum(role_rep, 1)
-        role_resized = self.context_shaper(role_rep_combo)
-        ctx_multiheaded = role_resized.view(role_resized.size(0), 1, self.n_heads, role_resized.size(1)//self.n_heads)
-        contextualized_multiheaded_img = multi_headed_img * ctx_multiheaded
+        role_resized = self.context_shaper_mul(role_rep_combo)
+        ctx_multiheaded_mul = role_resized.view(role_resized.size(0), 1, self.n_heads, role_resized.size(1)//self.n_heads)
+        contextualized_multiheaded_img = multi_headed_img * ctx_multiheaded_mul
+
+        role_resized_ad = self.context_shaper_ad(role_rep_combo)
+        ctx_multiheaded_add = role_resized_ad.view(role_resized_ad.size(0), 1, self.n_heads, role_resized_ad.size(1)//self.n_heads)
+        contextualized_multiheaded_img = contextualized_multiheaded_img + ctx_multiheaded_add
 
         contextualized_img = self.non_linear_combinator(
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
@@ -2847,8 +2852,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         att = self.v_att(updated_img, q_emb)
-        #v_emb = (att * updated_img).sum(1) # [batch, v_dim]
-        v_emb = self.avg_pool_role(att * updated_img).squeeze()
+        v_emb = (att * updated_img).sum(1) # [batch, v_dim]
+        #v_emb = self.avg_pool_role(att * updated_img).squeeze()
 
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
