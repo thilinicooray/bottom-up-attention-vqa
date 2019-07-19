@@ -2958,7 +2958,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         p_attn = F.softmax(scores, dim = -1)
         weighted_img = torch.sum(p_attn.transpose(-2, -1)*img_org,1)
         print(weighted_img.size())
-        ext_ctx = self.non_linear_combinator(weighted_img * role_resized)
+        ext_ctx = self.non_linear_combinator(weighted_img * role_resized.squeeze())
         print(ext_ctx.size())
 
         label_idx = torch.max(role_pred,-1)[1]
