@@ -2403,8 +2403,6 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
         self.non_linear_combinator = nn.Linear(2048, 1024)
 
-
-
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5*logvar)
         eps = torch.randn_like(std)
@@ -2959,6 +2957,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         p_attn = F.softmax(scores, dim = -1)
         weighted_img = torch.sum(p_attn.transpose(-2, -1)*img_org,1)
+        print(weighted_img.size())
         ext_ctx = self.non_linear_combinator(weighted_img * role_resized)
         print(ext_ctx.size())
 
