@@ -2398,7 +2398,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.n_heads = 2
+        self.n_heads = 1
         self.context_shaper = nn.Linear(1024, 2048)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
         self.non_linear_combinator = nn.Linear(2048, 2048)
@@ -2851,7 +2851,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
 
-        hard_vqa_ans = q_repr * v_repr
+        hard_vqa_ans = q_repr * v_repr + soft_vqa_ans
 
 
         combo_rep = hard_vqa_ans
