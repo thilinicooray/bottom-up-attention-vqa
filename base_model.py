@@ -2977,7 +2977,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
             #print(cros_entropy, l2)
-            loss = cros_entropy + self.l2_criterion(image_recon, img_feat_flat)
+            loss = cros_entropy + 0.01* self.l2_criterion(image_recon, img_feat_flat)
 
         return logits, loss
 
