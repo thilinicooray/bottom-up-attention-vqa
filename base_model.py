@@ -2956,6 +2956,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         ext_ctx_att = F.softmax(img_org * role_resized)
         weighted_img = torch.sum(ext_ctx_att*img_org,1)
         ext_ctx = self.non_linear_combinator(weighted_img * role_resized)
+        print(ext_ctx.size())
 
         label_idx = torch.max(role_pred,-1)[1]
         q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
