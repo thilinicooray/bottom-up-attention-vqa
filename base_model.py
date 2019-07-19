@@ -2401,9 +2401,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.n_heads = 1
         self.context_shaper_mul = nn.Linear(1024, 2048)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
-        self.non_linear_combinator = nn.Linear(2048, 2048)
-        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1024))
-        self.avg_pool_role = nn.AdaptiveAvgPool2d((1, 2048))
+        self.non_linear_combinator = nn.Linear(2048, 1024)
 
 
 
@@ -2809,7 +2807,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_multihead(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2937,6 +2935,57 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
 
         return logits, loss, agents, places, agent_10, place_10
+
+    def forward(self, img_id, v, gt_verbs, labels):
+
+        img_features = self.convnet(v)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        img_org = img_org.permute(0, 2, 1)
+
+        losses = []
+        prev_rep = None
+        batch_size = v.size(0)
+        role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+
+        role_rep_combo = torch.sum(role_rep, 1)
+        role_resized = self.context_shaper_mul(role_rep_combo).unsqueeze(1)
+        ext_ctx_att = F.softmax(img_org * role_resized)
+        weighted_img = torch.sum(ext_ctx_att*img_org,1)
+        ext_ctx = self.non_linear_combinator(weighted_img * role_resized)
+
+        label_idx = torch.max(role_pred,-1)[1]
+        q = self.encoder.get_verbq_with_agentplace(img_id, batch_size, label_idx)
+        if torch.cuda.is_available():
+            q = q.to(torch.device('cuda'))
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        att = self.v_att(img_org, q_emb)
+        v_emb = (att * img_org).sum(1) # [batch, v_dim]
+
+        q_repr = self.q_net(q_emb)
+        v_repr = self.v_net(v_emb)
+
+        joint_repr = q_repr * v_repr
+
+        combo_rep = joint_repr + ext_ctx
+
+        logits = self.classifier(combo_rep)
+
+
+
+        loss = None
+        if self.training:
+            cros_entropy = self.calculate_loss(logits, gt_verbs)
+            #print(cros_entropy, l2)
+            loss = cros_entropy
+
+        return logits, loss
 
     def calculate_loss(self, verb_pred, gt_verbs):
 
