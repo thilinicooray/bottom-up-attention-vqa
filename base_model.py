@@ -2828,9 +2828,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         #role_rep_combo = torch.sum(role_rep, 1)
         role_rep_combo = self.avg_pool_role(role_rep)
-        print(role_rep_combo.size())
         #role_resized = self.context_shaper(role_rep_combo)
-        ctx_multiheaded = role_resized.view(role_resized.size(0), 1, self.n_heads, role_resized.size(1)//self.n_heads)
+        ctx_multiheaded = role_rep_combo.view(role_rep_combo.size(0), 1, self.n_heads, role_rep_combo.size(2)//self.n_heads)
         contextualized_multiheaded_img = multi_headed_img * ctx_multiheaded
 
         contextualized_img = self.non_linear_combinator(
