@@ -2400,7 +2400,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         self.n_heads = 2
         self.context_shaper = nn.Linear(1024, 2048)
-        self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
+        #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
+        self.non_linear_combinator = nn.Linear(2048, 2048)
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1024))
 
 
@@ -2863,7 +2864,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
             #print(cros_entropy, l2)
-            loss = cros_entropy 
+            loss = cros_entropy
 
         return logits, loss
 
