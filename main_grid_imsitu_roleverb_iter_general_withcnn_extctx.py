@@ -348,7 +348,7 @@ def main():
         opts = [{'params': model.convnet.parameters(), 'lr': 5e-5},
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
-                {'params': model.context_shaper.parameters()},
+                {'params': model.context_shaper_mul.parameters()},
                 {'params': model.non_linear_combinator.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
