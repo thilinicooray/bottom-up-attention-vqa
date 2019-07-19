@@ -2826,10 +2826,9 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
 
-        #role_rep_combo = torch.sum(role_rep, 1)
-        role_rep_combo = self.avg_pool_role(role_rep)
-        #role_resized = self.context_shaper(role_rep_combo)
-        ctx_multiheaded = role_rep_combo.view(role_rep_combo.size(0), 1, self.n_heads, role_rep_combo.size(2)//self.n_heads)
+        role_rep_combo = torch.sum(role_rep, 1)
+        role_resized = self.context_shaper(role_rep_combo)
+        ctx_multiheaded = role_rep_combo.view(role_resized.size(0), 1, self.n_heads, role_resized.size(1)//self.n_heads)
         contextualized_multiheaded_img = multi_headed_img * ctx_multiheaded
 
         contextualized_img = self.non_linear_combinator(
@@ -2848,7 +2847,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         att = self.v_att(updated_img, q_emb)
-        v_emb = (att * updated_img).sum(1) # [batch, v_dim]
+        #v_emb = (att * updated_img).sum(1) # [batch, v_dim]
+        v_emb = self.avg_pool_role(att * updated_img).squeeze()
 
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
