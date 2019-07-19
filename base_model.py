@@ -2398,7 +2398,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.n_heads = 1
+        self.n_heads = 4
         self.context_shaper = nn.Linear(1024, 2048)
         #self.non_linear_combinator = MLP(2048, 1024, 2048, num_layers=2, dropout_p=0.2)
         self.non_linear_combinator = nn.Linear(2048, 2048)
