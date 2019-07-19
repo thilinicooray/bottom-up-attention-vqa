@@ -2396,7 +2396,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.role_module = role_module
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
-        #self.resize_img_flat = nn.Linear(2048, 1024)
+        self.resize_img_flat = nn.Linear(2048, 1024)
 
         self.n_heads = 2
         self.context_shaper = nn.Linear(1024, 2048)
@@ -2834,7 +2834,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
             contextualized_multiheaded_img.view(img_org.size(0), -1, img_org.size(2)))
 
         #soft_vqa_ans = self.avg_poo(contextualized_img).squeeze()
-        soft_vqa_ans = torch.sum(contextualized_img, 1)
+        soft_vqa_ans = self.resize_img_flat(torch.sum(contextualized_img, 1))
 
         updated_img = contextualized_img
 
