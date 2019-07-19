@@ -2817,7 +2817,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         img_org = img_features.view(batch_size, n_channel, -1)
         img_org = img_org.permute(0, 2, 1)
 
-        multi_headed_img = img_org.view(img_org.size(0), img_org.size(0), self.n_heads, img_org.size(2)//self.n_heads)
+        multi_headed_img = img_org.view(img_org.size(0), img_org.size(1), self.n_heads, img_org.size(2)//self.n_heads)
 
         losses = []
         prev_rep = None
