@@ -2932,7 +2932,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss, agents, places, agent_10, place_10
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward_ctx(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2980,7 +2980,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward1(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2994,13 +2994,15 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         prev_rep = None
         batch_size = v.size(0)
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
+        role_rep_img = img_feat_flat.unsqueeze(1) * role_rep
 
         role_rep_combo = torch.sum(role_rep, 1)
 
-        ext_ctx = img_feat_flat * role_rep_combo
+        #ext_ctx = img_feat_flat * role_rep_combo
+        ext_ctx = role_rep_combo
 
         label_idx = torch.max(role_pred,-1)[1]
-        q, grounded_info = self.encoder.get_verbq_with_agentplace_with_grounded_info(img_id, batch_size, label_idx, role_rep)
+        q, grounded_info = self.encoder.get_verbq_with_agentplace_with_grounded_info(img_id, batch_size, label_idx, role_rep_img)
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
             grounded_info = grounded_info.to(torch.device('cuda'))
