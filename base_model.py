@@ -2932,7 +2932,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss, agents, places, agent_10, place_10
 
-    def forward_ctx(self, img_id, v, gt_verbs, labels):
+    def forward(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -2967,7 +2967,8 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         joint_repr = q_repr * v_repr
 
-        combo_rep = joint_repr + ext_ctx
+        #combo_rep = joint_repr + ext_ctx
+        combo_rep = joint_repr
 
         logits = self.classifier(combo_rep)
 
@@ -2979,7 +2980,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         return logits, loss
 
-    def forward(self, img_id, v, gt_verbs, labels):
+    def forward1(self, img_id, v, gt_verbs, labels):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
