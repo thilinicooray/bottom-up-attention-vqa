@@ -2996,7 +2996,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         role_rep, role_pred = self.role_module.forward_noq_reponly(v)
         role_rep_img = img_feat_flat.unsqueeze(1) * role_rep
 
-        role_rep_combo = torch.sum(role_rep, 1)
+        role_rep_combo = torch.sum(role_rep_img, 1)
 
         #ext_ctx = img_feat_flat * role_rep_combo
         ext_ctx = role_rep_combo
