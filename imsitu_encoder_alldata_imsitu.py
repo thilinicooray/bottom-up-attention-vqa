@@ -920,7 +920,7 @@ class imsitu_encoder():
 
             grounded_info.append(init_info)
 
-        print(all_qs[0], rquestion_tokens[0], grounded_info[0].size(), agent_place_idx[0], grounded_info[0])
+        print(rquestion_tokens[0], agent_place_idx[0], grounded_info[0][agent_place_idx[0]['agent'][0]],grounded_info[0][agent_place_idx[0]['agent'][1]])
 
         return torch.stack(rquestion_tokens,0), torch.stack(grounded_info,0)
 
