@@ -841,6 +841,89 @@ class imsitu_encoder():
 
         return torch.stack(rquestion_tokens,0)
 
+    def get_verbq_with_agentplace_with_grounded_info(self, img_id, batch_size, agent_place_ids, role_rep):
+        batch_size = batch_size
+        all_qs = []
+
+        max_len = 0
+        agent_place_idx = []
+
+        for i in range(batch_size):
+            im_id = img_id[i]
+            current_labels = agent_place_ids[i]
+            agent_name = self.label_list[current_labels[0]]
+
+            place_name = self.label_list[current_labels[1]]
+            cur_agent_place_dict = {}
+
+            if len(agent_name) > 0 and len(place_name) > 0:
+                agent_eng_name = self.all_words[self.labelid2nlword[agent_name]]
+                place_eng_name = self.all_words[self.labelid2nlword[place_name]]
+                question = 'what is the ' + agent_eng_name + ' doing at the ' + place_eng_name
+                cur_agent_place_dict['agent']= [3, 2+len(agent_eng_name.split())]
+                cur_agent_place_dict['place'] = [cur_agent_place_dict ['agent'][1]+4, len(question.split()) - 1]
+
+            elif len(place_name) > 0 and len(agent_name) == 0:
+                place_eng_name = self.all_words[self.labelid2nlword[place_name]]
+                question = 'what is the action happening at the ' + place_eng_name
+                cur_agent_place_dict['agent']= [-1, -1]
+                cur_agent_place_dict['place'] = [7, len(question.split()) - 1]
+            elif len(agent_name) > 0 and len(place_name) == 0:
+                agent_eng_name = self.all_words[self.labelid2nlword[agent_name]]
+                question = 'what is the '+ agent_eng_name + ' doing'
+                cur_agent_place_dict['agent']= [3, 2+len(agent_eng_name.split())]
+                cur_agent_place_dict['place'] = [-1, -1]
+            else:
+                question = 'what is the action happening'
+                cur_agent_place_dict = {'agent':[-1,-1], 'place':[-1,-1]}
+
+
+            length = len(question.split())
+            if length > max_len:
+                max_len = length
+            all_qs.append(question)
+            agent_place_idx.append(cur_agent_place_dict)
+
+        rquestion_tokens = []
+        grounded_info = []
+
+        for j in range(len(all_qs)):
+            entry = all_qs[j]
+
+            if len(entry) > 0:
+                tokens = self.dictionary.tokenize(entry, False)
+                #print('question', entry, tokens)
+
+                tokens = tokens[:max_len]
+                if len(tokens) < max_len:
+                    # Note here we pad in front of the sentence
+                    padding = [self.dictionary.padding_idx] * (max_len - len(tokens))
+                    tokens = tokens + padding
+                utils.assert_eq(len(tokens), max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+            else:
+                tokens = [self.dictionary.padding_idx] * (max_len)
+                rquestion_tokens.append(torch.tensor(tokens))
+
+            current_agent_place_idx = agent_place_idx[j]
+            agent_rep = role_rep[j][0]
+            place_rep = role_rep[j][1]
+
+            init_info = torch.zeros(max_len, agent_rep.size(-1))
+            if current_agent_place_idx['agent'][0] != -1:
+                for ag_idx in current_agent_place_idx['agent']:
+                    init_info[ag_idx] = agent_rep
+
+            if current_agent_place_idx['place'][0] != -1:
+                for plz_idx in current_agent_place_idx['place']:
+                    init_info[plz_idx] = place_rep
+
+            grounded_info.append(init_info)
+
+        print(all_qs[0], rquestion_tokens[0], grounded_info[0][:2])
+
+        return torch.stack(rquestion_tokens,0), torch.stack(grounded_info,0)
+
     def get_verbq_with_agentplace_eval(self, img_id, batch_size, agent_place_ids, label_logits_10, label_id_10):
         batch_size = batch_size
         all_qs = []
