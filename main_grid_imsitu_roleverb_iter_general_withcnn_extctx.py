@@ -379,7 +379,8 @@ def main():
         utils_imsitu.set_trainable(model, True)
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
-        opts = [{'params': model.classifier.parameters()},
+        opts = [{'params': model.convnet.parameters(), 'lr': 5e-5},
+                {'params': model.classifier.parameters()},
                 {'params': model.resize_img_flat.parameters()},
                 {'params': model.v_att.parameters()},
                 {'params': model.q_net.parameters()},
