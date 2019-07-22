@@ -3002,6 +3002,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         q, grounded_info = self.encoder.get_verbq_with_agentplace_with_grounded_info(img_id, batch_size, label_idx, role_rep)
         if torch.cuda.is_available():
             q = q.to(torch.device('cuda'))
+            grounded_info = grounded_info.to(torch.device('cuda'))
 
         w_emb = self.w_emb(q) + grounded_info
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
