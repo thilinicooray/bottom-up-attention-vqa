@@ -2398,7 +2398,7 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
 
-        self.image_constructor = MLP(1024, 1024, 1024, num_layers=2, dropout_p=0.2)
+        #self.image_constructor = MLP(1024, 1024, 1024, num_layers=2, dropout_p=0.2)
         self.l2_criterion = nn.MSELoss()
 
     def reparameterize(self, mu, logvar):
@@ -2971,13 +2971,11 @@ class BaseModelGrid_Imsitu_RoleVerbIter_General_With_CNN_ExtCtx(nn.Module):
 
         logits = self.classifier(combo_rep)
 
-        image_recon = self.image_constructor(combo_rep*ext_ctx*q_emb)
-
         loss = None
         if self.training:
             cros_entropy = self.calculate_loss(logits, gt_verbs)
             #print(cros_entropy, l2)
-            loss = cros_entropy + 0.01* self.l2_criterion(image_recon, img_feat_flat)
+            loss = cros_entropy
 
         return logits, loss
 
@@ -4042,8 +4040,8 @@ def build_baseline0grid_imsitu_roleverb_general_with_cnn(dataset, num_hid, num_a
 def build_baseline0grid_imsitu_roleverb_general_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, role_module, num_iter):
     print('words count verbiter:', encoder.dictionary.ntoken)
     covnet = resnet_modified_medium()
-    w_emb = WordEmbedding(encoder.dictionary.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
+    w_emb = WordEmbedding(encoder.dictionary.ntoken, num_hid, 0.0)
+    q_emb = QuestionEmbedding(num_hid, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid, num_hid])
     v_net = FCNet([2048, num_hid])

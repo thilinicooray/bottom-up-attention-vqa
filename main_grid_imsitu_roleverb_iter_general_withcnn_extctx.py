@@ -308,7 +308,8 @@ def main():
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model, args.num_iter_verb)
 
-    model.w_emb.init_embedding(w_emb_path)
+    # removed cz increased word size to join
+    # model.w_emb.init_embedding(w_emb_path)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
@@ -348,7 +349,6 @@ def main():
         opts = [{'params': model.convnet.parameters(), 'lr': 5e-5},
                 {'params': model.classifier.parameters()},
                 {'params': model.w_emb.parameters()},
-                {'params': model.image_constructor.parameters()},
                 {'params': model.resize_img_flat.parameters()},
                 {'params': model.q_emb.parameters(), 'lr': 1e-4},
                 {'params': model.v_att.parameters(), 'lr': 5e-5},
@@ -380,8 +380,7 @@ def main():
         utils_imsitu.load_net(args.role_module, [model.role_module])
         utils_imsitu.set_trainable(model.role_module, False)
         opts = [{'params': model.classifier.parameters()},
-                {'params': model.context_shaper_mul.parameters()},
-                {'params': model.non_linear_combinator.parameters()},
+                {'params': model.resize_img_flat.parameters()},
                 {'params': model.v_att.parameters()},
                 {'params': model.q_net.parameters()},
                 {'params': model.v_net.parameters()},
