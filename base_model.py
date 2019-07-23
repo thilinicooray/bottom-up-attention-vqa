@@ -797,6 +797,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
+        self.l2_criterion = nn.MSELoss()
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -900,7 +901,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
-        joint_repr = q_repr * v_repr + ext_ctx
+        joint_repr = v_repr + ext_ctx
+
+        rep_img = joint_repr * q_repr
 
         logits = self.classifier(joint_repr)
 
@@ -909,7 +912,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels) + self.l2_criterion(rep_img, img_feat_flat)
 
 
         return role_label_pred, loss
