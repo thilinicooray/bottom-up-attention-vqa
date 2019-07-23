@@ -755,7 +755,7 @@ class imsitu_encoder():
 
                     updated_template = ' '.join(all_tot)
 
-                    print('template :', template, updated_template)
+                    #print('template :', template, updated_template)
 
                     length = len(updated_template.split())
                     if length > max_len:
