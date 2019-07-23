@@ -859,7 +859,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         role_rep, role_pred = self.ctx_role_model.forward_noq_reponly_allroles(v_org, gt_verb)
         label_idx = torch.max(role_pred,-1)[1]
-        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+        role_q_idx = self.encoder.get_detailed_roleq_idx_agentplace_ctx(gt_verb, label_idx)
 
         if torch.cuda.is_available():
             q = role_q_idx.to(torch.device('cuda'))
