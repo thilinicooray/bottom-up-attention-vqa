@@ -842,9 +842,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return role_label_pred, loss
 
 
-    def forward(self, v, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
-        img_features = self.convnet(v)
+        img_features = self.convnet(v_org)
         '''img_feat_flat = self.convnet.resnet.avgpool(img_features)
         img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
         img_feat_flat = img_feat_flat.expand(self.encoder.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
@@ -857,7 +857,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         batch_size = v.size(0)
 
-        role_rep, role_pred = self.ctx_role_model.forward_noq_reponly_allroles(v, gt_verb)
+        role_rep, role_pred = self.ctx_role_model.forward_noq_reponly_allroles(v_org, gt_verb)
         label_idx = torch.max(role_pred,-1)[1]
         role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
