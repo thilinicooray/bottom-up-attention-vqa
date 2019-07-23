@@ -25,7 +25,7 @@ class imsitu_encoder():
         self.max_q_word_count = 0
         self.vrole_question = {}
         self.dictionary = dict
-        self.q_templates = json.load(open('data/role_detailed_templates.json'))
+        self.q_templates = json.load(open('data/role_detailed_templates_agentctx_only.json'))
         self.all_words = json.load(open('data/allnverbsall_imsitu_words_nl2glovematching.json'))
         self.labelid2nlword = json.load(open('data/all_imsitu_words_id2nl.json'))
 
@@ -680,6 +680,82 @@ class imsitu_encoder():
                     updated_template = ' '.join(all_tot)
 
                     #print('template :', template, updated_template)
+
+                    length = len(updated_template.split())
+                    if length > max_len:
+                        max_len = length
+                    current_verb_qs.append(updated_template)
+                all_qs.append(current_verb_qs)
+
+            all_new_list = []
+            for q_list in all_qs:
+                rquestion_tokens = []
+                for entry in q_list:
+                    #print('tokeningzing :', entry)
+                    tokens = self.dictionary.tokenize(entry, False)
+                    tokens = tokens[:max_len]
+                    if len(tokens) < max_len:
+                        # Note here we pad in front of the sentence
+                        padding = [self.dictionary.padding_idx] * (max_len - len(tokens))
+                        tokens = tokens + padding
+                    utils.assert_eq(len(tokens), max_len)
+                    rquestion_tokens.append(torch.tensor(tokens))
+
+                role_padding_count = self.max_role_count - len(rquestion_tokens)
+
+                #todo : how to handle below sequence making for non roles properly?
+                for i in range(role_padding_count):
+                    padding = [self.dictionary.padding_idx] * (max_len)
+                    rquestion_tokens.append(torch.tensor(padding))
+
+                all_new_list.append(torch.stack(rquestion_tokens,0))
+
+            return torch.stack(all_new_list,0)
+
+    def get_detailed_roleq_idx_agentplace_ctx(self, verb_ids, label_ids):
+
+        if label_ids is None:
+            #get general roles
+            return self.get_role_nl_questions_batch(verb_ids)
+
+        else:
+
+            batch_size = verb_ids.size(0)
+            all_qs = []
+            max_len = 0
+
+            for i in range(batch_size):
+                curr_verb_id = verb_ids[i]
+                current_labels = label_ids[i]
+                verb_name = self.verb_list[curr_verb_id]
+                current_role_list = self.verb2_role_dict[verb_name]
+
+                role_q_templates = self.q_templates[verb_name]['roles']
+                current_verb_qs = []
+                role_dict = {}
+                for j in range(len(current_role_list)):
+                    label = self.label_list[current_labels[j]]
+                    #remember to add 'UNK' as a key to labelid2nlword and all labels must be inside the dict
+                    label_name = self.all_words[self.labelid2nlword[label]]
+                    role_dict[current_role_list[j].upper()] = label_name
+
+                for i in range(len(current_role_list)):
+                    org_template = role_q_templates[current_role_list[i]]
+                    template = org_template.format(**role_dict)
+
+                    #transform all according to correct word forms
+                    split_temp = template.split()
+                    all_tot = []
+
+                    for word in split_temp:
+                        if word == 'agentparts':
+                            print('HERERRERERERRE  ', template)
+                        final_word = self.all_words[word] if word in self.all_words else word
+                        all_tot.append(final_word)
+
+                    updated_template = ' '.join(all_tot)
+
+                    print('template :', template, updated_template)
 
                     length = len(updated_template.split())
                     if length > max_len:

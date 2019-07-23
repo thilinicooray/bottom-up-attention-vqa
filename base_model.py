@@ -747,16 +747,16 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
-        self.resize_img_flat = nn.Linear(2048, 1024)
+        #self.resize_img_flat = nn.Linear(2048, 1024)
 
-    def forward_gt(self, v, labels, gt_verb):
+    def forward(self, v, labels, gt_verb):
 
         loss = None
 
         frame_idx = np.random.randint(3, size=1)
         label_idx = labels[:,frame_idx,:].squeeze()
 
-        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
+        role_q_idx = self.encoder.get_detailed_roleq_idx_agentplace_ctx(gt_verb, label_idx)
 
         if torch.cuda.is_available():
             q = role_q_idx.to(torch.device('cuda'))
@@ -793,7 +793,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return role_label_pred, loss
 
 
-    def forward(self, v, labels, gt_verb):
+    def forward_pred(self, v, labels, gt_verb):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
