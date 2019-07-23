@@ -855,7 +855,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             role_rep_combo = torch.sum(role_rep, 1).unsqueeze(1)
             role_rep_combo = role_rep_combo.expand(role_rep_combo.size(0), self.encoder.max_role_count, role_rep_combo.size(-1))
-            role_rep_combo = role_rep_combo.view(-1, role_rep_combo.size(-1))
+            role_rep_combo = role_rep_combo.contiguous().view(-1, role_rep_combo.size(-1))
             ext_ctx = img_feat_flat * role_rep_combo
 
 
