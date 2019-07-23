@@ -25,7 +25,7 @@ class imsitu_encoder():
         self.max_q_word_count = 0
         self.vrole_question = {}
         self.dictionary = dict
-        self.q_templates = json.load(open('data/role_detailed_templates_agentctx_only.json'))
+        self.q_templates = json.load(open('data/role_detailed_templates.json'))
         self.all_words = json.load(open('data/allnverbsall_imsitu_words_nl2glovematching.json'))
         self.labelid2nlword = json.load(open('data/all_imsitu_words_id2nl.json'))
 

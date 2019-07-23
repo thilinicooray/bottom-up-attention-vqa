@@ -747,16 +747,16 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
-        #self.resize_img_flat = nn.Linear(2048, 1024)
+        self.resize_img_flat = nn.Linear(2048, 1024)
 
-    def forward(self, v, labels, gt_verb):
+    def forward_gt(self, v, labels, gt_verb):
 
         loss = None
 
         frame_idx = np.random.randint(3, size=1)
         label_idx = labels[:,frame_idx,:].squeeze()
 
-        role_q_idx = self.encoder.get_detailed_roleq_idx_agentplace_ctx(gt_verb, label_idx)
+        role_q_idx = self.encoder.get_detailed_roleq_idx(gt_verb, label_idx)
 
         if torch.cuda.is_available():
             q = role_q_idx.to(torch.device('cuda'))
@@ -793,7 +793,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return role_label_pred, loss
 
 
-    def forward_pred(self, v, labels, gt_verb):
+    def forward(self, v, labels, gt_verb):
 
         img_features = self.convnet(v)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -851,26 +851,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             label_idx = torch.max(role_label_pred,-1)[1]
 
-            #for each role its ctx gonna be every other role, excluding it.
-            #we need to arrage it that way, then add image to each of them
-            #then reshape ctx to match original join rep dimentions
-
-            role_rep_expand = role_rep.expand(self.encoder.max_role_count, role_rep.size(0), role_rep.size(1), role_rep.size(2))
-            role_rep_expand = role_rep_expand.transpose(0,1)
-            role_rep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, role_rep.size(2)])
-            for i in range(self.encoder.max_role_count):
-                if i == 0:
-                    role_rep_expand_new[:,i] = role_rep_expand[:,i,1:]
-                elif i == self.encoder.max_role_count -1:
-                    role_rep_expand_new[:,i] = role_rep_expand[:,i,:i]
-                else:
-                    role_rep_expand_new[:,i] = torch.cat([role_rep_expand[:,i,:i], role_rep_expand[:,i,i+1:]], 1)
-
-            if torch.cuda.is_available():
-                role_rep_expand_new = role_rep_expand_new.to(torch.device('cuda'))
 
 
-            role_rep_combo = torch.sum(role_rep_expand_new, 2)
+            role_rep_combo = torch.sum(role_rep, 1).unsqueeze(1)
+            role_rep_combo = role_rep_combo.expand(role_rep_combo.size(0), self.encoder.max_role_count, role_rep_combo.size(-1))
             role_rep_combo = role_rep_combo.view(-1, role_rep_combo.size(-1))
             ext_ctx = img_feat_flat * role_rep_combo
 
