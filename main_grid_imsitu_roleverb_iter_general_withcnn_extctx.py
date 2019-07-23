@@ -309,7 +309,7 @@ def main():
     model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_verbs(), encoder, role_model, args.num_iter_verb)
 
     # removed cz increased word size to join
-    # model.w_emb.init_embedding(w_emb_path)
+    model.w_emb.init_embedding(w_emb_path)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 

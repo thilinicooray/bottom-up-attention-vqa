@@ -264,6 +264,8 @@ def main():
     parser.add_argument('--num_iter', type=int, default=1)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
 
+    parser.add_argument('--role_module', type=str, default='', help='pretrained role module')
+
     #todo: train role module separately with gt verbs
 
     args = parser.parse_args()
@@ -291,8 +293,13 @@ def main():
 
     train_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
+    #get role_model
+    print('loading role model')
+    role_constructor = 'build_%s' % 'baseline0grid_imsitu_roleiter_with_cnn'
+    role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, 1)
+
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter)
+    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter, role_model)
 
     model.w_emb.init_embedding(w_emb_path)
 
@@ -330,13 +337,14 @@ def main():
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
+        utils_imsitu.load_net(args.role_module, [model.ctx_role_model])
+        utils_imsitu.set_trainable(model.ctx_role_model, False)
         #utils_imsitu.set_trainable(model.convnet, True)
         #utils_imsitu.set_trainable(model.w_emb, False)
         #utils_imsitu.set_trainable(model.q_emb, True)
         optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
-            {'params': model.resize_img_flat.parameters()},
             {'params': model.w_emb.parameters()},
             {'params': model.q_emb.parameters(), 'lr': 1e-4},
             {'params': model.v_att.parameters(), 'lr': 5e-5},
