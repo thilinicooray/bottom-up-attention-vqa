@@ -843,7 +843,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return role_label_pred, loss
 
 
-    def forward_qdiff(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         img_feat_flat = self.convnet.resnet.avgpool(img_features)
@@ -990,7 +990,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         return role_label_pred, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_noctx(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
 
