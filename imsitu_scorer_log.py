@@ -372,7 +372,7 @@ class imsitu_scorer():
                 label_id = torch.max(label_pred[k],0)[1]
 
                 found = False
-                pred_situ.append({gt_role_list[k] : self.encoder.label_list[label_id]})
+                pred_situ.append({gt_role_list[k] : self.encoder.all_words[self.encoder.labelid2nlword[self.encoder.label_list[label_id]]]})
 
                 for r in range(0,self.nref):
                     gt_label_id = gt_label[r][k]
