@@ -993,11 +993,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
     def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
-        img_feat_flat = self.convnet.resnet.avgpool(img_features)
-        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
-        img_feat_flat = img_feat_flat.expand(self.encoder.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
-        img_feat_flat = img_feat_flat.transpose(0,1)
-        img_feat_flat = img_feat_flat.contiguous().view(-1, img_feat_flat.size(-1))
+
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
@@ -1005,30 +1001,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         batch_size = v.size(0)
 
-        role_rep, role_pred = self.ctx_role_model.forward_noq_reponly_allroles(v_org, gt_verb)
-
-        role_rep_expand = role_rep.expand(self.encoder.max_role_count, role_rep.size(0), role_rep.size(1), role_rep.size(2))
-        role_rep_expand = role_rep_expand.transpose(0,1)
-        role_rep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, role_rep.size(2)])
-        for i in range(self.encoder.max_role_count):
-            if i == 0:
-                role_rep_expand_new[:,i] = role_rep_expand[:,i,1:]
-            elif i == self.encoder.max_role_count -1:
-                role_rep_expand_new[:,i] = role_rep_expand[:,i,:i]
-            else:
-                role_rep_expand_new[:,i] = torch.cat([role_rep_expand[:,i,:i], role_rep_expand[:,i,i+1:]], 1)
-
-        if torch.cuda.is_available():
-            role_rep_expand_new = role_rep_expand_new.to(torch.device('cuda'))
-
-
-        role_rep_combo = torch.sum(role_rep_expand_new, 2)
-        role_rep_combo = role_rep_combo.view(-1, role_rep_combo.size(-1))
-        ext_ctx = img_feat_flat * role_rep_combo
-
-
-        label_idx = torch.max(role_pred,-1)[1]
-        role_q_idx = self.encoder.get_detailed_roleq_idx_agentplace_ctx(gt_verb, label_idx)
+        role_q_idx = self.encoder.get_role_nl_questions_batch(gt_verb)
 
         if torch.cuda.is_available():
             q = role_q_idx.to(torch.device('cuda'))
