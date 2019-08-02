@@ -8,9 +8,9 @@ import numpy as np
 import torch
 from torch import nn
 
-from pythia.modules.attention import AttentionLayer
-from pythia.modules.layers import Identity
-from pythia.utils.vocab import Vocab
+from modules.attention import AttentionLayer
+from modules.layers import Identity
+from utils.vocab import Vocab
 
 
 class TextEmbedding(nn.Module):
