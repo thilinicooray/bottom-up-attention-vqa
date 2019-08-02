@@ -1071,7 +1071,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         mfb_iq_eltwise = torch.mul(q_repr, v_repr)
         mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
-        mfb_iq_resh = mfb_iq_drop.view(self.batch_size, 1, -1, 5)   # N x 1 x 1000 x 5
+        mfb_iq_resh = mfb_iq_drop.view(mfb_iq_drop.size(0), 1, -1, 5)   # N x 1 x 1000 x 5
         mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
         mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
