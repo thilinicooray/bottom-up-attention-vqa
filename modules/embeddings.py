@@ -10,7 +10,7 @@ from torch import nn
 
 from modules.attention import AttentionLayer
 from modules.layers import Identity
-from utils.vocab import Vocab
+#from utils.vocab import Vocab
 
 
 class TextEmbedding(nn.Module):
