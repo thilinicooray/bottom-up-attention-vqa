@@ -366,6 +366,8 @@ def main():
         print('Training from the scratch.')
         model_name = 'train_full'
         utils_imsitu.set_trainable(model, True)
+        utils_imsitu.load_net(args.role_module, [model.ctx_role_model])
+        utils_imsitu.set_trainable(model.ctx_role_model, False)
         #utils_imsitu.set_trainable(model.classifier, True)
         #utils_imsitu.set_trainable(model.w_emb, True)
         #utils_imsitu.set_trainable(model.q_emb, True)
