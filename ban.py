@@ -125,11 +125,15 @@ class BAN(nn.Module):
 
         b_emb = [0] * 4
         att, logits = self.v_att.forward_all(img, q_emb)
+        print('biatt ', att.size(), logits.size())
 
         for g in range(4):
             g_att = att[:, g, :, :]
             b_emb[g] = self.b_net[g].forward_with_weights(img, q_emb, g_att)
-            q_emb = self.q_prj[g](b_emb[g].unsqueeze(1)) + q_emb
+            print('glipz ', q_emb.size(), b_emb[g].size())
+            a = self.q_prj[g](b_emb[g].unsqueeze(1))
+            print('out q proj', a.size())
+            q_emb = a + q_emb
 
         #print('final size ', q_emb.size())
         logits = self.classifier(q_emb.sum(1))

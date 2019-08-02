@@ -340,7 +340,7 @@ def main():
                 {'params': model.q_prj.parameters()},
                 {'params': model.classifier.parameters()},
                 ]
-        optimizer = torch.optim.Adamax(opts, lr=1e-3)
+        optimizer = torch.optim.Adamax(opts, lr=1e-2)
 
 
 
