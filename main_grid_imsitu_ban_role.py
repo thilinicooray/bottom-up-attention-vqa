@@ -79,7 +79,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
-            loss = loss1
+            loss = loss1.mean()
 
             '''g = make_dot(verb_predict, model.state_dict())
             g.view()'''
