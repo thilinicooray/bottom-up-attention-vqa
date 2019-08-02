@@ -131,7 +131,7 @@ class BAN(nn.Module):
             b_emb[g] = self.b_net[g].forward_with_weights(img, q_emb, g_att)
             q_emb = self.q_prj[g](b_emb[g].unsqueeze(1)) + q_emb
 
-        print('final size ', q_emb.size())
+        #print('final size ', q_emb.size())
         logits = self.classifier(q_emb.sum(1))
 
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
