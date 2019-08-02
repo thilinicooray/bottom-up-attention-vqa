@@ -54,7 +54,7 @@ class BAN(nn.Module):
 
     def _init_text_embedding(self):
         q_mod = BiLSTMTextEmbedding(
-            512,
+            1280,
             300,
             1,
             0.0,
@@ -64,7 +64,7 @@ class BAN(nn.Module):
         self.q_emb = q_mod
 
     def _init_bilinear_attention(self):
-        num_hidden = 512
+        num_hidden = 1280
         v_dim = 2048
 
         v_att = BiAttention(v_dim, num_hidden, num_hidden, 4)
@@ -92,7 +92,7 @@ class BAN(nn.Module):
         self.v_att = v_att
 
     def _init_classifier(self,num_ans_classes):
-        num_hidden = 512
+        num_hidden = 1280
         dropout = 0.5
         self.classifier = WeightNormClassifier(
             num_hidden, num_ans_classes, num_hidden * 2, dropout
