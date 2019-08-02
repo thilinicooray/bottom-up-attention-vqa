@@ -84,6 +84,7 @@ class BiLSTMTextEmbedding(nn.Module):
         )
 
     def forward(self, x):
+        self.recurrent_encoder.flatten_parameters()
         out, _ = self.recurrent_encoder(x)
         # Return last state
         if self.bidirectional:
@@ -94,6 +95,7 @@ class BiLSTMTextEmbedding(nn.Module):
         return torch.cat((forward_, backward), dim=1)
 
     def forward_all(self, x):
+        self.recurrent_encoder.flatten_parameters()
         output, _ = self.recurrent_encoder(x)
         return output
 
