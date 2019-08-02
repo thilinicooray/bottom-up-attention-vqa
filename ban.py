@@ -36,9 +36,9 @@ class resnet_modified_medium(nn.Module):
 
 
 class BAN(nn.Module):
-    def __init__(self, encoder, num_ans_classes):
+    def __init__(self, dataset, encoder, num_ans_classes):
         super(BAN, self).__init__()
-        self._build_word_embedding(encoder)
+        self._build_word_embedding(dataset)
         self._init_text_embedding()
         self._init_classifier(num_ans_classes)
         self._init_bilinear_attention()
@@ -46,11 +46,11 @@ class BAN(nn.Module):
         self.convnet = resnet_modified_medium()
 
 
-    def _build_word_embedding(self, encoder):
+    def _build_word_embedding(self, dataset):
         #text_processor = registry.get(self._datasets[0] + "_text_processor")
         #vocab = text_processor.vocab
         #self.word_embedding = vocab.get_embedding(torch.nn.Embedding, embedding_dim=300)
-        self.word_embedding = WordEmbedding(encoder.verbq_dict.ntoken, 300, 0.0)
+        self.word_embedding = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
 
     def _init_text_embedding(self):
         q_mod = BiLSTMTextEmbedding(

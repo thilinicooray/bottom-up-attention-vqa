@@ -292,7 +292,7 @@ def main():
     train_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
     #get role_model
-    model = ban.BAN(encoder, encoder.get_num_labels() )
+    model = ban.BAN(train_set, encoder, encoder.get_num_labels() )
 
     model.word_embedding.init_embedding(w_emb_path)
 
