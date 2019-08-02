@@ -2,7 +2,7 @@
 import torch
 from torch import nn
 
-from pythia.modules.layers import GatedTanh, ModalCombineLayer, TransformLayer
+from modules.layers import GatedTanh, ModalCombineLayer, TransformLayer
 
 
 class AttentionLayer(nn.Module):
