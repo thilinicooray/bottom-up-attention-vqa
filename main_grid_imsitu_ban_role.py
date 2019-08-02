@@ -350,7 +350,12 @@ def main():
     #optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_step, gamma=lr_gamma)
     #gradient clipping, grad check
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler_class = torch.optim.lr_scheduler.LambdaLR
+    scheduler_func = lambda x: utils_imsitu.lr_lambda_update(x)
+    scheduler = scheduler_class(
+        optimizer, lr_lambda=scheduler_func
+    )
 
     if args.evaluate:
         top1, top5, val_loss = eval(model, dev_loader, encoder, args.gpuid, write_to_file = True)

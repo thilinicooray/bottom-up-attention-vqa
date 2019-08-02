@@ -5,6 +5,7 @@ import torch
 import pdb
 import numpy as np
 from torch.autograd import Function
+from bisect import bisect
 
 '''def init_weight(module):
     if isinstance(module, nn.Linear):
@@ -31,6 +32,15 @@ def l2norm(input, p=2.0, dim=1, eps=1e-12):
     Compute L2 norm, row-wise
     """
     return input / input.norm(p, dim).clamp(min=eps).expand_as(input)
+
+def lr_lambda_update(i_iter):
+    if (i_iter <= 8000
+    ):
+        alpha = float(i_iter) / float(8000)
+        return 0.2 * (1.0 - alpha) + alpha
+    else:
+        idx = bisect([15000, 18000, 20000, 21000], i_iter)
+        return pow(0.1, idx)
 
 def init_gru_cell(input):
 
