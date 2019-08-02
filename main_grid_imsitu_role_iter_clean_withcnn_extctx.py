@@ -369,7 +369,16 @@ def main():
         #utils_imsitu.set_trainable(model.classifier, True)
         #utils_imsitu.set_trainable(model.w_emb, True)
         #utils_imsitu.set_trainable(model.q_emb, True)
-        optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adamax([
+            {'params': model.convnet.parameters(), 'lr': 5e-5},
+            {'params': model.classifier.parameters()},
+            {'params': model.resize_img_flat.parameters()},
+            {'params': model.w_emb.parameters()},
+            {'params': model.q_emb.parameters()},
+            {'params': model.v_att.parameters()},
+            {'params': model.q_net.parameters()},
+            {'params': model.v_net.parameters()}
+        ], lr=1e-3)
 
 
 
