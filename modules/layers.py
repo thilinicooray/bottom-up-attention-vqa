@@ -2,8 +2,8 @@
 import torch
 from torch import nn
 from torch.nn.utils.weight_norm import weight_norm
-from pythia.common.registry import registry
-from pythia.modules.decoders import LanguageDecoder
+#from pythia.common.registry import registry
+from modules.decoders import LanguageDecoder
 
 
 class ConvNet(nn.Module):
