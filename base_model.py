@@ -1253,7 +1253,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
                     curr_loss += loss(role_leb_placewise[i][j], gt_labels_placewise[i][j])
             output = curr_loss / (n + 10e-8)
             role_loss += output
-        return role_loss / self.encoder.max_role_count
+        return (role_loss / self.encoder.max_role_count) * role_label_pred.size(-1)
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size, upperlimit):
