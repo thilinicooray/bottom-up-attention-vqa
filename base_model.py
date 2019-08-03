@@ -1080,12 +1080,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         logits = self.classifier(mfb_l2)
 
-        #prediction = F.log_softmax(logits, dim=-1)
+        prediction = F.log_softmax(logits, dim=-1)
 
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(logits, labels)
+            loss = self.calculate_loss(prediction, labels)
 
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
