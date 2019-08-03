@@ -353,8 +353,8 @@ def main():
             {'params': model.w_emb.parameters()},
             {'params': model.q_emb.parameters(), 'lr': 1e-4},
             {'params': model.v_att.parameters(), 'lr': 5e-5},
-            {'params': model.q_net.parameters() },
-            {'params': model.v_net.parameters()}
+            {'params': model.q_net.parameters(), 'lr': 5e-5 },
+            {'params': model.v_net.parameters(), 'lr': 5e-5}
         ], lr=1e-3)
 
     elif args.resume_training:
