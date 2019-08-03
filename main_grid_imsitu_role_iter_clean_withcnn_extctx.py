@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (_, img, verb, labels) in enumerate(train_loader):
+        for i, (_, img, verb, labels, label_scores) in enumerate(train_loader):
             #print("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -59,10 +59,12 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
+                label_scores = torch.autograd.Variable(label_scores.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
+                label_scores = torch.autograd.Variable(label_scores)
 
 
 
@@ -75,7 +77,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            role_predict, loss1 = pmodel(img, labels, verb)
+            role_predict, loss1 = pmodel(img, label_scores, verb)
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
@@ -197,7 +199,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
     top5 = imsitu_scorer(encoder, 5, 3)
     with torch.no_grad():
         mx = len(dev_loader)
-        for i, (img_id, img, verb, labels) in enumerate(dev_loader):
+        for i, (img_id, img, verb, labels, label_scores) in enumerate(dev_loader):
             #print("{}/{} batches\r".format(i+1,mx)) ,
             '''im_data = torch.squeeze(im_data,0)
             im_info = torch.squeeze(im_info,0)
@@ -211,12 +213,14 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
+                label_scores = torch.autograd.Variable(label_scores.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
+                label_scores = torch.autograd.Variable(label_scores)
 
-            role_predict, _ = model(img, labels, verb)
+            role_predict, _ = model(img, label_scores, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
