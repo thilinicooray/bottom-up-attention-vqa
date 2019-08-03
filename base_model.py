@@ -1063,17 +1063,25 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        n_heads = 4
+        img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+        img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
-        att = self.v_att(img, q_emb)
-        v_emb = (att * img).sum(1) # [batch, v_dim]
+        q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
 
+        print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+
+        att = self.v_att(img_mul_head, q_emb_mul_head)
+        v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+        v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
 
-        mfb_iq_sumpool = torch.mul(q_repr, v_repr)
-        #mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
-        #mfb_iq_resh = mfb_iq_drop.view(mfb_iq_drop.size(0), 1, -1, 5)   # N x 1 x 1000 x 5
-        #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+        mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+        mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+        mfb_iq_resh = mfb_iq_drop.view(mfb_iq_drop.size(0), 1, -1, 5)   # N x 1 x 1000 x 5
+        mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
         mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)
@@ -4171,12 +4179,13 @@ def build_baseline0grid_imsitu_roleiter_with_cnn(dataset, num_hid, num_ans_class
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, num_iter, ctx_role_model):
     print('words count :', dataset.dictionary.ntoken)
+    n_heads = 4
     covnet = resnet_modified_medium()
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = Attention(2048, q_emb.num_hid, num_hid)
-    q_net = FCNet([num_hid, num_hid])
-    v_net = FCNet([2048, num_hid])
+    v_att = Attention(2048//n_heads, q_emb.num_hid//n_heads, num_hid)
+    q_net = FCNet([num_hid, num_hid * 5])
+    v_net = FCNet([2048, num_hid* 5])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, ctx_role_model)
