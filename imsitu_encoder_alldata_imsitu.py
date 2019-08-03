@@ -6,6 +6,7 @@ import nltk
 import torchvision as tv
 import json
 import utils
+import numpy as np
 
 #This is the class which encodes training set json in the following structure
 #todo: the structure
@@ -448,18 +449,20 @@ class imsitu_encoder():
         roles = self.verb2_role_dict[verb]
 
         for role in roles:
-            label_counts = {}
+            label_counts = np.zeros(self.get_num_labels()+1)
             for frame in frames:
                 label = frame[role]
                 label_id = self.label_list.index(label)
 
-                if label_id in label_counts:
+                label_counts[label_id] += 1
+
+                '''if label_id in label_counts:
                     label_counts[label_id] += 1
                 else:
-                    label_counts[label_id] = 1
+                    label_counts[label_id] = 1'''
 
-            current_role_scorevec = self.get_label_score_values(label_counts)
-            all_role_list.append(current_role_scorevec)
+            current_role_scorevec = label_counts / np.sum(label_counts)
+            all_role_list.append(torch.from_numpy(current_role_scorevec).float())
 
         role_padding_count = self.max_role_count - len(roles)
 

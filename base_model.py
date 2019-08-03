@@ -1080,12 +1080,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         logits = self.classifier(mfb_l2)
 
-        prediction = F.log_softmax(logits, dim=-1)
+        #prediction = F.log_softmax(logits, dim=-1)
 
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(prediction, labels)
+            loss = self.calculate_loss(logits, labels)
 
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
@@ -1232,11 +1232,29 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
-    def calculate_loss(self, role_label_pred, gt_labels):
+    def calculate_loss_prev(self, role_label_pred, gt_labels):
         #loss = nn.KLDivLoss(reduction='sum')
         loss = nn.BCEWithLogitsLoss()
         final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
         return final_loss
+
+    def calculate_loss(self, role_label_pred, gt_labels):
+        #loss = nn.KLDivLoss(reduction='sum')
+        loss = nn.BCEWithLogitsLoss(reduction='sum')
+        batch_size = role_label_pred.size()[0]
+        role_leb_placewise = role_label_pred.view(batch_size, self.encoder.max_role_count, -1)
+        gt_labels_placewise = gt_labels.view(batch_size, self.encoder.max_role_count, -1)
+        role_loss = 0
+        for j in range(0, self.encoder.max_role_count):
+            n = 0
+            curr_loss = 0
+            for i in range(batch_size):
+                if not (gt_labels_placewise[i][j][-1] > 0.0) :
+                    n += 1
+                    curr_loss += loss(role_leb_placewise[i][j], gt_labels[i][j])
+            output = curr_loss / (n + 10e-8)
+            role_loss += output
+        return role_loss / self.encoder.max_role_count
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size, upperlimit):
