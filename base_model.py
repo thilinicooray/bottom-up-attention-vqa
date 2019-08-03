@@ -1084,9 +1084,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_iq_eltwise = torch.mul(q_repr, v_repr)
 
         lin1out = self.lin1(mfb_iq_eltwise)
-        lin2_in = lin1out + mfb_iq_eltwise
+        lin2_in = lin1out
         lin2_out = self.lin2(lin2_in)
-        val = lin2_out + lin1out + mfb_iq_eltwise
+        val = lin2_out + mfb_iq_eltwise
 
         mfb_iq_drop = self.Dropout_M(val)
 
