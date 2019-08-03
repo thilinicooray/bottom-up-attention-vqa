@@ -791,7 +791,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.v_att = v_att
         self.q_net = q_net
         self.v_net = v_net
-        #self.classifier = classifier
+        self.classifier = classifier
         self.ctx_role_model = ctx_role_model
         self.encoder = encoder
         self.num_iter = num_iter
@@ -799,7 +799,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.resize_img_flat = nn.Linear(2048, 1024)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
-        self.classifier = nn.Linear(1024, encoder.get_num_labels())
 
     def forward_gt(self, v, labels, gt_verb):
 
