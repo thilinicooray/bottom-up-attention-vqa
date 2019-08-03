@@ -1250,7 +1250,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             for i in range(batch_size):
                 if not (gt_labels_placewise[i][j][-1] > 0.0) :
                     n += 1
-                    curr_loss += loss(role_leb_placewise[i][j], gt_labels[i][j])
+                    curr_loss += loss(role_leb_placewise[i][j], gt_labels_placewise[i][j])
             output = curr_loss / (n + 10e-8)
             role_loss += output
         return role_loss / self.encoder.max_role_count
