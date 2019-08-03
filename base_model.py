@@ -1059,6 +1059,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
         q = q.view(batch_size* self.encoder.max_role_count, -1)
+        labels = labels.view(batch_size* self.encoder.max_role_count, -1)
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
@@ -1079,12 +1080,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         logits = self.classifier(mfb_l2)
 
-        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        prediction = F.log_softmax(logits)
 
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(role_label_pred, labels)
+            loss = self.calculate_loss(logits, labels)
+
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
 
         return role_label_pred, loss
@@ -1230,7 +1233,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return final_loss
 
     def calculate_loss(self, role_label_pred, gt_labels):
-
+        criterion = nn.KLDivLoss(size_average=False)
         loss = nn.BCEWithLogitsLoss()
         final_loss = loss(role_label_pred, gt_labels)
         return final_loss
