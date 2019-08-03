@@ -474,7 +474,11 @@ class imsitu_encoder():
         return scores
 
     def get_label_score_values(self, counts):
-        current_role_scorevec = torch.zeros(self.get_num_labels())
+        import numpy as np
+
+        prob_answer_vec = np.zeros(self.get_num_labels())
+
+        '''current_role_scorevec = torch.zeros(self.get_num_labels())
 
         for k, v in counts.items():
             score = 0
@@ -485,9 +489,15 @@ class imsitu_encoder():
             else:
                 score = 1.0
 
-            current_role_scorevec[k] = score
+            current_role_scorevec[k] = score'''
+        for k, v in counts.items():
+            prob_answer_vec[k] = v
 
-        return current_role_scorevec
+
+        dis = prob_answer_vec / np.sum(prob_answer_vec)
+        print(dis)
+
+        return torch.from_numpy(dis)
 
     def get_adj_matrix(self, verb_ids):
         adj_matrix_list = []
