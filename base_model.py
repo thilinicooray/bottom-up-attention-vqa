@@ -1066,7 +1066,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
-        n_heads = 8
+        n_heads = 2
         img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
         img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
@@ -4189,7 +4189,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn(dataset, num_hid, num_ans_class
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, num_iter, ctx_role_model):
     print('words count :', dataset.dictionary.ntoken)
-    n_heads = 8
+    n_heads = 2
     covnet = resnet_modified_medium()
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
