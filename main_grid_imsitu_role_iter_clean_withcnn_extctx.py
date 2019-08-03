@@ -357,7 +357,6 @@ def main():
             {'params': model.v_net.parameters()},
             {'params': model.lin1.parameters()},
             {'params': model.lin2.parameters()},
-            {'params': model.lin3.parameters()}
         ], lr=1e-3)
 
     elif args.resume_training:

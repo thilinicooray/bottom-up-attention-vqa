@@ -798,11 +798,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
         self.l2_criterion = nn.MSELoss()
-        self.Dropout_M = nn.Dropout(0.1)
+        self.Dropout_M = nn.Dropout(0.2)
 
         self.lin1 = nn.Linear(1024, 1024)
         self.lin2 = nn.Linear(1024, 1024)
-        self.lin3 = nn.Linear(1024, 1024)
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1088,10 +1087,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         lin2_in = lin1out + mfb_iq_eltwise
         lin2_out = self.lin2(lin2_in)
         val = lin2_out + lin1out + mfb_iq_eltwise
-        lin3_out = self.lin3(val)
-        out = lin3_out + val
 
-        mfb_iq_drop = self.Dropout_M(out)
+        mfb_iq_drop = self.Dropout_M(val)
 
         mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
         mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
