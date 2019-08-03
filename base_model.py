@@ -1233,9 +1233,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return final_loss
 
     def calculate_loss(self, role_label_pred, gt_labels):
-        loss = nn.KLDivLoss(reduction='sum')
-        #loss = nn.BCEWithLogitsLoss()
-        final_loss = loss(role_label_pred, gt_labels)
+        #loss = nn.KLDivLoss(reduction='sum')
+        loss = nn.BCEWithLogitsLoss()
+        final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
