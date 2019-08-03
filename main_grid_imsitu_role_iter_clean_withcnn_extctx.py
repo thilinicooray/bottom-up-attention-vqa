@@ -303,7 +303,7 @@ def main():
     role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, 1)
 
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels()+1, encoder, args.num_iter, role_model)
+    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter, role_model)
 
     model.w_emb.init_embedding(w_emb_path)
 
