@@ -1070,20 +1070,18 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         q_repr = self.q_net(q_emb)
         v_repr = self.v_net(v_emb)
 
-        mfb_iq_eltwise = torch.mul(q_repr, v_repr)
-        mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
-        mfb_iq_resh = mfb_iq_drop.view(mfb_iq_drop.size(0), 1, -1, 8)   # N x 1 x 1000 x 5
-        mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+        mfb_iq_sumpool = torch.mul(q_repr, v_repr)
+        #mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+        #mfb_iq_resh = mfb_iq_drop.view(mfb_iq_drop.size(0), 1, -1, 5)   # N x 1 x 1000 x 5
+        #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
         mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)
 
         logits = self.classifier(mfb_l2)
 
-        prediction = F.log_softmax(logits, dim=-1)
-
         loss = None
-        role_label_pred = prediction.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         if self.training:
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
@@ -4177,8 +4175,8 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048, q_emb.num_hid, num_hid)
-    q_net = FCNet([num_hid, num_hid*8])
-    v_net = FCNet([2048, num_hid*8])
+    q_net = FCNet([num_hid, num_hid])
+    v_net = FCNet([2048, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, ctx_role_model)
