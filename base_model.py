@@ -1085,7 +1085,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         loss = None
 
         if self.training:
-            loss = self.calculate_loss(logits, labels)
+            loss = self.calculate_loss(gt_verb, logits, labels)
 
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
