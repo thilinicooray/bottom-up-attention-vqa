@@ -495,9 +495,9 @@ class imsitu_encoder():
 
 
         dis = prob_answer_vec / np.sum(prob_answer_vec)
-        print(dis)
+        #print(dis)
 
-        return torch.from_numpy(dis)
+        return torch.from_numpy(dis).float()
 
     def get_adj_matrix(self, verb_ids):
         adj_matrix_list = []
