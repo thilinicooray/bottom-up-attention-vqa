@@ -1070,7 +1070,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
         q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
 
-        print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+        #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
 
         att = self.v_att(img_mul_head, q_emb_mul_head)
         v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
