@@ -1120,8 +1120,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
+        mfb_sign_sqrt = torch.sqrt(F.relu(compositionedans)) - torch.sqrt(F.relu(-compositionedans))
+        mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-        logits = self.classifier(compositionedans)
+        logits = self.classifier(mfb_l2)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
