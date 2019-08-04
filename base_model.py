@@ -4216,7 +4216,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
     covnet = resnet_modified_medium()
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = Attention(2048//n_heads, q_emb.num_hid//n_heads, num_hid)
+    v_att = Attention(2048//n_heads, q_emb.num_hid, num_hid)
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
