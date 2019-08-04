@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils.weight_norm import weight_norm
-from fc import FCNet
+from fc import FCNet, FCNet_relu
 
 
 class Attention(nn.Module):
     def __init__(self, v_dim, q_dim, num_hid, dropout=0.2):
         super(Attention, self).__init__()
-        self.nonlinear = FCNet([v_dim + q_dim, num_hid])
+        self.nonlinear = FCNet_relu([v_dim + q_dim, num_hid])
         self.dropout = nn.Dropout(dropout)
         self.linear = weight_norm(nn.Linear(num_hid, 1), dim=None)
 
