@@ -1109,7 +1109,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         lin1out = F.relu(self.lin1(concat_vec))
         lin2_in = lin1out
         lin2_out = F.relu(self.lin2(lin2_in))
-        val = lin2_out + lin2_in
+        val = lin2_out 
 
         '''mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads * n_heads)   # N x 1 x 1000 x 5
         mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
