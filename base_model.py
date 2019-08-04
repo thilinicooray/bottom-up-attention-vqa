@@ -800,15 +800,16 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
-        self.longq_embd = FCNet([1024, 1024 ])
-        self.g = nn.Sequential(
+        self.longq_embd = FCNet_relu([1024*4, 1024])
+        '''self.g = nn.Sequential(
             nn.Linear(1024*3, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, 1024),
-            #nn.ReLU(),
-        )
+            nn.ReLU(),
+        )'''
+        self.g = FCNet_relu([1024*3, 1024, 1024])
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1094,6 +1095,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         q_repr = self.q_net(q_emb_mul_head)
         v_repr = self.v_net(v_emb)
 
+        qst_org = self.longq_embd(q_repr.contiguous().view(batch_size* self.encoder.max_role_count, -1))
+        qst = torch.unsqueeze(qst_org, 1)
+        qst = qst.repeat(1,n_heads * n_heads,1)
+        qst = torch.squeeze(qst)
+
         mfb_iq_eltwise = torch.mul(q_repr, v_repr)
 
         mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
@@ -1103,11 +1109,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
         #mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
         #mfb_l2 = F.normalize(mfb_sign_sqrt)
-
-        qst_org = self.longq_embd(q_emb)
-        qst = torch.unsqueeze(qst_org, 1)
-        qst = qst.repeat(1,n_heads * n_heads,1)
-        qst = torch.squeeze(qst)
 
         subans_grouped = mfb_iq_drop.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
         sub_ans1 = subans_grouped.unsqueeze(1).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_iq_drop.size(-1))
@@ -1126,8 +1127,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
-
-        res_con = qst_org * img_feat_flat
 
         logits = self.classifier(qst_org * compositionedans)
 
@@ -4227,8 +4226,8 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(2048//n_heads, q_emb.num_hid//n_heads, num_hid)
-    q_net = FCNet([num_hid//n_heads, num_hid ])
-    v_net = FCNet([2048//n_heads, num_hid])
+    q_net = FCNet_relu([num_hid//n_heads, num_hid ])
+    v_net = FCNet_relu([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, ctx_role_model)
