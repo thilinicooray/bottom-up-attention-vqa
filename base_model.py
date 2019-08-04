@@ -1095,15 +1095,15 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
         #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
         #mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
-        #mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
-        #mfb_l2 = F.normalize(mfb_sign_sqrt)
+        mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
+        mfb_l2 = F.normalize(mfb_sign_sqrt)
 
         qst = self.longq_embd(q_emb)
         qst = torch.unsqueeze(qst, 1)
         qst = qst.repeat(1,n_heads * n_heads,1)
         qst = torch.squeeze(qst)
 
-        subans_grouped = mfb_iq_drop.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
+        subans_grouped = mfb_l2.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
         sub_ans1 = subans_grouped.unsqueeze(1).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_iq_drop.size(-1))
         sub_ans2 = subans_grouped.unsqueeze(2).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_iq_drop.size(-1))
 
@@ -1120,10 +1120,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
-        mfb_sign_sqrt = torch.sqrt(F.relu(compositionedans)) - torch.sqrt(F.relu(-compositionedans))
-        mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-        logits = self.classifier(mfb_l2)
+        logits = self.classifier(compositionedans)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
