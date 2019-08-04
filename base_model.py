@@ -1127,7 +1127,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
 
-        logits = self.classifier(compositionedans + qst_org * img_feat_flat )
+        res_con = F.relu(qst_org * img_feat_flat)
+
+        logits = self.classifier(compositionedans + res_con)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
