@@ -1071,21 +1071,20 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
         img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
-        q_emb_mul_head = q_emb.unsqueeze(1)
-        q_emb_mul_head = q_emb_mul_head.expand(q_emb.size(0), n_heads, q_emb.size(-1))
-        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb.size(-1))
+        q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
 
         #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
 
         att = self.v_att(img_mul_head, q_emb_mul_head)
         v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
         #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
-        #q_repr = self.q_net(q_emb_mul_head)
+        q_repr = self.q_net(q_emb_mul_head)
         v_repr = self.v_net(v_emb)
 
-        #mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+        mfb_iq_eltwise = torch.mul(q_repr, v_repr)
 
-        #mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+        mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
 
         #mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
         #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
@@ -1098,19 +1097,19 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         qst = qst.repeat(1,n_heads * n_heads,1)
         qst = torch.squeeze(qst)
 
-        subans_grouped = v_repr.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
-        sub_ans1 = subans_grouped.unsqueeze(1).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, v_repr.size(-1))
-        sub_ans2 = subans_grouped.unsqueeze(2).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, v_repr.size(-1))
+        subans_grouped = mfb_iq_drop.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
+        sub_ans1 = subans_grouped.unsqueeze(1).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_iq_drop.size(-1))
+        sub_ans2 = subans_grouped.unsqueeze(2).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_iq_drop.size(-1))
 
-        sub_ans1 = sub_ans1.contiguous().view(-1, n_heads * n_heads, v_repr.size(-1))
-        sub_ans2 = sub_ans2.contiguous().view(-1, n_heads * n_heads, v_repr.size(-1))
+        sub_ans1 = sub_ans1.contiguous().view(-1, n_heads * n_heads, mfb_iq_drop.size(-1))
+        sub_ans2 = sub_ans2.contiguous().view(-1, n_heads * n_heads, mfb_iq_drop.size(-1))
         #print('size :', sub_ans2.size(), qst.size())
         concat_vec = torch.cat([sub_ans1, sub_ans2, qst], 2).view(-1, sub_ans1.size(-1)*3)
 
         lin1out = F.relu(self.lin1(concat_vec))
         lin2_in = lin1out
         lin2_out = F.relu(self.lin2(lin2_in))
-        val = lin2_out
+        val = lin2_out + lin2_in
 
         '''mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads * n_heads)   # N x 1 x 1000 x 5
         mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
@@ -4216,7 +4215,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
     covnet = resnet_modified_medium()
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = Attention(2048//n_heads, q_emb.num_hid, num_hid)
+    v_att = Attention(2048//n_heads, q_emb.num_hid//n_heads, num_hid)
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
