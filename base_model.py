@@ -1092,7 +1092,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
         #mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-        qst = self.longq_embd(mfb_iq_drop)
+        qst = self.longq_embd(q_emb)
         qst = torch.unsqueeze(qst, 1)
         qst = qst.repeat(1,n_heads * n_heads,1)
         qst = torch.squeeze(qst)
