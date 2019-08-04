@@ -801,8 +801,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.Dropout_M = nn.Dropout(0.1)
 
         self.longq_embd = FCNet([1024, 1024 ])
-        self.lin1 = nn.Linear(1024*3, 1024)
-        self.lin2 = nn.Linear(1024, 1024)
+        self.g = nn.Sequential(
+            nn.Linear(1024*3, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 1024),
+            nn.ReLU(),
+        )
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1106,17 +1112,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #print('size :', sub_ans2.size(), qst.size())
         concat_vec = torch.cat([sub_ans1, sub_ans2, qst], 2).view(-1, sub_ans1.size(-1)*3)
 
-        lin1out = F.relu(self.lin1(concat_vec))
-        lin2_in = lin1out
-        lin2_out = F.relu(self.lin2(lin2_in))
-        val = lin2_out 
+        lin1out = self.g(concat_vec)
 
         '''mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads * n_heads)   # N x 1 x 1000 x 5
         mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
         mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
-        compositionedans = val.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
+        compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
 
         logits = self.classifier(compositionedans)
 
