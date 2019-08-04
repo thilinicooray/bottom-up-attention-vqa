@@ -1103,7 +1103,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         sub_ans1 = sub_ans1.contiguous().view(-1, n_heads * n_heads, mfb_l2.size(-1))
         sub_ans2 = sub_ans2.contiguous().view(-1, n_heads * n_heads, mfb_l2.size(-1))
-        print('size :', sub_ans2.size(), qst.size())
+        #print('size :', sub_ans2.size(), qst.size())
         concat_vec = torch.cat([sub_ans1, sub_ans2, qst], 2).view(-1, sub_ans1.size(-1)*3)
 
         lin1out = F.relu(self.lin1(concat_vec))
