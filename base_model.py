@@ -798,7 +798,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.resize_img_flat = nn.Linear(2048, 1024)
         self.l2_criterion = nn.MSELoss()
-        self.Dropout_M = nn.Dropout(0.2)
+        self.Dropout_M = nn.Dropout(0.3)
 
         self.lin1 = nn.Linear(1024, 1024)
         self.lin2 = nn.Linear(1024, 1024)
