@@ -1085,10 +1085,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
 
-        mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
-        mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
-        mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
-        mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
+        #mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+        #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+        #mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
+        mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
         mfb_l2 = F.normalize(mfb_sign_sqrt)
 
         lin1out = F.relu(self.lin1(mfb_l2))
@@ -1096,7 +1096,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         lin2_out = F.relu(self.lin2(lin2_in))
         val = lin2_out + lin2_in
 
-        logits = self.classifier(val)
+        mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+        mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+        mfb_out = torch.squeeze(mfb_iq_sumpool)
+
+        logits = self.classifier(mfb_out)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
