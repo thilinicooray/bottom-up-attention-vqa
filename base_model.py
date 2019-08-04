@@ -1056,6 +1056,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img_org = img_features.view(batch_size, n_channel, -1)
         v = img_org.permute(0, 2, 1)
 
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        img_feat_flat = img_feat_flat.expand(self.encoder.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
+        img_feat_flat = img_feat_flat.transpose(0,1)
+        img_feat_flat = img_feat_flat.contiguous().view(-1, img_feat_flat.size(-1))
+
         batch_size = v.size(0)
 
         role_q_idx = self.encoder.get_role_nl_questions_batch(gt_verb)
@@ -1121,7 +1127,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
 
-        logits = self.classifier(qst_org * compositionedans)
+        logits = self.classifier(qst_org * compositionedans + img_feat_flat * qst_org)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
