@@ -1083,10 +1083,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         mfb_iq_eltwise = torch.mul(q_repr, v_repr)
 
-        lin1out = self.lin1(mfb_iq_eltwise)
+        lin1out = F.relu(self.lin1(mfb_iq_eltwise))
         lin2_in = lin1out + mfb_iq_eltwise
-        lin2_out = self.lin2(lin2_in)
-        val = lin2_out + lin1out + mfb_iq_eltwise
+        lin2_out = F.relu(self.lin2(lin2_in))
+        val = lin2_out + lin2_in
 
         mfb_iq_drop = self.Dropout_M(val)
 
@@ -1224,7 +1224,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         return role_rep, role_label_pred
 
-    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
+    def calculate_loss1(self, gt_verbs, role_label_pred, gt_labels):
 
         batch_size = role_label_pred.size()[0]
 
@@ -1245,7 +1245,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
-    def calculate_loss_kl(self, role_label_pred, gt_labels):
+    def calculate_loss(self, role_label_pred, gt_labels):
         #loss = nn.KLDivLoss(reduction='sum')
         loss = nn.BCEWithLogitsLoss()
         final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
