@@ -800,7 +800,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
-        self.lin1 = nn.Linear(1024, 1024)
+        self.longq_embd = FCNet([1024, 1024 ])
+        self.lin1 = nn.Linear(1024*3, 1024)
         self.lin2 = nn.Linear(1024, 1024)
 
     def forward_gt(self, v, labels, gt_verb):
@@ -1091,16 +1092,31 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_sign_sqrt = torch.sqrt(F.relu(mfb_iq_drop)) - torch.sqrt(F.relu(-mfb_iq_drop))
         mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-        lin1out = F.relu(self.lin1(mfb_l2))
-        lin2_in = lin1out + mfb_l2
+        qst = self.longq_embd(q_emb)
+        qst = torch.unsqueeze(qst, 1)
+        qst = qst.repeat(1,n_heads * n_heads,1)
+        qst = torch.squeeze(qst)
+
+        subans_grouped = mfb_l2.contiguous().view(batch_size * self.encoder.max_role_count, n_heads, -1)
+        sub_ans1 = subans_grouped.unsqueeze(1).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_l2.size(-1))
+        sub_ans2 = subans_grouped.unsqueeze(2).expand(batch_size * self.encoder.max_role_count, n_heads, n_heads, mfb_l2.size(-1))
+
+        sub_ans1 = sub_ans1.contiguous().view(-1, n_heads * n_heads, mfb_l2.size(-1))
+        sub_ans2 = sub_ans2.contiguous().view(-1, n_heads * n_heads, mfb_l2.size(-1))
+        print('size :', sub_ans2.size(), qst.size())
+        concat_vec = torch.cat([sub_ans1, sub_ans2, qst], 2).view(-1, sub_ans1.size(-1)*3)
+
+        lin1out = F.relu(self.lin1(concat_vec))
+        lin2_in = lin1out
         lin2_out = F.relu(self.lin2(lin2_in))
-        val = lin2_out + lin2_in
+        val = lin2_out
 
-        mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
-        mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
-        mfb_out = torch.squeeze(mfb_iq_sumpool)
+        #mfb_iq_resh = val.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+        #mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+        #mfb_out = torch.squeeze(mfb_iq_sumpool)
+        compositionedans = val.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
 
-        logits = self.classifier(mfb_out)
+        logits = self.classifier(compositionedans)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)

@@ -355,6 +355,7 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
+            {'params': model.longq_embd.parameters()},
             {'params': model.lin1.parameters()},
             {'params': model.lin2.parameters()},
         ], lr=1e-3)
