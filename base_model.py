@@ -807,7 +807,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, 1024),
-            nn.ReLU(),
+            #nn.ReLU(),
         )
 
     def forward_gt(self, v, labels, gt_verb):
@@ -1127,9 +1127,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         mfb_l2 = F.normalize(mfb_sign_sqrt)'''
         compositionedans = lin1out.view(-1, n_heads * n_heads, sub_ans1.size(-1)).sum(1).squeeze()
 
-        res_con = F.relu(qst_org * img_feat_flat)
+        res_con = qst_org * img_feat_flat
 
-        logits = self.classifier(compositionedans + res_con)
+        logits = self.classifier(qst_org * compositionedans)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
