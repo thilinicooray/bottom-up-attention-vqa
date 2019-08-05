@@ -1325,6 +1325,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             curr_group = cur_pred.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             biatt, logbiatt = self.bi_att.forward_all(img_org_all, curr_group)
+            biatt = biatt.squeeze()
+
+            print(biatt[0][0], biatt[0][10])
 
             ctx = self.b_net.forward_with_weights(img_org_all, curr_group, biatt.squeeze())
 

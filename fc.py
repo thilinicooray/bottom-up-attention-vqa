@@ -136,8 +136,8 @@ class BCNet(nn.Module):
 
     def forward(self, v, q):
         if self.h_out is None:
-            v_ = v.transpose(1, 2).unsqueeze(3)
-            q_ = q.transpose(1, 2).unsqueeze(2)
+            v_ = self.v_net(v).transpose(1, 2).unsqueeze(3)
+            q_ = self.q_net(q).transpose(1, 2).unsqueeze(2)
             d_ = torch.matmul(v_, q_)
             logits = d_.transpose(1, 2).transpose(2, 3)
             return logits
@@ -145,8 +145,8 @@ class BCNet(nn.Module):
         # broadcast Hadamard product, matrix-matrix production
         # fast computation but memory inefficient
         elif self.h_out <= self.c:
-            v_ = self.dropout(v).unsqueeze(1)
-            q_ = q
+            v_ = self.dropout(self.v_net(v)).unsqueeze(1)
+            q_ = self.q_net(q)
             h_ = v_ * self.h_mat
             logits = torch.matmul(h_, q_.unsqueeze(1).transpose(2, 3))
             logits = logits + self.h_bias
@@ -155,15 +155,15 @@ class BCNet(nn.Module):
         # batch outer product, linear projection
         # memory efficient but slow computation
         else:
-            v_ = self.dropout(v).transpose(1, 2).unsqueeze(3)
-            q_ = q.transpose(1, 2).unsqueeze(2)
+            v_ = self.dropout(self.v_net(v)).transpose(1, 2).unsqueeze(3)
+            q_ = self.q_net(q).transpose(1, 2).unsqueeze(2)
             d_ = torch.matmul(v_, q_)
             logits = self.h_net(d_.transpose(1, 2).transpose(2, 3))
             return logits.transpose(2, 3).transpose(1, 2)
 
     def forward_with_weights(self, v, q, w):
-        v_ = v.transpose(1, 2).unsqueeze(2)
-        q_ = q.transpose(1, 2).unsqueeze(3)
+        v_ = self.v_net(v).transpose(1, 2).unsqueeze(2)
+        q_ = self.q_net(q).transpose(1, 2).unsqueeze(3)
         logits = torch.matmul(torch.matmul(v_, w.unsqueeze(1)), q_)
         logits = logits.squeeze(3).squeeze(2)
 
