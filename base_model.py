@@ -1391,15 +1391,17 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
-            print('before att :', cur_group[1,:, :5])
+            #print('before att :', cur_group[1,:, :5])
 
             selfatt_val, _ = self.attention(cur_group, cur_group, cur_group, mask=None,
                                      dropout=None)
 
-            print('after att :', selfatt_val[1,:, :5])
+            #print('after att :', selfatt_val[1,:, :5])
+
+            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
 
-            out = mfb_l2
+            out = mfb_l2 + withctx
 
 
         logits = self.classifier(out)
