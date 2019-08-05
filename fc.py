@@ -2,6 +2,8 @@ from __future__ import print_function
 import torch.nn as nn
 from torch.nn.utils.weight_norm import weight_norm
 
+import torch
+
 from collections import OrderedDict
 from torch import nn
 
@@ -98,6 +100,78 @@ class FCNet(nn.Module):
         y = y_hat * g
 
         return y
+
+class BCNet(nn.Module):
+    """
+    Simple class for non-linear bilinear connect network
+    """
+
+    def __init__(self, v_dim, q_dim, h_dim, h_out, act="ReLU", dropout=[0.2, 0.5], k=3):
+        super(BCNet, self).__init__()
+
+        self.c = 32
+        self.k = k
+        self.v_dim = v_dim
+        self.q_dim = q_dim
+        self.h_dim = h_dim
+        self.h_out = h_out
+
+        self.v_net = FCNet([v_dim, h_dim * self.k], act=act, dropout=dropout[0])
+        self.q_net = FCNet([q_dim, h_dim * self.k], act=act, dropout=dropout[0])
+        self.dropout = nn.Dropout(dropout[1])
+
+        if k > 1:
+            self.p_net = nn.AvgPool1d(self.k, stride=self.k)
+
+        if h_out is None:
+            pass
+
+        elif h_out <= self.c:
+            self.h_mat = nn.Parameter(
+                torch.Tensor(1, h_out, 1, h_dim * self.k).normal_()
+            )
+            self.h_bias = nn.Parameter(torch.Tensor(1, h_out, 1, 1).normal_())
+        else:
+            self.h_net = weight_norm(nn.Linear(h_dim * self.k, h_out), dim=None)
+
+    def forward(self, v, q):
+        if self.h_out is None:
+            v_ = self.v_net(v).transpose(1, 2).unsqueeze(3)
+            q_ = self.q_net(q).transpose(1, 2).unsqueeze(2)
+            d_ = torch.matmul(v_, q_)
+            logits = d_.transpose(1, 2).transpose(2, 3)
+            return logits
+
+        # broadcast Hadamard product, matrix-matrix production
+        # fast computation but memory inefficient
+        elif self.h_out <= self.c:
+            v_ = self.dropout(self.v_net(v)).unsqueeze(1)
+            q_ = self.q_net(q)
+            h_ = v_ * self.h_mat
+            logits = torch.matmul(h_, q_.unsqueeze(1).transpose(2, 3))
+            logits = logits + self.h_bias
+            return logits
+
+        # batch outer product, linear projection
+        # memory efficient but slow computation
+        else:
+            v_ = self.dropout(self.v_net(v)).transpose(1, 2).unsqueeze(3)
+            q_ = self.q_net(q).transpose(1, 2).unsqueeze(2)
+            d_ = torch.matmul(v_, q_)
+            logits = self.h_net(d_.transpose(1, 2).transpose(2, 3))
+            return logits.transpose(2, 3).transpose(1, 2)
+
+    def forward_with_weights(self, v, q, w):
+        v_ = self.v_net(v).transpose(1, 2).unsqueeze(2)
+        q_ = self.q_net(q).transpose(1, 2).unsqueeze(3)
+        logits = torch.matmul(torch.matmul(v_, w.unsqueeze(1)), q_)
+        logits = logits.squeeze(3).squeeze(2)
+
+        if self.k > 1:
+            logits = logits.unsqueeze(1)
+            logits = self.p_net(logits).squeeze(1) * self.k
+
+        return logits
 
 
 if __name__ == '__main__':
