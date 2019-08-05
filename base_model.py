@@ -1499,7 +1499,7 @@ class MultiHeadedAttention(nn.Module):
             .view(nbatches, -1, self.h * self.d_k)
         return self.linears[-1](x)
 
-def attention(self, query, key, value, mask=None, dropout=None):
+def attention(query, key, value, mask=None, dropout=None):
     "Compute 'Scaled Dot Product Attention'"
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) \
