@@ -797,7 +797,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.encoder = encoder
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.3)
-        self.resize_img_flat = nn.Linear(2048, 1024)
+        self.resize_img_flat = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
@@ -1415,7 +1415,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
-            img = img_exp_org * withctx.unsqueeze(1)
+            img = img_exp_org * self.resize_img_flat(withctx).unsqueeze(1)
 
 
             out = mfb_l2
