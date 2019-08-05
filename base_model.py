@@ -10,6 +10,8 @@ import numpy as np
 import torch.nn.functional as F
 import math
 
+import copy
+
 class resnet_152_features(nn.Module):
     def __init__(self):
         super(resnet_152_features, self).__init__()
@@ -799,6 +801,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
+        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.0)
+
         '''self.longq_embd = FCNet([1024*4, 1024])
         self.g = nn.Sequential(
             nn.Linear(1024*3, 1024),
@@ -1393,8 +1397,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             #print('before att :', cur_group[1,:, :5])
 
-            selfatt_val, _ = self.attention(cur_group, cur_group, cur_group, mask=None,
-                                     dropout=None)
+            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=None)
 
             #print('after att :', selfatt_val[1,:, :5])
 
@@ -1413,17 +1416,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         return role_label_pred, loss
 
-    def attention(self, query, key, value, mask=None, dropout=None):
-        "Compute 'Scaled Dot Product Attention'"
-        d_k = query.size(-1)
-        scores = torch.matmul(query, key.transpose(-2, -1)) \
-                 / math.sqrt(d_k)
-        if mask is not None:
-            scores = scores.masked_fill(mask == 0, -1e9)
-        p_attn = F.softmax(scores, dim = -1)
-        if dropout is not None:
-            p_attn = dropout(p_attn)
-        return torch.matmul(p_attn, value), p_attn
+
 
     def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
@@ -1468,6 +1461,55 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             output = curr_loss / (n + 10e-8)
             role_loss += output
         return (role_loss / self.encoder.max_role_count)
+
+class MultiHeadedAttention(nn.Module):
+    def __init__(self, h, d_model, dropout=0.1):
+        "Take in model size and number of heads."
+        super(MultiHeadedAttention, self).__init__()
+        assert d_model % h == 0
+        # We assume d_v always equals d_k
+        self.d_k = d_model // h
+        self.h = h
+        self.linears = self.clones(nn.Linear(d_model, d_model), 4)
+        self.attn = None
+        self.dropout = nn.Dropout(p=dropout)
+
+    def clones(self, module, N):
+        "Produce N identical layers."
+        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
+    def forward(self, query, key, value, mask=None):
+        "Implements Figure 2"
+        if mask is not None:
+            # Same mask applied to all h heads.
+            mask = mask.unsqueeze(1)
+        nbatches = query.size(0)
+
+        # 1) Do all the linear projections in batch from d_model => h x d_k
+        query, key, value = \
+            [l(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
+             for l, x in zip(self.linears, (query, key, value))]
+
+        # 2) Apply attention on all the projected vectors in batch.
+        x, self.attn = super.attention(query, key, value, mask=mask,
+                                       dropout=self.dropout)
+
+        # 3) "Concat" using a view and apply a final linear.
+        x = x.transpose(1, 2).contiguous() \
+            .view(nbatches, -1, self.h * self.d_k)
+        return self.linears[-1](x)
+
+def attention(self, query, key, value, mask=None, dropout=None):
+    "Compute 'Scaled Dot Product Attention'"
+    d_k = query.size(-1)
+    scores = torch.matmul(query, key.transpose(-2, -1)) \
+             / math.sqrt(d_k)
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, -1e9)
+    p_attn = F.softmax(scores, dim = -1)
+    if dropout is not None:
+        p_attn = dropout(p_attn)
+    return torch.matmul(p_attn, value), p_attn
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, beam_size, upperlimit):
