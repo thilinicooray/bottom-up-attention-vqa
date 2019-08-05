@@ -1351,6 +1351,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img = v
 
         img = img.expand(self.encoder.max_role_count, img.size(0), img.size(1), img.size(2))
+
+
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.resize_img_flat(img_feat_flat.squeeze())
+        img_feat_flat = img_feat_flat.expand(self.encoder.max_role_count,img_feat_flat.size(0), img_feat_flat.size(1))
+        img_feat_flat = img_feat_flat.transpose(0,1)
+        img_feat_flat = img_feat_flat.contiguous().view(-1, img_feat_flat.size(-1))
+
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
@@ -1404,7 +1412,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
 
-            out = mfb_l2 + withctx
+            out = mfb_l2 + img_feat_flat * withctx
 
 
         logits = self.classifier(out)
