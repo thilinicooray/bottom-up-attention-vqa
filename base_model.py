@@ -1394,7 +1394,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             print('before att :', cur_group[1,:, :5])
 
             selfatt_val, _ = self.attention(cur_group, cur_group, cur_group, mask=None,
-                                     dropout=0.0)
+                                     dropout=None)
 
             print('after att :', selfatt_val[1,:, :5])
 
