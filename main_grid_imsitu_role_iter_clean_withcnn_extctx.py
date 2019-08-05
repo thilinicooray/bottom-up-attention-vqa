@@ -355,8 +355,8 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
-            {'params': model.longq_embd.parameters()},
-            {'params': model.g.parameters()},
+            {'params': model.bi_att.parameters()},
+            {'params': model.b_net.parameters()},
         ], lr=1e-3)
 
     elif args.resume_training:

@@ -116,8 +116,8 @@ class BCNet(nn.Module):
         self.h_dim = h_dim
         self.h_out = h_out
 
-        self.v_net = FCNet([v_dim, h_dim * self.k], act=act, dropout=dropout[0])
-        self.q_net = FCNet([q_dim, h_dim * self.k], act=act, dropout=dropout[0])
+        self.v_net = FCNet1([v_dim, h_dim * self.k], act=act, dropout=dropout[0])
+        self.q_net = FCNet1([q_dim, h_dim * self.k], act=act, dropout=dropout[0])
         self.dropout = nn.Dropout(dropout[1])
 
         if k > 1:
@@ -172,6 +172,41 @@ class BCNet(nn.Module):
             logits = self.p_net(logits).squeeze(1) * self.k
 
         return logits
+
+
+class FCNet1(nn.Module):
+    """
+    Simple class for non-linear fully connect network
+    """
+
+    def __init__(self, dims, act="ReLU", dropout=0):
+        super(FCNet1, self).__init__()
+
+        layers = []
+        for i in range(len(dims) - 2):
+            in_dim = dims[i]
+            out_dim = dims[i + 1]
+
+            if dropout > 0:
+                layers.append(nn.Dropout(dropout))
+
+            layers.append(weight_norm(nn.Linear(in_dim, out_dim), dim=None))
+
+            if act is not None:
+                layers.append(getattr(nn, act)())
+
+        if dropout > 0:
+            layers.append(nn.Dropout(dropout))
+
+        layers.append(weight_norm(nn.Linear(dims[-2], dims[-1]), dim=None))
+
+        if act is not None:
+            layers.append(getattr(nn, act)())
+
+        self.main = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.main(x)
 
 
 if __name__ == '__main__':
