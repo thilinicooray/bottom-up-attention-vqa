@@ -337,12 +337,12 @@ def main():
         #model_data = torch.load(args.pretrained_ban_model, map_location='cpu')
         #model.load_state_dict(model_data.get('model_state', model_data))
 
-        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['convnet', 'w_emb',  'ctx_role_model', 'classifier'])
+        utils_imsitu.load_net_ban(args.pretrained_buatt_model, [model], ['module'], ['convnet', 'w_emb', 'classifier'])
         model_name = 'pre_trained_buatt'
 
         utils_imsitu.set_trainable(model, True)
-        utils_imsitu.load_net(args.role_module, [model.ctx_role_model])
-        utils_imsitu.set_trainable(model.ctx_role_model, False)
+        #utils_imsitu.load_net(args.role_module, [model.ctx_role_model])
+        #utils_imsitu.set_trainable(model.ctx_role_model, False)
         #utils_imsitu.set_trainable(model.convnet, True)
         #utils_imsitu.set_trainable(model.w_emb, False)
         #utils_imsitu.set_trainable(model.q_emb, True)
