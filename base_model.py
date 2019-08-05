@@ -1290,7 +1290,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         for i in range(1):
 
-
             n_heads = 4
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
@@ -1326,7 +1325,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             curr_group = cur_pred.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             biatt, logbiatt = self.bi_att.forward_all(img_org_all, curr_group)
-            print('bi att size :', biatt.size(), logbiatt.size())
+
+            ctx = self.b_net.forward_with_weights(img_org_all, curr_group, biatt.squeeze())
+            print(ctx.size())
 
 
         logits = self.classifier(mfb_l2)
