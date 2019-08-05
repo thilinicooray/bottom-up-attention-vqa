@@ -1254,7 +1254,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         return role_rep, role_label_pred
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_mulheadatt_factpool(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
 
@@ -1327,6 +1327,101 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
         return role_label_pred, loss
+
+    def forward(self, v_org, labels, gt_verb):
+
+        img_features = self.convnet(v_org)
+
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        batch_size = v.size(0)
+
+        role_q_idx = self.encoder.get_role_nl_questions_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            q = role_q_idx.to(torch.device('cuda'))
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count, img.size(0), img.size(1), img.size(2))
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+
+        img_org_all = v
+        q = q.view(batch_size* self.encoder.max_role_count, -1)
+        #labels = labels.view(batch_size* self.encoder.max_role_count, -1)
+
+        w_emb = self.w_emb(q)
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+
+        for i in range(1):
+
+            n_heads = 4
+            img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+            img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
+
+            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+
+            #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+            #attention
+
+            att = self.v_att(img_mul_head, q_emb_mul_head)
+            v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+            q_repr = self.q_net(q_emb_mul_head)
+            v_repr = self.v_net(v_emb)
+
+            #composition
+
+            mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+
+            mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+
+            mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+            mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+            mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
+            mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
+            mfb_l2 = F.normalize(mfb_sign_sqrt)
+
+            #contextualization
+
+            cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            print('before att :', cur_group[1,:, :5])
+
+            selfatt_val, _ = self.attention(cur_group, cur_group, cur_group, mask=None,
+                                     dropout=0.0)
+
+            print('after att :', selfatt_val[1,:, :5])
+
+
+            out = mfb_l2
+
+
+        logits = self.classifier(out)
+
+        loss = None
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+
+        return role_label_pred, loss
+
+    def attention(self, query, key, value, mask=None, dropout=None):
+        "Compute 'Scaled Dot Product Attention'"
+        d_k = query.size(-1)
+        scores = torch.matmul(query, key.transpose(-2, -1)) \
+                 / math.sqrt(d_k)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        p_attn = F.softmax(scores, dim = -1)
+        if dropout is not None:
+            p_attn = dropout(p_attn)
+        return torch.matmul(p_attn, value), p_attn
 
     def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
