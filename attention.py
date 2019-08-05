@@ -74,7 +74,7 @@ class BiAttention(nn.Module):
 
     def forward_all(self, v, q, v_mask=True):
 
-        print('input ', v[0, :, :5], q[0,:,:5])
+        #print('input ', v[0, :, :5], q[0,:,:5])
 
         v_num = v.size(1)
         q_num = q.size(1)
@@ -89,7 +89,7 @@ class BiAttention(nn.Module):
         expanded_logits = logits.view(-1, self.glimpse, v_num * q_num)
         p = nn.functional.softmax(expanded_logits, 2)
 
-        print(logits[0,1], p[0,0])
+        print(logits[0], p[0])
 
 
 
