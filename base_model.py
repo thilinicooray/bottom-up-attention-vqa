@@ -1401,7 +1401,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
 
-            out = mfb_l2 + withctx
+            out = withctx
 
 
         logits = self.classifier(out)
