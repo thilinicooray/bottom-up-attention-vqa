@@ -809,9 +809,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             nn.ReLU(),
         )'''
 
-        self.bi_att = BiAttention(2048, 1024, 2048, 1)
+        self.bi_att = BiAttention(2048, 1024, 1024, 1)
         self.b_net = BCNet(
-            2048, 1024, 2048, None, k=1
+            2048, 1024, 1024, None, k=1
         )
 
     def forward_gt(self, v, labels, gt_verb):
@@ -1327,10 +1327,15 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             biatt, logbiatt = self.bi_att.forward_all(img_org_all, curr_group)
 
             ctx = self.b_net.forward_with_weights(img_org_all, curr_group, biatt.squeeze())
-            print(ctx.size())
+
+            ctx = ctx.expand(self.encoder.max_role_count, ctx.size(0), img.size(1))
+            ctx = ctx.transpose(0,1)
+            ctx = ctx.contiguous().view(batch_size * self.encoder.max_role_count, -1)
+
+            out = mfb_l2 + ctx
 
 
-        logits = self.classifier(mfb_l2)
+        logits = self.classifier(out)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
