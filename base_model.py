@@ -1281,7 +1281,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        img_org_all = img
+        img_org_all = v
         q = q.view(batch_size* self.encoder.max_role_count, -1)
         #labels = labels.view(batch_size* self.encoder.max_role_count, -1)
 
