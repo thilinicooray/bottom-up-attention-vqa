@@ -1399,7 +1399,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
-            mask = self.encoder.get_adj_matrix_noself(gt_verb)
+            mask = self.encoder.get_adj_matrix(gt_verb)
 
             if torch.cuda.is_available():
                 mask = mask.to(torch.device('cuda'))
