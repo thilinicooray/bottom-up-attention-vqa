@@ -801,7 +801,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
-        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.0)
+        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
         '''self.longq_embd = FCNet([1024*4, 1024])
         self.g = nn.Sequential(
