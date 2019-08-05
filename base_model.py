@@ -1362,14 +1362,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        img_org_all = v
+        img_exp_org = img
         q = q.view(batch_size* self.encoder.max_role_count, -1)
         #labels = labels.view(batch_size* self.encoder.max_role_count, -1)
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-        for i in range(1):
+        for i in range(2):
 
             n_heads = 4
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
@@ -1404,19 +1404,21 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
-            mask = self.encoder.get_adj_matrix(gt_verb)
+            '''mask = self.encoder.get_adj_matrix(gt_verb)
 
             if torch.cuda.is_available():
-                mask = mask.to(torch.device('cuda'))
+                mask = mask.to(torch.device('cuda'))'''
 
-            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
+            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=None)
 
             #print('after att :', selfatt_val[1,:, :5])
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
+            img = img_exp_org * withctx.unsqueeze(1)
 
-            out = withctx
+
+            out = mfb_l2
 
 
         logits = self.classifier(out)
