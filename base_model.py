@@ -1404,15 +1404,19 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
+            mask = self.encoder.get_adj_matrix(gt_verb)
 
-            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=None)
+            if torch.cuda.is_available():
+                mask = mask.to(torch.device('cuda'))
+
+            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
 
             #print('after att :', selfatt_val[1,:, :5])
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
 
-            out = mfb_l2 * withctx
+            out = withctx
 
 
         logits = self.classifier(out)
