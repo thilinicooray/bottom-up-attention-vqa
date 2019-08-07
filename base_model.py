@@ -1416,7 +1416,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
             img = img * self.resize_ctx(withctx).unsqueeze(1)
 
             secondary_ans = img.permute(0, 2, 1).view(img.size(0), -1, 7, 7)
-            secondary_ans = self.avgpool(secondary_ans)
+            secondary_ans = self.avgpool(secondary_ans).squeeze()
 
             out = mfb_l2 + self.resize_img_flat(secondary_ans)
             '''if prev is not None:
