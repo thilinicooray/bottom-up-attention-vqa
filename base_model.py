@@ -1369,13 +1369,13 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         q_repr = self.q_net(q_emb_mul_head)
         prev = None
 
-        init_vemb = torch.zeros(batch_size * self.encoder.max_role_count * n_heads, v.size(2)//n_heads)
+        '''init_vemb = torch.zeros(batch_size * self.encoder.max_role_count * n_heads, v.size(2)//n_heads)
         if torch.cuda.is_available():
             init_vemb = init_vemb.to(torch.device('cuda'))
 
-        vemb_list = [init_vemb]
+        vemb_list = [init_vemb]'''
 
-        for i in range(3):
+        for i in range(2):
 
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
@@ -1388,9 +1388,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             att = self.v_att(img_mul_head, q_emb_mul_head)
             v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
-            vemb_list.append(v_emb)
+            #vemb_list.append(v_emb)
             #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
-            v_repr = self.v_net(vemb_list[-1] + v_emb)
+            v_repr = self.v_net(v_emb)
 
             #composition
 
