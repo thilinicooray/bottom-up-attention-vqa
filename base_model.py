@@ -798,7 +798,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.1)
         self.resize_ctx = nn.Linear(1024, 2048)
-        self.decoder = nn.Linear(1024, 2048)
+        self.decoder = MLP(1024,1024,2048, num_layers=1, dropout_p=0.2)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
@@ -1428,7 +1428,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             prev = out'''
 
-        ans_with_ctx = torch.sum((out + withctx).contiguous().view(v.size(0), self.encoder.max_role_count, -1),1)
+        ans_with_ctx = torch.sum((out).contiguous().view(v.size(0), self.encoder.max_role_count, -1),1)
         decoded_img = self.decoder(ans_with_ctx)
         logits = self.classifier(out)
 
