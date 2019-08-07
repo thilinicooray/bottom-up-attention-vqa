@@ -798,6 +798,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.1)
         self.resize_ctx = nn.Linear(1024, 2048)
+        self.decoder = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
@@ -1335,7 +1336,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
     def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
-
+        img_feat_flat = self.convnet.resnet.avgpool(img_features)
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
@@ -1415,6 +1416,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
 
+            ans_with_ctx = torch.sum(cur_group + selfatt_val,1)
+            decoded_img = self.decoder(ans_with_ctx)
+
             #print('after att :', selfatt_val[1,:, :5])
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
@@ -1432,7 +1436,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         if self.training:
-            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels) + self.l2_criterion(decoded_img, img_feat_flat)
 
         return role_label_pred, loss
 
