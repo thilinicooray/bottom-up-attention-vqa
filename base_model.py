@@ -1336,7 +1336,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
     def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
-        img_feat_flat = self.convnet.resnet.avgpool(img_features)
+        img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
         img_org = img_features.view(batch_size, n_channel, -1)
