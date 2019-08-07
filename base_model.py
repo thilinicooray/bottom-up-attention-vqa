@@ -798,11 +798,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.1)
         self.resize_ctx = nn.Linear(1024, 2048)
-        self.resize_img_flat = nn.Linear(2048, 1024)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
-
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
@@ -1415,10 +1412,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            secondary_ans = img.permute(0, 2, 1).view(img.size(0), -1, 7, 7)
-            secondary_ans = self.avgpool(secondary_ans).squeeze()
-
-            out = mfb_l2 + self.resize_img_flat(secondary_ans)
+            out = mfb_l2 + withctx
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
