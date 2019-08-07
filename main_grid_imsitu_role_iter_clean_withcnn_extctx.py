@@ -348,6 +348,7 @@ def main():
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
             {'params': model.resize_img_flat.parameters()},
+            {'params': model.resize_ctx.parameters()},
             {'params': model.w_emb.parameters()},
             {'params': model.q_emb.parameters(), 'lr': 1e-4},
             {'params': model.v_att.parameters()},
