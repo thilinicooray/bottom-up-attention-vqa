@@ -1362,6 +1362,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        prev = None
 
         for i in range(3):
 
@@ -1413,10 +1414,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
 
             out = mfb_l2
-            '''if prev is not None:
+            if prev is not None:
                 out += prev
 
-            prev = out'''
+            prev = out
 
 
 
