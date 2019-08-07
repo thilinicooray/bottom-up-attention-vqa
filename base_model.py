@@ -1359,28 +1359,37 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         img_exp_org = img
         q = q.view(batch_size* self.encoder.max_role_count, -1)
         #labels = labels.view(batch_size* self.encoder.max_role_count, -1)
+        n_heads = 4
 
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+        q_repr = self.q_net(q_emb_mul_head)
         prev = None
+
+        init_vemb = torch.zeros(batch_size * self.encoder.max_role_count, v.size(2))
+        if torch.cuda.is_available():
+            init_vemb = init_vemb.to(torch.device('cuda'))
+
+        vemb_list = [init_vemb]
 
         for i in range(3):
 
-            n_heads = 4
+
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
-            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
-            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+
 
             #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
             #attention
 
             att = self.v_att(img_mul_head, q_emb_mul_head)
             v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            vemb_list.append(v_emb)
             #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
-            q_repr = self.q_net(q_emb_mul_head)
-            v_repr = self.v_net(v_emb)
+            v_repr = self.v_net(vemb_list[-1] + v_emb)
 
             #composition
 
@@ -1412,7 +1421,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            out = mfb_l2 + withctx
+            out = mfb_l2
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
