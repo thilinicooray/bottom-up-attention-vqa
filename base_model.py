@@ -796,7 +796,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.classifier = classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.1)
         self.resize_img_flat = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
@@ -1396,7 +1396,13 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             #contextualization
 
-            cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+            out = mfb_l2
+            if prev is not None:
+                out = prev + self.dropout(out)
+
+            prev = out
+
+            cur_group = out.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
             mask = self.encoder.get_adj_matrix_noself(gt_verb)
@@ -1410,16 +1416,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
-            img = img * self.resize_img_flat(withctx).unsqueeze(1)
-
-
-            out = mfb_l2
-            if prev is not None:
-                out = out.clone() + prev
-
-            prev = out
-
-
+            img = img_org * self.resize_img_flat(withctx).unsqueeze(1)
 
         logits = self.classifier(out)
 
