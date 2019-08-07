@@ -1363,7 +1363,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
-        for i in range(2):
+        for i in range(3):
 
             n_heads = 4
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
