@@ -798,7 +798,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         self.num_iter = num_iter
         self.dropout = nn.Dropout(0.1)
         self.resize_ctx = nn.Linear(1024, 2048)
-        self.decoder = MLP(1024,1024,2048, num_layers=1, dropout_p=0.2)
+        self.decoder = MLP(1024,1024,2048, num_layers=1, dropout_p=0.1)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
 
