@@ -1428,7 +1428,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             prev = out'''
 
-        ans_with_ctx = torch.sum(out.contiguous().view(v.size(0), self.encoder.max_role_count, -1),1)
+        ans_with_ctx = torch.sum((out + withctx).contiguous().view(v.size(0), self.encoder.max_role_count, -1),1)
         decoded_img = self.decoder(ans_with_ctx)
         logits = self.classifier(out)
 
