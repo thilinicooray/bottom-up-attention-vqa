@@ -15,22 +15,22 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=2000):
     model.train()
     train_loss = 0
     total_steps = 0
-    print_freq = 400
+    print_freq = 200
     dev_score_list = []
     time_all = time.time()
 
-    '''if gpu_mode >= 0 :
+    if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
-    pmodel = model
+        pmodel = model
+    #pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -81,7 +81,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
-            loss = loss1
+            loss = loss1.mean()
 
             '''g = make_dot(verb_predict, model.state_dict())
             g.view()'''
