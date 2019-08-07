@@ -785,7 +785,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN(nn.Module):
         return final_loss
 
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
-    def __init__(self, convnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, ctx_role_model):
+    def __init__(self, convnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX, self).__init__()
         self.convnet = convnet
         self.w_emb = w_emb
@@ -4443,7 +4443,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn(dataset, num_hid, num_ans_class
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
-def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, num_iter, ctx_role_model):
+def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_ans_classes, encoder, num_iter):
     print('words count :', dataset.dictionary.ntoken)
     n_heads = 4
     covnet = resnet_modified_medium()
@@ -4454,7 +4454,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
     v_net = FCNet([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter, ctx_role_model)
+    return BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(covnet, w_emb, q_emb, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)

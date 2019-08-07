@@ -268,7 +268,7 @@ def main():
     parser.add_argument('--num_iter', type=int, default=1)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
 
-    parser.add_argument('--role_module', type=str, default='', help='pretrained role module')
+    #parser.add_argument('--role_module', type=str, default='', help='pretrained role module')
 
     #todo: train role module separately with gt verbs
 
@@ -298,12 +298,10 @@ def main():
     train_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
     #get role_model
-    print('loading role model')
-    role_constructor = 'build_%s' % 'baseline0grid_imsitu_roleiter_with_cnn'
-    role_model = getattr(base_model, role_constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, 1)
+
 
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter, role_model)
+    model = getattr(base_model, constructor)(train_set, args.num_hid, encoder.get_num_labels(), encoder, args.num_iter)
 
     model.w_emb.init_embedding(w_emb_path)
 
