@@ -1415,7 +1415,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
             out = mfb_l2
             if prev is not None:
-                out += prev
+                out = out.clone() + prev
 
             prev = out
 
