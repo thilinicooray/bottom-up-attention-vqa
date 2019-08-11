@@ -1780,7 +1780,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
             ans_up = torch.cat([prev, mfb_l2], -1)
-            ctx_weight = torch.sigmoid(self.resize_ans(ans_up))
+            ctx_weight = self.resize_ans(ans_up)
 
             out = ctx_weight * mfb_l2
             '''if prev is not None:
