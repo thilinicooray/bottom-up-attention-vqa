@@ -1499,6 +1499,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.resize_ctx = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
+        self.Dropout_Q = nn.Dropout(0.1)
         self.context_adder = nn.GRUCell(1024, 1024)
 
         self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
@@ -1580,7 +1581,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         verb_embed_expand = verb_embed_expand.transpose(0,1)
         concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
-        q_emb = self.query_composer(role_verb_embd)
+        q_emb = self.Dropout_Q(self.query_composer(role_verb_embd))
 
         q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
         q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
@@ -1598,8 +1599,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
-
-
 
             #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
             #attention
@@ -1627,7 +1626,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
-            mask = self.encoder.get_adj_matrix_noself(gt_verb)
+            '''mask = self.encoder.get_adj_matrix_noself(gt_verb)
 
             if torch.cuda.is_available():
                 mask = mask.to(torch.device('cuda'))
@@ -1636,11 +1635,21 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #print('after att :', selfatt_val[1,:, :5])
 
-            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)'''
 
-            img = img * self.resize_ctx(withctx).unsqueeze(1)
+            cur_group1 = cur_group.unsqueeze(1).expand(v.size(0), self.encoder.max_role_count, self.encoder.max_role_count, cur_group.size(-1))
+            cur_group2 = cur_group.unsqueeze(2).expand(v.size(0), self.encoder.max_role_count, self.encoder.max_role_count, cur_group.size(-1))
+            cur_group1 = cur_group1.contiguous().view(-1, self.encoder.max_role_count * self.encoder.max_role_count, cur_group.size(-1))
+            cur_group2 = cur_group2.contiguous().view(-1, self.encoder.max_role_count * self.encoder.max_role_count, cur_group.size(-1))
 
-            out = self.context_adder(mfb_l2 + withctx)
+
+            print(cur_group1[0,:2,:2], cur_group2[0,:2,:2])
+
+            concat_vec = torch.cat([cur_group1, cur_group2], 2).view(-1, cur_group.size(-1)*2)
+
+            #img = img * self.resize_ctx(withctx).unsqueeze(1)
+
+            out = mfb_l2
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
