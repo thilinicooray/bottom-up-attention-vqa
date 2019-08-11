@@ -1782,7 +1782,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             ans_up = torch.cat([prev, mfb_l2], -1)
             ctx_weight = self.resize_ans(ans_up)
 
-            out = ctx_weight * mfb_l2
+            out = ctx_weight
             '''if prev is not None:
                 out = prev + self.dropout(out)'''
 
