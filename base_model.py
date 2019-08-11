@@ -1719,11 +1719,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_repr = self.q_net(q_emb_mul_head)
         prev = None
 
-        '''init_vemb = torch.zeros(batch_size * self.encoder.max_role_count * n_heads, v.size(2)//n_heads)
+        prev = torch.zeros(batch_size * self.encoder.max_role_count, 1024)
         if torch.cuda.is_available():
-            init_vemb = init_vemb.to(torch.device('cuda'))
+            prev = prev.to(torch.device('cuda'))
 
-        vemb_list = [init_vemb]'''
+        #vemb_list = [init_vemb]
 
         for i in range(2):
 
@@ -1779,14 +1779,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            ans_up = torch.cat([withctx, mfb_l2], -1)
+            ans_up = torch.cat([prev, mfb_l2], -1)
             ctx_weight = torch.sigmoid(self.resize_ans(ans_up))
 
             out = ctx_weight * mfb_l2
             '''if prev is not None:
-                out = prev + self.dropout(out)
+                out = prev + self.dropout(out)'''
 
-            prev = out'''
+            prev = out
 
         logits = self.classifier(out)
 
