@@ -1500,7 +1500,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
-        self.context_adder = nn.GRUCell(1024, 1024)
+        #self.context_adder = nn.GRUCell(1024, 1024)
+        self.g = nn.Linear(2048,1024)
 
         self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
@@ -1642,10 +1643,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             cur_group1 = cur_group1.contiguous().view(-1, self.encoder.max_role_count * self.encoder.max_role_count, cur_group.size(-1))
             cur_group2 = cur_group2.contiguous().view(-1, self.encoder.max_role_count * self.encoder.max_role_count, cur_group.size(-1))
 
-
-            print(cur_group1[0,:2,:2], cur_group2[0,:2,:2])
-
             concat_vec = torch.cat([cur_group1, cur_group2], 2).view(-1, cur_group.size(-1)*2)
+            added = F.sigmoid(self.g(concat_vec)) * cur_group2
+            added = added.unsqueeze(2).expand(v.size(0), self.encoder.max_role_count, self.encoder.max_role_count, cur_group.size(-1)).sum(2)
+            print(added.size())
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
