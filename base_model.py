@@ -1711,7 +1711,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         verb_embed_expand = verb_embed_expand.transpose(0,1)
         concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
-        q_emb = self.Dropout_Q(self.query_composer(role_verb_embd))
+        q_emb = self.query_composer(role_verb_embd)
 
         q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
         q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
