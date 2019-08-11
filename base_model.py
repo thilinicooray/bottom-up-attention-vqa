@@ -1792,7 +1792,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
                 if iter == 0:
                     labelrep_expand_new[:,iter] = labelrep_expand[:,iter,1:]
                 elif iter == self.encoder.max_role_count -1:
-                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,:i]
+                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,:iter]
                 else:
                     labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
 
