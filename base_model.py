@@ -1659,9 +1659,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             added_img = torch.cat([withctx_expand, img], -1)
             added_img = added_img.contiguous().view(-1, cur_group.size(-1)*3)
             added_img = torch.sigmoid(self.resize_ctx(added_img))
-            added_img = added_img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, cur_group.size(-1))
+            added_img = added_img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, cur_group.size(-1)*2)
 
-            img = added_img * img 
+            img = added_img * img
 
             out = mfb_l2
             '''if prev is not None:
