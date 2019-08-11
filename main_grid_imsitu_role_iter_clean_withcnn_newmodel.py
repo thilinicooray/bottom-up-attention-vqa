@@ -349,7 +349,8 @@ def main():
             {'params': model.ctx_att.parameters()},
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
-            {'params': model.v_net.parameters()}
+            {'params': model.v_net.parameters()},
+            {'params': model.context_adder.parameters()}
         ], lr=1e-3)
 
 

@@ -1439,8 +1439,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 
         return role_label_pred, loss
 
-
-
     def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
         batch_size = role_label_pred.size()[0]
@@ -1501,6 +1499,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.resize_ctx = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
+        self.context_adder = nn.GRUCell(1024, 1024)
 
         self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
@@ -1594,7 +1593,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         vemb_list = [init_vemb]'''
 
-        for i in range(2):
+        for i in range(1):
 
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
@@ -1641,7 +1640,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            out = mfb_l2
+            out = self.context_adder(mfb_l2 + withctx)
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
