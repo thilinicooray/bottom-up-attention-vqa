@@ -1644,11 +1644,17 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             cur_group2 = cur_group2.contiguous().view(-1, self.encoder.max_role_count * self.encoder.max_role_count, cur_group.size(-1))
 
             concat_vec = torch.cat([cur_group1, cur_group2], 2).view(-1, cur_group.size(-1)*2)
-            added = torch.sigmoid(self.context_adder(concat_vec)) * cur_group2.view(concat_vec.size(0), -1)
+
+            print('concat_vec ', concat_vec[:3, -5 :-1])
+
+            a = cur_group2.view(concat_vec.size(0), -1)
+            print('a ', a[:3, -5 :-1])
+
+            added = torch.sigmoid(self.context_adder(concat_vec)) * a
 
             added = added.contiguous().view(v.size(0), self.encoder.max_role_count, self.encoder.max_role_count, cur_group.size(-1)).sum(2)
 
-            withctx = added.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            withctx = added.contiguous().view(v.size(0) * self.encoder.max_role_count, -1)
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
