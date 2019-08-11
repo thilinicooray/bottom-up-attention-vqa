@@ -1596,7 +1596,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         vemb_list = [init_vemb]'''
 
-        for i in range(1):
+        for i in range(2):
 
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
@@ -1654,9 +1654,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             withctx = added.contiguous().view(v.size(0) * self.encoder.max_role_count, -1)
 
-            #img = img * self.resize_ctx(withctx).unsqueeze(1)
+            img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            out = torch.cat([mfb_l2, withctx], -1)
+            out = mfb_l2
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
@@ -4709,7 +4709,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
-        2 * num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        num_hid, 2 * num_hid, num_ans_classes, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
