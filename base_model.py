@@ -1796,7 +1796,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
                 else:
                     labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
 
-            if self.gpu_mode >= 0:
+            if torch.cuda.is_available():
                 labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
 
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count-1, 1024)
