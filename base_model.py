@@ -1501,6 +1501,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
+
+        self.q_emb2 = nn.LSTM(1024, 1024,
+                              batch_first=True, bidirectional=True)
+        self.lstm_proj2 = nn.Linear(1024 * 2, 1024)
+
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
 
@@ -1713,9 +1718,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
         q_emb = self.query_composer(role_verb_embd)
 
-        q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
-        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
-        q_repr = self.q_net(q_emb_mul_head)
         prev = None
 
         '''prev = torch.zeros(batch_size * self.encoder.max_role_count, 1024)
@@ -1730,6 +1732,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
+            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+
             #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
             #attention
 
@@ -1738,6 +1743,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             #vemb_list.append(v_emb)
             #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
             v_repr = self.v_net(v_emb)
+            q_repr = self.q_net(q_emb_mul_head)
 
             #composition
 
@@ -1751,7 +1757,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
             mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-            #contextualization
+            #contextualization of img and q
 
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
@@ -1777,6 +1783,28 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             img = added_img * img
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
+
+            labelrep_expand = cur_group.expand(self.max_role_count, cur_group.size(0), cur_group.size(1), cur_group.size(2))
+            labelrep_expand = labelrep_expand.transpose(0,1)
+            labelrep_expand_new = torch.zeros([batch_size, self.max_role_count, self.max_role_count-1, self.mlp_hidden])
+            for i in range(self.max_role_count):
+                if i == 0:
+                    labelrep_expand_new[:,i] = labelrep_expand[:,i,1:]
+                elif i == self.max_role_count -1:
+                    labelrep_expand_new[:,i] = labelrep_expand[:,i,:i]
+                else:
+                    labelrep_expand_new[:,i] = torch.cat([labelrep_expand[:,i,:i], labelrep_expand[:,i,i+1:]], 1)
+
+            if self.gpu_mode >= 0:
+                labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
+
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.max_role_count-1, self.mlp_hidden)
+
+            updated_roleq = torch.cat([labelrep_expand, q_emb.unsqueeze(1)], 1)
+            self.q_emb2.flatten_parameters()
+            lstm_out, (h, _) = self.q_emb2(updated_roleq)
+            q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.max_role_count, -1)
+            q_emb = self.lstm_proj2(q_emb_up)
 
             out = mfb_l2
             '''if prev is not None:
