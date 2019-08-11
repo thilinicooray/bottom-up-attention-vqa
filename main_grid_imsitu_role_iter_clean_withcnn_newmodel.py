@@ -346,6 +346,7 @@ def main():
             {'params': model.verb_emb.parameters()},
             {'params': model.query_composer.parameters()},
             {'params': model.resize_ctx.parameters()},
+            {'params': model.resize_ans.parameters()},
             {'params': model.ctx_att.parameters()},
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
