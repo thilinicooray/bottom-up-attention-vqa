@@ -1496,7 +1496,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.classifier = classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(3072, 2048)
+        self.resize_ctx = nn.Linear(1024, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -1767,16 +1767,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
 
-            withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
-            withctx_expand = withctx_expand.transpose(0,1)
-            added_img = torch.cat([withctx_expand, img], -1)
-            added_img = added_img.contiguous().view(-1, cur_group.size(-1)*3)
-            added_img = torch.sigmoid(self.resize_ctx(added_img))
-            added_img = added_img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, cur_group.size(-1)*2)
-
-            img = added_img * img
-
-            #img = img * self.resize_ctx(withctx).unsqueeze(1)
+            img = img * self.resize_ctx(withctx).unsqueeze(1)
 
             out = mfb_l2
             '''if prev is not None:
@@ -4826,7 +4817,8 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     covnet = resnet_modified_medium()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
-    query_composer = FCNet([600, 1024])
+    #query_composer = FCNet([600, 1024])
+    query_composer = nn.GRUCell(600, 1024)
     v_att = Attention(2048//n_heads, 1024//n_heads, num_hid)
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
