@@ -1500,6 +1500,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
+        self.Dropout_C = nn.Dropout(0.1)
         #self.context_adder = nn.GRUCell(1024, 1024)
         self.context_adder = nn.Linear(2048,1024)
 
@@ -1655,7 +1656,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            out = mfb_l2 + withctx
+            out = mfb_l2 * withctx
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
