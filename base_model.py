@@ -1717,6 +1717,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
         q_emb = self.query_composer(role_verb_embd)
+        q_emb_org = q_emb
 
         prev = None
 
@@ -1784,26 +1785,26 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            labelrep_expand = cur_group.expand(self.max_role_count, cur_group.size(0), cur_group.size(1), cur_group.size(2))
+            labelrep_expand = cur_group.expand(self.encoder.max_role_count, cur_group.size(0), cur_group.size(1), cur_group.size(2))
             labelrep_expand = labelrep_expand.transpose(0,1)
-            labelrep_expand_new = torch.zeros([batch_size, self.max_role_count, self.max_role_count-1, self.mlp_hidden])
-            for i in range(self.max_role_count):
-                if i == 0:
-                    labelrep_expand_new[:,i] = labelrep_expand[:,i,1:]
-                elif i == self.max_role_count -1:
-                    labelrep_expand_new[:,i] = labelrep_expand[:,i,:i]
+            labelrep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, 1024])
+            for iter in range(self.encoder.max_role_count):
+                if iter == 0:
+                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,1:]
+                elif iter == self.encoder.max_role_count -1:
+                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,:i]
                 else:
-                    labelrep_expand_new[:,i] = torch.cat([labelrep_expand[:,i,:i], labelrep_expand[:,i,i+1:]], 1)
+                    labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
 
             if self.gpu_mode >= 0:
                 labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
 
-            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.max_role_count-1, self.mlp_hidden)
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count-1, 1024)
 
-            updated_roleq = torch.cat([labelrep_expand, q_emb.unsqueeze(1)], 1)
+            updated_roleq = torch.cat([labelrep_expand, q_emb_org.unsqueeze(1)], 1)
             self.q_emb2.flatten_parameters()
             lstm_out, (h, _) = self.q_emb2(updated_roleq)
-            q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.max_role_count, -1)
+            q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.encoder.max_role_count, -1)
             q_emb = self.lstm_proj2(q_emb_up)
 
             out = mfb_l2
