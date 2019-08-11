@@ -1579,7 +1579,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         verb_embed_expand = verb_embd.expand(self.encoder.max_role_count, verb_embd.size(0), verb_embd.size(1))
         verb_embed_expand = verb_embed_expand.transpose(0,1)
-        concat_query = torch.cat([role_embd, verb_embed_expand], -1)
+        concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
         q_emb = self.query_composer(role_verb_embd)
 
