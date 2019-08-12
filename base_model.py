@@ -1824,6 +1824,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
     def forward(self, v_org, labels, gt_verb):
 
+
+
+
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
@@ -1832,6 +1835,15 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         v = img_org.permute(0, 2, 1)
 
         batch_size = v.size(0)
+
+        #creating the mask
+        a = np.ones((self.encoder.max_role_count, self.encoder.max_role_count), int)
+        np.fill_diagonal(a, 0)
+        exp = torch.from_numpy(a)
+        mask = exp.expand(batch_size, exp.size(0), exp.size(1))
+        if torch.cuda.is_available():
+            mask = mask.to(torch.device('cuda'))
+
 
         role_idx = self.encoder.get_role_ids_batch(gt_verb)
 
@@ -1900,10 +1912,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
-            mask = self.encoder.get_adj_matrix_noself(gt_verb)
+            '''mask = self.encoder.get_adj_matrix_noself(gt_verb)
 
             if torch.cuda.is_available():
-                mask = mask.to(torch.device('cuda'))
+                mask = mask.to(torch.device('cuda'))'''
 
             selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
 
