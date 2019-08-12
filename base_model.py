@@ -1484,7 +1484,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return (role_loss / self.encoder.max_role_count)
 
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
-    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter):
+    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, verb_classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel, self).__init__()
         self.convnet = convnet
         self.role_emb = role_emb
@@ -1494,6 +1494,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
+        self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
         self.resize_ctx = nn.Linear(1024, 2048)
@@ -1837,7 +1838,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         batch_size = v.size(0)
 
         #creating the mask
-        a = np.ones((self.encoder.max_role_count, self.encoder.max_role_count), int)
+        a = np.ones((self.encoder.max_role_count+1, self.encoder.max_role_count+1), int)
         np.fill_diagonal(a, 0)
         exp = torch.from_numpy(a)
         mask = exp.expand(batch_size, exp.size(0), exp.size(1))
@@ -1845,7 +1846,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             mask = mask.to(torch.device('cuda'))
 
 
-        role_idx = self.encoder.get_role_ids_batch(gt_verb)
+        role_idx = self.encoder.get_role_ids_with_actionrole_batch(gt_verb)
 
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
@@ -1901,7 +1902,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
 
-            mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+            mfb_iq_resh = mfb_iq_drop.view(batch_size* (self.encoder.max_role_count +1 ), 1, -1, n_heads)   # N x 1 x 1000 x 5
             mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
             mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
             mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
@@ -1909,7 +1910,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #contextualization
 
-            cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+            cur_group = mfb_l2.contiguous().view(v.size(0), (self.encoder.max_role_count +1 ), -1)
 
             #print('before att :', cur_group[1,:, :5])
             '''mask = self.encoder.get_adj_matrix_noself(gt_verb)
@@ -1921,26 +1922,29 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #print('after att :', selfatt_val[1,:, :5])
 
-            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            withctx = selfatt_val.contiguous().view(v.size(0)* (self.encoder.max_role_count +1 ), -1)
 
             img = img * self.resize_ctx(withctx).unsqueeze(1)
 
-            out = mfb_l2
+            ans_verb = cur_group[:,0,:].squeeze()
+            ans_nouns = cur_group[:,1:,:]
+            ans_nouns = ans_nouns.contiguous().view(v.size(0)* (self.encoder.max_role_count ), -1)
             '''if prev is not None:
                 out = prev + self.dropout(out)
 
             prev = out'''
 
-        logits = self.classifier(out)
+        logits = self.classifier(ans_nouns)
+        verb_logits = self.verb_classifier(ans_verb)
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         if self.training:
-            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+            loss = self.calculate_loss(verb_logits, gt_verb, role_label_pred, labels)
 
         return role_label_pred, loss
 
-    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
+    def calculate_loss(self, verb_pred, gt_verbs, role_label_pred, gt_labels):
 
         batch_size = role_label_pred.size()[0]
 
@@ -1948,11 +1952,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         for i in range(batch_size):
             for index in range(gt_labels.size()[1]):
                 frame_loss = 0
-                #verb_loss = utils.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
                 for j in range(0, self.encoder.max_role_count):
                     frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
-                frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
+                frame_loss = verb_loss + frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
 
@@ -4969,7 +4973,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     #print('words count :', dataset.dictionary.ntoken)
     n_heads = 4
     covnet = resnet_modified_medium()
-    role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
+    role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([300, 1024])
     v_att = Attention(2048//n_heads, 1024//n_heads, num_hid)
@@ -4977,7 +4981,9 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     v_net = FCNet([2048//n_heads, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter)
+    verb_classifier = SimpleClassifier(
+        num_hid, 2 * num_hid, n_verbs, 0.5)
+    return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, verb_classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)

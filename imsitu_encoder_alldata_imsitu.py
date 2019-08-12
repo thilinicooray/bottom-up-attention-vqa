@@ -141,6 +141,27 @@ class imsitu_encoder():
         self.verb2role_list = torch.stack(verb2role_list)
         self.verb2role_encoding = self.get_verb2role_encoding()
         self.verb2role_oh_encoding = self.get_verb2role_oh_encoding()
+
+        verb2role_withaction_list = []
+        for verb_id in range(len(self.verb_list)):
+            current_role_list = self.verb2_role_dict[self.verb_list[verb_id]]
+
+            role_verb_withaction = [len(self.role_list) + 1]
+            for role in current_role_list:
+                role_id = self.role_list.index(role)
+                role_verb_withaction.append(role_id)
+
+            padding_count = self.max_role_count - len(current_role_list)
+
+            for i in range(padding_count):
+                role_verb_withaction.append(len(self.role_list))
+
+            verb2role_withaction_list.append(torch.tensor(role_verb_withaction))
+
+        self.verb2role_withaction_list = torch.stack(verb2role_withaction_list)
+
+
+
         '''print('verb to role list :', self.verb2role_list.size())
 
         print('unit test verb and roles: \n')
@@ -282,6 +303,16 @@ class imsitu_encoder():
 
         return torch.stack(role_batch_list,0)
 
+    def get_role_ids_with_actionrole_batch(self, verbs):
+        role_batch_list = []
+        q_len = []
+
+        for verb_id in verbs:
+            role_ids = self.get_role_ids_with_actionrole(verb_id)
+            role_batch_list.append(role_ids)
+
+        return torch.stack(role_batch_list,0)
+
     def get_role_questions_batch(self, verbs):
         role_batch_list = []
         q_len_batch = []
@@ -326,6 +357,10 @@ class imsitu_encoder():
     def get_role_ids(self, verb_id):
 
         return self.verb2role_list[verb_id]
+
+    def get_role_ids_with_actionrole(self, verb_id):
+
+        return self.verb2role_withaction_list[verb_id]
 
     def get_role_questions(self, verb):
         rquestion_tokens = []
