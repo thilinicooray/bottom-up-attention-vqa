@@ -1858,6 +1858,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_emb = self.query_composer(role_embd)
 
         q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+        print(q_emb_mul_head.size())
         q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
         print(q_emb.size(), q_emb_mul_head.size())
         q_repr = self.q_net(q_emb_mul_head)
