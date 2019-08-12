@@ -1881,7 +1881,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         vemb_list = [init_vemb]'''
 
-        for i in range(2):
+        for i in range(1):
 
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
