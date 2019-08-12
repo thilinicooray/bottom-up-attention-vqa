@@ -1823,7 +1823,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward_withverbb(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -1939,9 +1939,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         if self.training:
             loss = self.calculate_loss_with_verbs(verb_logits, gt_verb, role_label_pred, labels)
 
-        return role_label_pred, loss
+        return verb_logits, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_noverb(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
