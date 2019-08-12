@@ -1683,7 +1683,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_updateq(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -1822,7 +1822,118 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
+    def forward_prev(self, v_org, labels, gt_verb):
 
+        img_features = self.convnet(v_org)
+        #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        batch_size = v.size(0)
+
+        role_idx = self.encoder.get_role_ids_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            role_idx = role_idx.to(torch.device('cuda'))
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count, img.size(0), img.size(1), img.size(2))
+
+
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+
+        n_heads = 4
+
+        verb_embd = self.verb_emb(gt_verb)
+        role_embd = self.role_emb(role_idx)
+
+        #verb_embed_expand = verb_embd.expand(self.encoder.max_role_count, verb_embd.size(0), verb_embd.size(1))
+        #verb_embed_expand = verb_embed_expand.transpose(0,1)
+        #concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
+        #role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
+        q_emb = self.query_composer(role_embd)
+
+        q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+        q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+        q_repr = self.q_net(q_emb_mul_head)
+        prev = None
+
+        '''init_vemb = torch.zeros(batch_size * self.encoder.max_role_count * n_heads, v.size(2)//n_heads)
+        if torch.cuda.is_available():
+            init_vemb = init_vemb.to(torch.device('cuda'))
+
+        vemb_list = [init_vemb]'''
+
+        for i in range(2):
+
+
+            img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+            img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
+
+            #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+            #attention
+
+            att = self.v_att(img_mul_head, q_emb_mul_head)
+            v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            #vemb_list.append(v_emb)
+            #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+            v_repr = self.v_net(v_emb)
+
+            #composition
+
+            mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+
+            mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+
+            mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+            mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+            mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
+            mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
+            mfb_l2 = F.normalize(mfb_sign_sqrt)
+
+            #contextualization
+
+            cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            #print('before att :', cur_group[1,:, :5])
+            mask = self.encoder.get_adj_matrix_noself(gt_verb)
+
+            if torch.cuda.is_available():
+                mask = mask.to(torch.device('cuda'))
+
+            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
+
+            #print('after att :', selfatt_val[1,:, :5])
+
+            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+
+            withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
+            withctx_expand = withctx_expand.transpose(0,1)
+            added_img = torch.cat([withctx_expand, img], -1)
+            added_img = added_img.contiguous().view(-1, cur_group.size(-1)*3)
+            added_img = torch.sigmoid(self.resize_ctx(added_img))
+            added_img = added_img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, cur_group.size(-1)*2)
+
+            img = added_img * img
+
+            out = mfb_l2
+            '''if prev is not None:
+                out = prev + self.dropout(out)
+
+            prev = out'''
+
+        logits = self.classifier(out)
+
+        loss = None
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+
+        return role_label_pred, loss
 
     def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
@@ -4855,7 +4966,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     covnet = resnet_modified_medium()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
-    query_composer = FCNet([600, 1024])
+    query_composer = FCNet([300, 1024])
     v_att = Attention(2048//n_heads, 1024//n_heads, num_hid)
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
