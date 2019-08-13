@@ -1484,8 +1484,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return (role_loss / self.encoder.max_role_count)
 
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
-    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, verb_classifier, encoder, num_iter):
+    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel, self).__init__()
+        self.hidden_size = 512
         self.convnet = convnet
         self.role_emb = role_emb
         self.verb_emb = verb_emb
@@ -1494,23 +1495,23 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
-        self.verb_classifier = verb_classifier
+        #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(3072, 2048)
+        self.resize_ctx = nn.Linear(self.hidden_size*3, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
 
-        self.q_emb2 = nn.LSTM(1024, 1024,
+        self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
-        self.lstm_proj2 = nn.Linear(1024 * 2, 1024)
+        self.lstm_proj2 = nn.Linear(self.hidden_size * 2, self.hidden_size)
 
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
 
-        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
+        self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1807,7 +1808,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count - 1, 1024)
                 '''
 
-            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, 1024)
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, self.hidden_size)
 
             updated_roleq = torch.cat([labelrep_expand, q_emb_org.unsqueeze(1)], 1)
             self.q_emb2.flatten_parameters()
@@ -5113,19 +5114,20 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
+    hidden_size = 512
     n_heads = 4
     covnet = resnet_modified_medium()
     role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
-    query_composer = FCNet([600, 1024])
-    v_att = Attention(2048//n_heads, 1024//n_heads, num_hid)
-    q_net = FCNet([num_hid//n_heads, num_hid ])
-    v_net = FCNet([2048//n_heads, num_hid])
+    query_composer = FCNet([600, hidden_size])
+    v_att = Attention(2048//n_heads, hidden_size//n_heads, hidden_size)
+    q_net = FCNet([hidden_size//n_heads, hidden_size ])
+    v_net = FCNet([2048//n_heads, hidden_size])
     classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, num_ans_classes, 0.5)
-    verb_classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, n_verbs, 0.5)
-    return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, verb_classifier, encoder, num_iter)
+        hidden_size, 2 * num_hid, num_ans_classes, 0.5)
+    #verb_classifier = SimpleClassifier(
+        #num_hid, 2 * num_hid, n_verbs, 0.5)
+    return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)
