@@ -2158,7 +2158,7 @@ class MultiHeadedAttention(nn.Module):
         x = x.transpose(1, 2).contiguous() \
             .view(nbatches, -1, self.h * self.d_k)
 
-        print(self.attn[0,:,0])
+        print(self.attn[0,:,1])
 
         return self.linears[-1](x)
 
