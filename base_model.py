@@ -1806,7 +1806,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             if torch.cuda.is_available():
                 labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))'''
 
-            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count-1, 1024)
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, 1024)
 
             updated_roleq = torch.cat([labelrep_expand, q_emb_org.unsqueeze(1)], 1)
             self.q_emb2.flatten_parameters()
