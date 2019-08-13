@@ -1774,7 +1774,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #print('after att :', selfatt_val[1,:, :5])
 
-            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            withctx, rolewise_att = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            print(rolewise_att.size(), rolewise_att[0,1,:])
 
             withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
             withctx_expand = withctx_expand.transpose(0,1)
@@ -2158,9 +2159,7 @@ class MultiHeadedAttention(nn.Module):
         x = x.transpose(1, 2).contiguous() \
             .view(nbatches, -1, self.h * self.d_k)
 
-        print(self.attn[0,:,1])
-
-        return self.linears[-1](x)
+        return self.linears[-1](x), torch.mean(self.attn, 1)
 
 def attention(query, key, value, mask=None, dropout=None):
     "Compute 'Scaled Dot Product Attention'"
