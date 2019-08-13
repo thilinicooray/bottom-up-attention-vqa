@@ -1775,7 +1775,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             #print('after att :', selfatt_val[1,:, :5])
 
             withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
-            print(rolewise_att.size(), rolewise_att[0,1,:])
 
             withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
             withctx_expand = withctx_expand.transpose(0,1)
@@ -1790,7 +1789,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             labelrep_expand = cur_group.expand(self.encoder.max_role_count, cur_group.size(0), cur_group.size(1), cur_group.size(2))
             labelrep_expand = labelrep_expand.transpose(0,1)
-            labelrep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, 1024])
+
+            labelrep_expand_new = rolewise_att.unsqueeze(-1) * labelrep_expand
+
+            print(labelrep_expand_new.size(), labelrep_expand_new[0,1,:5])
+
+            '''labelrep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, 1024])
             for iter in range(self.encoder.max_role_count):
                 if iter == 0:
                     labelrep_expand_new[:,iter] = labelrep_expand[:,iter,1:]
@@ -1800,7 +1804,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
                     labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
 
             if torch.cuda.is_available():
-                labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
+                labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))'''
 
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count-1, 1024)
 
