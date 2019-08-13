@@ -5108,7 +5108,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     covnet = resnet_modified_medium()
     role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
-    query_composer = FCNet([300, 1024])
+    query_composer = FCNet([600, 1024])
     v_att = Attention(2048//n_heads, 1024//n_heads, num_hid)
     q_net = FCNet([num_hid//n_heads, num_hid ])
     v_net = FCNet([2048//n_heads, num_hid])
