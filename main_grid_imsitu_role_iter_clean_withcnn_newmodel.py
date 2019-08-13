@@ -342,12 +342,11 @@ def main():
         optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
-            {'params': model.verb_classifier.parameters()},
             {'params': model.role_emb.parameters()},
             {'params': model.verb_emb.parameters()},
             {'params': model.query_composer.parameters()},
             {'params': model.resize_ctx.parameters()},
-            {'params': model.ctx_att.parameters()},
+            {'params': model.context_adder.parameters()},
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},

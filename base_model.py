@@ -1508,9 +1508,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.lstm_proj2 = nn.Linear(1024 * 2, 1024)'''
 
         #self.context_adder = nn.GRUCell(1024, 1024)
-        #self.context_adder = nn.Linear(2048,1024)
+        self.context_adder = nn.Linear(2048,1024)
 
-        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
+        #self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
     def forward_gt(self, v, labels, gt_verb):
 
