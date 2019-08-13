@@ -2157,6 +2157,9 @@ class MultiHeadedAttention(nn.Module):
         # 3) "Concat" using a view and apply a final linear.
         x = x.transpose(1, 2).contiguous() \
             .view(nbatches, -1, self.h * self.d_k)
+
+        print(x.size(), self.attn.size())
+
         return self.linears[-1](x)
 
 def attention(query, key, value, mask=None, dropout=None):
@@ -2170,7 +2173,6 @@ def attention(query, key, value, mask=None, dropout=None):
     if dropout is not None:
         p_attn = dropout(p_attn)
 
-    print(p_attn.size(), value.size())
     return torch.matmul(p_attn, value), p_attn
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
