@@ -1498,7 +1498,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size*3, 2048)
+        self.resize_ctx = nn.Linear(self.hidden_size + 2048, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -1781,7 +1781,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             withctx_expand = withctx_expand.transpose(0,1)
             added_img = torch.cat([withctx_expand, img], -1)
             print(added_img.size())
-            added_img = added_img.contiguous().view(-1, cur_group.size(-1)*3)
+            added_img = added_img.contiguous().view(-1, added_img.size(-1))
             print(added_img.size())
             added_img = torch.sigmoid(self.resize_ctx(added_img))
             print(added_img.size())
