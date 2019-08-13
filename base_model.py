@@ -1503,14 +1503,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
 
-        '''self.q_emb2 = nn.LSTM(1024, 1024,
+        self.q_emb2 = nn.LSTM(1024, 1024,
                               batch_first=True, bidirectional=True)
-        self.lstm_proj2 = nn.Linear(1024 * 2, 1024)'''
+        self.lstm_proj2 = nn.Linear(1024 * 2, 1024)
 
         #self.context_adder = nn.GRUCell(1024, 1024)
-        self.context_adder = nn.Linear(2048,1024)
+        #self.context_adder = nn.Linear(2048,1024)
 
-        #self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
+        self.ctx_att = MultiHeadedAttention(4, 1024, dropout=0.1)
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1556,7 +1556,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         return role_label_pred, loss
 
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_ctxwrong(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -1684,7 +1684,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward_updateq(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -1719,6 +1719,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
         q_emb = self.query_composer(role_verb_embd)
         q_emb_org = q_emb
+
+        mask = self.encoder.get_adj_matrix_noself(gt_verb)
+
+        if torch.cuda.is_available():
+            mask = mask.to(torch.device('cuda'))
 
         prev = None
 
@@ -1764,10 +1769,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
             #print('before att :', cur_group[1,:, :5])
-            mask = self.encoder.get_adj_matrix_noself(gt_verb)
-
-            if torch.cuda.is_available():
-                mask = mask.to(torch.device('cuda'))
 
             selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
 
@@ -2168,6 +2169,8 @@ def attention(query, key, value, mask=None, dropout=None):
     p_attn = F.softmax(scores, dim = -1)
     if dropout is not None:
         p_attn = dropout(p_attn)
+
+    print(p_attn.size(), value.size())
     return torch.matmul(p_attn, value), p_attn
 
 class BaseModelGrid_Imsitu_RoleIter_Beam(nn.Module):
