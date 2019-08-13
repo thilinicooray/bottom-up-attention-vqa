@@ -1770,11 +1770,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             #print('before att :', cur_group[1,:, :5])
 
-            selfatt_val= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
+            selfatt_val, rolewise_att= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
 
             #print('after att :', selfatt_val[1,:, :5])
 
-            withctx, rolewise_att = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
             print(rolewise_att.size(), rolewise_att[0,1,:])
 
             withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
