@@ -2114,7 +2114,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         loss = nn.BCEWithLogitsLoss(reduction='sum')
         #final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
         total_loss = loss(role_label_pred, gt_labels)
-        final_loss = total_loss/ real_tot
+        final_loss = (total_loss/ real_tot) * gt_labels.size(-1)
 
 
         return final_loss
