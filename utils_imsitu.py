@@ -581,6 +581,8 @@ def load_net(fname, net_list, prefix_list = None):
         else:
             dict = torch.load(fname)
 
+        print(dict)
+
         try:
             for k, v in net_list[i].state_dict().items():
                 #print('trying to copy :', k, v.size(), v.type())
