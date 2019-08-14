@@ -1486,7 +1486,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
     def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel, self).__init__()
-        self.hidden_size = 1024
+        self.hidden_size = 512
         self.convnet = convnet
         self.role_emb = role_emb
         self.verb_emb = verb_emb
@@ -5121,7 +5121,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
-    hidden_size = 1024
+    hidden_size = 512
     n_heads = 4
     covnet = vgg16_modified()
     role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
