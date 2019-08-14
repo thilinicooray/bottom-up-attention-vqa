@@ -1486,7 +1486,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
     def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel, self).__init__()
-        self.hidden_size = 512
+        self.hidden_size = 1024
         self.convnet = convnet
         self.role_emb = role_emb
         self.verb_emb = verb_emb
@@ -1498,7 +1498,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size + 512, 512)
+        self.resize_ctx = nn.Linear(self.hidden_size + 2048, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -1686,6 +1686,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         return role_label_pred, loss
 
     def forward(self, v_org, labels, gt_verb):
+
+        self.convnet.eval()
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -5121,15 +5123,15 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
-    hidden_size = 512
+    hidden_size = 1024
     n_heads = 4
-    covnet = vgg16_modified()
+    covnet = resnet_modified_medium()
     role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([600, hidden_size])
-    v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
+    v_att = Attention(2048//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
-    v_net = FCNet([512//n_heads, hidden_size])
+    v_net = FCNet([2048//n_heads, hidden_size])
     classifier = SimpleClassifier(
         hidden_size, 2 * num_hid, num_ans_classes, 0.5)
     #verb_classifier = SimpleClassifier(
