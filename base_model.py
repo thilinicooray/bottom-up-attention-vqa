@@ -1690,7 +1690,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
-        labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+        #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
         img_org = img_features.view(batch_size, n_channel, -1)
         v = img_org.permute(0, 2, 1)
@@ -1830,7 +1830,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         if self.training:
-            loss = self.calculate_loss(logits, labels)
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
         return role_label_pred, loss
 
@@ -2088,7 +2088,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
-    def calculate_loss_old(self, gt_verbs, role_label_pred, gt_labels):
+    def calculate_loss(self, gt_verbs, role_label_pred, gt_labels):
 
         batch_size = role_label_pred.size()[0]
 
@@ -2109,7 +2109,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
-    def calculate_loss(self, role_label_pred, gt_labels):
+    def calculate_loss_doesntwork(self, role_label_pred, gt_labels):
         #loss = nn.KLDivLoss(reduction='sum')
         loss = nn.BCEWithLogitsLoss(reduction='mean')
         #final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
