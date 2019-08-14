@@ -1723,11 +1723,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_emb_org = q_emb
 
         mask = self.encoder.get_adj_matrix_noself(gt_verb)
-        oh_role_encoding, real_role_count = self.encoder.get_verb2role_encoing_batch(gt_verb)
+        #oh_role_encoding, real_role_count = self.encoder.get_verb2role_encoing_batch(gt_verb)
 
         if torch.cuda.is_available():
             mask = mask.to(torch.device('cuda'))
-            oh_role_encoding = oh_role_encoding.to(torch.device('cuda'))
+            #oh_role_encoding = oh_role_encoding.to(torch.device('cuda'))
 
         prev = None
 
@@ -1830,7 +1830,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
         if self.training:
-            loss = self.calculate_loss(logits, labels, real_role_count)
+            loss = self.calculate_loss(logits, labels)
 
         return role_label_pred, loss
 
@@ -2109,12 +2109,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #print('loss :', final_loss)
         return final_loss
 
-    def calculate_loss(self, role_label_pred, gt_labels, real_tot):
+    def calculate_loss(self, role_label_pred, gt_labels):
         #loss = nn.KLDivLoss(reduction='sum')
-        loss = nn.BCEWithLogitsLoss(reduction='sum')
+        loss = nn.BCEWithLogitsLoss(reduction='mean')
         #final_loss = loss(role_label_pred, gt_labels) * role_label_pred.size(1)
         total_loss = loss(role_label_pred, gt_labels)
-        final_loss = (total_loss/ real_tot) * gt_labels.size(-1)
+        final_loss = (total_loss) * gt_labels.size(-1)
 
 
         return final_loss
