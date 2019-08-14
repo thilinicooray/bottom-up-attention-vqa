@@ -489,14 +489,15 @@ class imsitu_encoder():
                 label = frame[role]
                 label_id = self.label_list.index(label)
 
-                label_counts[label_id] += 1
+                label_counts[label_id] = 1
 
                 '''if label_id in label_counts:
                     label_counts[label_id] += 1
                 else:
                     label_counts[label_id] = 1'''
 
-            current_role_scorevec = label_counts / np.sum(label_counts)
+            #current_role_scorevec = label_counts / np.sum(label_counts)
+            current_role_scorevec = label_counts
             all_role_list.append(torch.from_numpy(current_role_scorevec).float())
 
         role_padding_count = self.max_role_count - len(roles)
