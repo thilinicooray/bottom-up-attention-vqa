@@ -57,15 +57,11 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
 
             if gpu_mode >= 0:
                 img = torch.autograd.Variable(img.cuda())
-                noise = torch.autograd.Variable(img.data.new(img.size()).normal_(0, 0.05).cuda())
-                img = img + noise
                 verb = torch.autograd.Variable(verb.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
                 label_scores = torch.autograd.Variable(label_scores.cuda())
             else:
                 img = torch.autograd.Variable(img)
-                noise = torch.autograd.Variable(img.data.new(img.size()).normal_(0, 0.05))
-                img = img + noise
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
                 label_scores = torch.autograd.Variable(label_scores)
