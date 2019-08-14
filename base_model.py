@@ -5131,7 +5131,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
     v_net = FCNet([2048//n_heads, hidden_size])
     classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, num_ans_classes + 1, 0.5)
+        hidden_size, 2 * num_hid, num_ans_classes, 0.5)
     #verb_classifier = SimpleClassifier(
         #num_hid, 2 * num_hid, n_verbs, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, classifier, encoder, num_iter)
