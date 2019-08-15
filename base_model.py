@@ -1739,9 +1739,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             prev = prev.to(torch.device('cuda'))'''
 
         #vemb_list = [init_vemb]
+        q_list = []
+        ans_list = []
 
         for i in range(3):
-
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
@@ -1814,6 +1815,16 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count - 1, 1024)
                 '''
 
+            out = mfb_l2
+
+            if prev is not None:
+                #out = prev + self.Dropout_C(out)
+                gate = torch.sigmoid(q_list[-1] * q_emb)
+                out = gate * ans_list[-1] + (1 - gate) * out
+
+            q_list.append(q_emb)
+            ans_list.append(mfb_l2)
+            prev = out
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, self.hidden_size)
 
             updated_roleq = torch.cat([labelrep_expand, q_emb_org.unsqueeze(1)], 1)
@@ -1821,12 +1832,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             lstm_out, (h, _) = self.q_emb2(updated_roleq)
             q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.encoder.max_role_count, -1)
             q_emb = self.Dropout_C(self.lstm_proj2(q_emb_up))
-
-            out = mfb_l2
-            '''if prev is not None:
-                out = prev + self.Dropout_C(out)
-
-            prev = out'''
 
         logits = self.classifier(out)
 
