@@ -1742,7 +1742,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_list = []
         ans_list = []
 
-        for i in range(3):
+        for i in range(2):
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
