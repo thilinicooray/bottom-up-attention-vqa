@@ -245,6 +245,7 @@ def main():
     #parser.add_argument("--command", choices = ["train", "eval", "resume", 'predict'], required = True)
     parser.add_argument('--resume_training', action='store_true', help='Resume training from the model [resume_model]')
     parser.add_argument('--resume_model', type=str, default='', help='The model we resume')
+    parser.add_argument('--use_pretrained_cnn', action='store_true', help='cnn fix, verb finetune, role train from the scratch')
     parser.add_argument('--pre_trained_cnn_model', type=str, default='', help='The model we resume')
     parser.add_argument('--pretrained_buatt_model', type=str, default='', help='pretrained verb module')
     parser.add_argument('--train_role', action='store_true', help='cnn fix, verb fix, role train from the scratch')
@@ -336,6 +337,26 @@ def main():
         optimizer_select = 0
         optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
         model_name = 'resume_all'
+    elif args.use_pretrained_cnn:
+        print('use pretrained cnn.')
+        model_name = 'pretrain_cnn_full'
+        utils_imsitu.set_trainable(model, True)
+        utils_imsitu.load_net(args.pre_trained_cnn_model, [model.convnet], ['convnet'])
+        utils_imsitu.set_trainable(model.convnet, False)
+        #{'params': model.convnet.parameters(), 'lr': 5e-5},
+        optimizer = torch.optim.Adamax([
+            {'params': model.classifier.parameters()},
+            {'params': model.role_emb.parameters()},
+            {'params': model.verb_emb.parameters()},
+            {'params': model.query_composer.parameters()},
+            {'params': model.resize_ctx.parameters()},
+            {'params': model.q_emb2.parameters()},
+            {'params': model.lstm_proj2.parameters()},
+            {'params': model.ctx_att.parameters()},
+            {'params': model.v_att.parameters()},
+            {'params': model.q_net.parameters()},
+            {'params': model.v_net.parameters()},
+        ], lr=1e-3)
     else:
         print('Training from the scratch.')
         model_name = 'train_full'
