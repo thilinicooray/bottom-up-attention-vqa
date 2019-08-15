@@ -3,7 +3,7 @@ import torch.nn as nn
 from attention import Attention, NewAttention, BiAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
-from fc import FCNet, FCNet_relu, MLP, BCNet
+from fc import FCNet, MLP, BCNet
 import torchvision as tv
 import utils_imsitu
 import numpy as np
