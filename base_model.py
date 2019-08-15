@@ -1498,14 +1498,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size + 2048, 2048)
+        self.resize_ctx = nn.Linear(self.hidden_size + 1024, 1024)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
         self.big_size = nn.Sequential(
-            nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
-            nn.BatchNorm2d(2048),
+            nn.Conv2d(512, 1024, [1, 1], 1, 0, bias=False),
+            nn.BatchNorm2d(1024),
             nn.ReLU()
         )
 
@@ -5133,9 +5133,9 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([600, hidden_size])
-    v_att = Attention(2048//n_heads, hidden_size//n_heads, hidden_size)
+    v_att = Attention(1024//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
-    v_net = FCNet([2048//n_heads, hidden_size])
+    v_net = FCNet([1024//n_heads, hidden_size])
     classifier = SimpleClassifier(
         hidden_size, 2 * num_hid, num_ans_classes, 0.5)
     #verb_classifier = SimpleClassifier(
