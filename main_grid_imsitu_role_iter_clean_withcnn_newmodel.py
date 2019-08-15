@@ -345,7 +345,6 @@ def main():
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
         optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
-            {'params': model.big_size.parameters()},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
             {'params': model.verb_emb.parameters()},

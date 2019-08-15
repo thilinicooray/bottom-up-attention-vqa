@@ -1498,16 +1498,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size + 1024, 1024)
+        self.resize_ctx = nn.Linear(self.hidden_size + 512, 512)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
-        self.big_size = nn.Sequential(
-            nn.Conv2d(512, 1024, [1, 1], 1, 0, bias=False),
-            nn.BatchNorm2d(1024),
-            nn.ReLU()
-        )
+
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
@@ -1693,7 +1689,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
     def forward(self, v_org, labels, gt_verb):
 
         img_features = self.convnet(v_org)
-        img_features = self.big_size(img_features)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
@@ -1716,7 +1711,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        n_heads = 4
+        n_heads = 1
 
         verb_embd = self.verb_emb(gt_verb)
         role_embd = self.role_emb(role_idx)
@@ -5128,14 +5123,14 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
     hidden_size = 1024
-    n_heads = 4
+    n_heads = 1
     covnet = vgg16_modified()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([600, hidden_size])
-    v_att = Attention(1024//n_heads, hidden_size//n_heads, hidden_size)
+    v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
-    v_net = FCNet([1024//n_heads, hidden_size])
+    v_net = FCNet([512//n_heads, hidden_size])
     classifier = SimpleClassifier(
         hidden_size, 2 * num_hid, num_ans_classes, 0.5)
     #verb_classifier = SimpleClassifier(
