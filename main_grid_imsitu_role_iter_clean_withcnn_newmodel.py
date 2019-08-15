@@ -340,10 +340,12 @@ def main():
         print('Training from the scratch.')
         model_name = 'train_full'
         utils_imsitu.set_trainable(model, True)
-        utils_imsitu.load_net(args.pre_trained_cnn_model, [model.convnet], ['convnet'])
-        utils_imsitu.set_trainable(model.convnet, False)
+        #utils_imsitu.load_net(args.pre_trained_cnn_model, [model.convnet], ['convnet'])
+        #utils_imsitu.set_trainable(model.convnet, False)
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
         optimizer = torch.optim.Adamax([
+            {'params': model.convnet.parameters(), 'lr': 5e-5},
+            {'params': model.big_size.parameters()},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
             {'params': model.verb_emb.parameters()},

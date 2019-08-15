@@ -1503,6 +1503,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
+        self.big_size = nn.Sequential(
+            nn.Conv2d(512, 2048, [1, 1], 1, 0, bias=False),
+            nn.BatchNorm2d(2048),
+            nn.ReLU()
+        )
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
@@ -1687,9 +1692,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
     def forward(self, v_org, labels, gt_verb):
 
-        self.convnet.eval()
-
         img_features = self.convnet(v_org)
+        img_features = self.big_size(img_features)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
