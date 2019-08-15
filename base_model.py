@@ -1502,7 +1502,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
-        self.Dropout_C = nn.Dropout(0.2)
+        self.Dropout_C = nn.Dropout(0.1)
 
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
@@ -1742,7 +1742,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_list = []
         ans_list = []
 
-        for i in range(2):
+        for i in range(4):
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
