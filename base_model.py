@@ -1820,10 +1820,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             if prev is not None:
                 #out = prev + self.Dropout_C(out)
                 gate = torch.sigmoid(q_list[-1] * q_emb)
-                out = (1-gate) * ans_list[-1] + gate * out
+                out = gate * ans_list[-1] + (1-gate) * out
 
             q_list.append(q_emb)
-            ans_list.append(mfb_l2)
+            ans_list.append(out)
             prev = out
             labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, self.hidden_size)
 
