@@ -1740,7 +1740,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         #vemb_list = [init_vemb]
 
-        for i in range(2):
+        for i in range(3):
 
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
@@ -1820,7 +1820,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             self.q_emb2.flatten_parameters()
             lstm_out, (h, _) = self.q_emb2(updated_roleq)
             q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.encoder.max_role_count, -1)
-            q_emb = self.lstm_proj2(q_emb_up)
+            q_emb = self.Dropout_C(self.lstm_proj2(q_emb_up))
 
             out = mfb_l2
             '''if prev is not None:
