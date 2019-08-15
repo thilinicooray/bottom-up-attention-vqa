@@ -58,11 +58,11 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
-class FCNet(nn.Module):
+class FCNet_relu(nn.Module):
     """Simple class for non-linear fully connect network
     """
     def __init__(self, dims):
-        super(FCNet, self).__init__()
+        super(FCNet_relu, self).__init__()
 
         layers = []
         for i in range(len(dims)-2):
@@ -78,11 +78,11 @@ class FCNet(nn.Module):
     def forward(self, x):
         return self.main(x)
 
-class FCNet_tanh(nn.Module):
+class FCNet(nn.Module):
     """Simple class for non-linear fully connect network with gated tangent as in paper
     """
     def __init__(self, dims):
-        super(FCNet_tanh, self).__init__()
+        super(FCNet, self).__init__()
 
         in_dim = dims[0]
         out_dim = dims[1]
