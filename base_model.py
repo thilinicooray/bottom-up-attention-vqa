@@ -1688,7 +1688,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
     def forward(self, v_org, labels, gt_verb):
 
-        self.convnet.eval()
+        #self.convnet.eval()
 
         img_features = self.convnet(v_org)
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
@@ -1713,7 +1713,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        n_heads = 4
+        n_heads = 2
 
         verb_embd = self.verb_emb(gt_verb)
         role_embd = self.role_emb(role_idx)
@@ -5130,7 +5130,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
     hidden_size = 1024
-    n_heads = 4
+    n_heads = 2
     covnet = vgg16_modified()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
