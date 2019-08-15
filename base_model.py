@@ -1837,10 +1837,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         loss = None
         role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
-        if self.training:
-            loss = self.calculate_loss(gt_verb, role_label_pred, labels)
+        '''if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
 
-        return role_label_pred, loss
+        return role_label_pred
 
     def forward_verballroles(self, v_org, labels, gt_verb):
 
