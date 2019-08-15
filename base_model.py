@@ -5129,8 +5129,8 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     #print('words count :', dataset.dictionary.ntoken)
     hidden_size = 1024
     n_heads = 4
-    covnet = resnet_modified_medium()
-    role_emb = nn.Embedding(n_roles+2, 300, padding_idx=n_roles)
+    covnet = vgg16_modified()
+    role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([600, hidden_size])
     v_att = Attention(2048//n_heads, hidden_size//n_heads, hidden_size)
