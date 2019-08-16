@@ -221,7 +221,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 labels = torch.autograd.Variable(labels)
                 label_scores = torch.autograd.Variable(label_scores)
 
-            role_predict, _ = model(img, labels, verb)
+            role_predict = model(img, labels, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
