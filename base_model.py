@@ -2235,7 +2235,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         logits_rest = self.classifier(rest)
         logits_rest = logits_rest.contiguous().view(v.size(0), 4, -1)
         logits = torch.cat([logits_place.unsqueeze(1), logits_agent.unsqueeze(1),logits_rest], 1)
-        print(logits.size())
 
         '''if self.training:
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
