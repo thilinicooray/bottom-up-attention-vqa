@@ -439,7 +439,6 @@ class imsitu_scorer():
             place_pred = logits_place[i]
             agent_pred = logits_agent[i]
             label_pred = logits_rest[i]
-            print('all pred', logits_place.size(), logits_agent.size(), logits_rest.size())
             gt_label = gt_labels[i]
 
             gt_v = gt_verb
@@ -461,21 +460,19 @@ class imsitu_scorer():
 
             all_found = True
             pred_situ = []
-
             for k in range(6):
                 if k == 0:
                     label_id = torch.max(place_pred,0)[1]
                 elif k == 1:
                     label_id = torch.max(agent_pred,0)[1]
                 else:
-                    label_id = torch.max(label_pred,0)[1]
+                    label_id = torch.max(label_pred[k-2],0)[1]
 
 
                 if role_encoding[k].item() == 1:
                     found = False
                     for r in range(0,self.nref):
                         gt_label_id = gt_label[r][k]
-                        print('gt and pred :', gt_label_id, label_id)
                         if label_id == gt_label_id:
                             found = True
                             break
