@@ -161,6 +161,9 @@ class imsitu_encoder():
         self.verb2role_withaction_list = torch.stack(verb2role_withaction_list)
 
 
+        self.details_of_ordered = self.get_ordered_details()
+
+
 
         '''print('verb to role list :', self.verb2role_list.size())
 
@@ -174,6 +177,78 @@ class imsitu_encoder():
             for role in role_list:
                 if role != len(self.role_list):
                     print('role : ', self.role_list[role])'''
+
+
+    def get_ordered_details(self):
+
+        ordered_details = {}
+
+        verb2role_list = []
+        for verb_id in range(len(self.verb_list)):
+            current_role_list = self.verb2_role_dict[self.verb_list[verb_id]]
+
+            role_verb = []
+
+            #add place in the first place
+            if 'place' in  current_role_list:
+                role_id = self.role_list.index('place')
+                role_verb.append(role_id)
+
+            else:
+                role_verb.append(len(self.role_list))
+
+            #add agent to next
+            agent_role = None
+            if 'agent' in current_role_list:
+                agent_role = 'agent'
+            else:
+                for role1 in current_role_list:
+                    if role1 in self.agent_roles[1:]:
+                        agent_role = role1
+                        break
+
+            if agent_role is not None:
+                role_id = self.role_list.index(agent_role)
+                role_verb.append(role_id)
+
+            else:
+                role_verb.append(len(self.role_list))
+
+
+            for role in current_role_list:
+                role_id = self.role_list.index(role)
+                if role_id not in role_verb:
+                    role_verb.append(role_id)
+
+            padding_count = self.max_role_count - len(role_verb)
+
+            for i in range(padding_count):
+                role_verb.append(len(self.role_list))
+
+            verb2role_list.append(torch.tensor(role_verb))
+
+        verb2role_list = torch.stack(verb2role_list)
+        ordered_details['verb2role_list'] = verb2role_list
+
+
+        verb2role_encoding = []
+
+        for verb_id in range(len(self.verb_list)):
+            role_ids = verb2role_list[verb_id]
+            role_embedding_verb = []
+
+            for r_id in role_ids:
+                if r_id == len(self.role_list):
+                    role_embedding_verb.append(0)
+                else:
+                    role_embedding_verb.append(1)
+
+            verb2role_encoding.append(torch.tensor(role_embedding_verb))
+
+        ordered_details['verb2role_encoding'] = verb2role_encoding
+
+        return ordered_details
+
 
     def encode(self, item):
         verb = self.verb_list.index(item['verb'])
@@ -203,6 +278,14 @@ class imsitu_encoder():
         #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
         #assuming labels are also in order of roles in encoder
         return verb, role_nl_qs, labels, label_scores
+
+    def encode_roleonly_ordered(self, item):
+        verb = self.verb_list.index(item['verb'])
+        labels = self.get_label_ids_ordered(item['verb'], item['frames'])
+
+        #print('item encoding size : v r l', verb.size(), roles.size(), labels.size())
+        #assuming labels are also in order of roles in encoder
+        return verb, labels
 
     def encode_with_rolenames(self, item):
         verb = self.verb_list.index(item['verb'])
@@ -303,6 +386,18 @@ class imsitu_encoder():
 
         return torch.stack(role_batch_list,0)
 
+
+    def get_ordered_role_ids_batch(self, verbs):
+        role_batch_list = []
+        q_len = []
+
+        for verb_id in verbs:
+            role_ids = self.get_role_ids_ordered(verb_id)
+            print('role ids ', role_ids)
+            role_batch_list.append(role_ids)
+
+        return torch.stack(role_batch_list,0)
+
     def get_role_ids_with_actionrole_batch(self, verbs):
         role_batch_list = []
         q_len = []
@@ -357,6 +452,12 @@ class imsitu_encoder():
     def get_role_ids(self, verb_id):
 
         return self.verb2role_list[verb_id]
+
+
+    def get_role_ids_ordered(self, verb_id):
+
+        return self.details_of_ordered['verb2role_list'][verb_id]
+
 
     def get_role_ids_with_actionrole(self, verb_id):
 
@@ -479,6 +580,39 @@ class imsitu_encoder():
 
         return labels
 
+
+    def get_label_ids_ordered(self, verb, frames):
+        all_frame_id_list = []
+        print('verb ', verb)
+        verb_id = self.verb_list.index(verb)
+        roles = self.details_of_ordered['verb2role_list'][verb_id]
+        print('roles ', roles)
+
+
+        for frame in frames:
+            label_id_list = []
+
+            for role_id in roles:
+                if role_id == len(self.role_list):
+                    label_id_list.append(self.label_list.index(""))
+                else:
+                    role = self.role_list.index(role_id)
+                    label = frame[role]
+                    #use UNK when unseen labels come
+                    if label in self.label_list:
+                        label_id = self.label_list.index(label)
+                    else:
+                        label_id = self.label_list.index('#UNK#')
+
+                    label_id_list.append(label_id)
+
+            all_frame_id_list.append(torch.tensor(label_id_list))
+
+        labels = torch.stack(all_frame_id_list,0)
+        print('label ', labels)
+
+        return labels
+
     def get_label_scores(self, verb, frames):
         all_role_list = []
         roles = self.verb2_role_dict[verb]
@@ -591,6 +725,34 @@ class imsitu_encoder():
             for idx in range(0,pad_count):
                 cur_idx = role_count + idx
                 adj[cur_idx][cur_idx] = 1
+            adj_matrix_list.append(adj)
+
+        return torch.stack(adj_matrix_list).type(torch.FloatTensor)
+
+
+    def get_adj_matrix_noself_ordered(self, verb_ids):
+        adj_matrix_list = []
+
+        for id in verb_ids:
+            print('adj ids :', id)
+            encoding = self.details_of_ordered['verb2role_encoding'][id]
+            print('encoding ', encoding)
+            encoding_tensor = torch.unsqueeze(encoding.clone().detach(), 0)
+            role_count = self.get_role_count(id)
+            #print('role count :', role_count)
+            pad_count = self.max_role_count - role_count
+            expanded = encoding_tensor.expand(self.max_role_count, encoding_tensor.size(1))
+            transpose = torch.t(expanded)
+            adj = expanded*transpose
+
+            for idx in encoding:
+                if idx == 1:
+                    adj[idx][idx] = 0
+                else:
+                    adj[idx][idx] = 1
+
+            print('adj ', adj)
+
             adj_matrix_list.append(adj)
 
         return torch.stack(adj_matrix_list).type(torch.FloatTensor)

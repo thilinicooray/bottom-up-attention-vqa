@@ -1686,7 +1686,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_normal(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
@@ -2074,6 +2074,162 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)
 
         return role_label_pred, loss
+
+    def forward(self, v_org, labels, gt_verb):
+
+        #self.convnet.eval()
+
+        img_features = self.convnet(v_org)
+        #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+        #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+
+        img_org = img_features.view(batch_size, n_channel, -1)
+        v = img_org.permute(0, 2, 1)
+
+        batch_size = v.size(0)
+
+        role_idx = self.encoder.get_ordered_role_ids_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            role_idx = role_idx.to(torch.device('cuda'))
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count, img.size(0), img.size(1), img.size(2))
+
+
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+
+        n_heads = 2
+
+        verb_embd = self.verb_emb(gt_verb)
+        role_embd = self.role_emb(role_idx)
+
+        verb_embed_expand = verb_embd.expand(self.encoder.max_role_count, verb_embd.size(0), verb_embd.size(1))
+        verb_embed_expand = verb_embed_expand.transpose(0,1)
+        concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
+        role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
+        q_emb = self.query_composer(role_verb_embd)
+        q_emb_org = q_emb
+
+        mask = self.encoder.get_adj_matrix_noself_ordered(gt_verb)
+        #oh_role_encoding, real_role_count = self.encoder.get_verb2role_encoing_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            mask = mask.to(torch.device('cuda'))
+            #oh_role_encoding = oh_role_encoding.to(torch.device('cuda'))
+
+        prev = None
+
+        '''prev = torch.zeros(batch_size * self.encoder.max_role_count, 1024)
+        if torch.cuda.is_available():
+            prev = prev.to(torch.device('cuda'))'''
+
+        #vemb_list = [init_vemb]
+        q_list = []
+        ans_list = []
+
+        for i in range(3):
+
+            img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+            img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
+
+            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+
+            #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+            #attention
+
+            att = self.v_att(img_mul_head, q_emb_mul_head)
+            v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            #vemb_list.append(v_emb)
+            #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+            v_repr = self.v_net(v_emb)
+            q_repr = self.q_net(q_emb_mul_head)
+
+            #composition
+
+            mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+
+            mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
+
+            mfb_iq_resh = mfb_iq_drop.view(batch_size* self.encoder.max_role_count, 1, -1, n_heads)   # N x 1 x 1000 x 5
+            mfb_iq_sumpool = torch.sum(mfb_iq_resh, 3, keepdim=True)    # N x 1 x 1000 x 1
+            mfb_out = torch.squeeze(mfb_iq_sumpool)                     # N x 1000
+            mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
+            mfb_l2 = F.normalize(mfb_sign_sqrt)
+
+            #contextualization of img and q
+
+            cur_group = mfb_l2.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+
+            #print('before att :', cur_group[1,:, :5])
+
+            selfatt_val, rolewise_att= self.ctx_att(cur_group, cur_group, cur_group, mask=mask)
+
+            #print('after att :', selfatt_val[1,:, :5])
+
+            withctx = selfatt_val.contiguous().view(v.size(0)* self.encoder.max_role_count, -1)
+
+            withctx_expand = withctx.expand(img.size(1), withctx.size(0), withctx.size(1))
+            withctx_expand = withctx_expand.transpose(0,1)
+            added_img = torch.cat([withctx_expand, img], -1)
+            added_img = added_img.contiguous().view(-1, added_img.size(-1))
+            added_img = torch.sigmoid(self.Dropout_C(self.resize_ctx(added_img)))
+            added_img = added_img.contiguous().view(v.size(0) * self.encoder.max_role_count, -1, added_img.size(-1))
+
+            img = added_img * img
+
+            #img = img * self.resize_ctx(withctx).unsqueeze(1)
+
+            labelrep_expand = cur_group.expand(self.encoder.max_role_count, cur_group.size(0), cur_group.size(1), cur_group.size(2))
+            labelrep_expand = labelrep_expand.transpose(0,1)
+
+            labelrep_expand_new = rolewise_att.unsqueeze(-1) * labelrep_expand
+
+            '''labelrep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, 1024])
+            for iter in range(self.encoder.max_role_count):
+                if iter == 0:
+                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,1:]
+                elif iter == self.encoder.max_role_count -1:
+                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,:iter]
+                else:
+                    labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
+
+            if torch.cuda.is_available():
+                labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
+                
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count - 1, 1024)
+                '''
+
+            out = mfb_l2
+
+            if prev is not None:
+                #out = prev + self.Dropout_C(out)
+                gate = torch.sigmoid(q_list[-1] * q_emb)
+                out = gate * ans_list[-1] + (1-gate) * out
+
+            q_list.append(q_emb)
+            ans_list.append(out)
+            prev = out
+            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count, self.hidden_size)
+
+            updated_roleq = torch.cat([labelrep_expand, q_emb_org.unsqueeze(1)], 1)
+            self.q_emb2.flatten_parameters()
+            lstm_out, (h, _) = self.q_emb2(updated_roleq)
+            q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*self.encoder.max_role_count, -1)
+            q_emb = self.Dropout_C(self.lstm_proj2(q_emb_up))
+
+        logits = self.classifier(out)
+
+        loss = None
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        '''if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
+
+        return role_label_pred
 
     def calculate_loss_with_verbs(self, verb_pred, gt_verbs, role_label_pred, gt_labels):
 

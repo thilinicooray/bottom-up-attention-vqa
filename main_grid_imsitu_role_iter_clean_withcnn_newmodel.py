@@ -280,7 +280,7 @@ def main():
     clip_norm = 0.25
     n_epoch = args.epochs
     batch_size = args.batch_size
-    n_worker = 3
+    n_worker = 1
 
     #dataset_folder = 'imSitu'
     #imgset_folder = 'resized_256'
