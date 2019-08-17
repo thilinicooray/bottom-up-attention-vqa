@@ -570,7 +570,8 @@ class imsitu_encoder():
 
             place_id = roles[0].item()
             if place_id == len(self.role_list):
-                label_id_list.append(len(self.place_label_list))
+                #label_id_list.append(len(self.place_label_list))
+                label_id_list.append(self.place_label_list.index(""))
             else:
                 role = self.role_list[place_id]
                 label = frame[role]
@@ -584,7 +585,8 @@ class imsitu_encoder():
 
             agent_id = roles[1].item()
             if agent_id == len(self.role_list):
-                label_id_list.append(len(self.agent_label_list))
+                #label_id_list.append(len(self.agent_label_list))
+                label_id_list.append(self.agent_label_list.index(""))
 
             else:
                 role = self.role_list[agent_id]
@@ -600,7 +602,8 @@ class imsitu_encoder():
             for role_idx in roles[2:]:
                 role_id = role_idx.item()
                 if role_id == len(self.role_list):
-                    label_id_list.append(len(self.label_list))
+                    #label_id_list.append(len(self.label_list))
+                    label_id_list.append(self.label_list.index(""))
                 else:
                     role = self.role_list[role_id]
                     label = frame[role]
