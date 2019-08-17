@@ -2090,7 +2090,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward_sepcls(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
