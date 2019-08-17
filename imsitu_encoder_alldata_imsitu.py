@@ -735,8 +735,6 @@ class imsitu_encoder():
 
         for id in verb_ids:
             print('adj ids :', id)
-            a = self.details_of_ordered['verb2role_list'][id]
-            print('roles ', a)
             encoding = self.details_of_ordered['verb2role_encoding'][id]
             print('encoding ', encoding)
             encoding_tensor = torch.unsqueeze(encoding.clone().detach(), 0)
@@ -746,6 +744,7 @@ class imsitu_encoder():
             expanded = encoding_tensor.expand(self.max_role_count, encoding_tensor.size(1))
             transpose = torch.t(expanded)
             adj = expanded*transpose
+            print('first ', adj)
 
             for idx1 in encoding:
                 idx = idx1.item()
