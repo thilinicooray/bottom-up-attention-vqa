@@ -747,9 +747,10 @@ class imsitu_encoder():
             transpose = torch.t(expanded)
             adj = expanded*transpose
 
-            for idx in encoding:
-                print('idx ', idx, idx.item(), idx.item() == 1)
-                if idx.item() == 1:
+            for idx1 in encoding:
+                idx = idx1.item()
+                print('idx ', idx1, idx1.item(), idx == 1)
+                if idx == 1:
                     adj[idx][idx] = 0
                 else:
                     adj[idx][idx] = 1
