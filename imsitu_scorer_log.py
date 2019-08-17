@@ -439,7 +439,7 @@ class imsitu_scorer():
             place_pred = logits_place[i]
             agent_pred = logits_agent[i]
             label_pred = logits_rest[i]
-            print('all pred', logits_place.size(), logits_agent.size(), logits_rest())
+            print('all pred', logits_place.size(), logits_agent.size(), logits_rest.size())
             gt_label = gt_labels[i]
 
             gt_v = gt_verb
