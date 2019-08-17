@@ -748,7 +748,7 @@ class imsitu_encoder():
             adj = expanded*transpose
 
             for idx in encoding:
-                print('idx ', idx)
+                print('idx ', idx, idx.item(), idx.item() == 1)
                 if idx.item() == 1:
                     adj[idx][idx] = 0
                 else:
