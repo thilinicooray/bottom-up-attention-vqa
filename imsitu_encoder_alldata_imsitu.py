@@ -592,11 +592,13 @@ class imsitu_encoder():
         for frame in frames:
             label_id_list = []
 
-            for role_id in roles:
+            for role_idx in roles:
+                role_id = role_idx.item()
                 if role_id == len(self.role_list):
                     label_id_list.append(self.label_list.index(""))
                 else:
-                    role = self.role_list.index(role_id)
+                    role = self.role_list[role_id]
+                    print(role)
                     label = frame[role]
                     #use UNK when unseen labels come
                     if label in self.label_list:
