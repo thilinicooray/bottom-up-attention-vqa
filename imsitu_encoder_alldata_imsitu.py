@@ -734,9 +734,7 @@ class imsitu_encoder():
         adj_matrix_list = []
 
         for id in verb_ids:
-            print('adj ids :', id)
             encoding = self.details_of_ordered['verb2role_encoding'][id]
-            print('encoding ', encoding, encoding.size(0))
             encoding_tensor = torch.unsqueeze(encoding.clone().detach(), 0)
             role_count = self.get_role_count(id)
             #print('role count :', role_count)
@@ -746,13 +744,12 @@ class imsitu_encoder():
             adj = expanded*transpose
 
             for idx1 in range(encoding.size(0)):
-                print('idx ', idx1, idx1, encoding[idx1].item() == 1)
-                if encoding[idx1] == 1:
+                if encoding[idx1].item() == 1:
                     adj[idx1][idx1] = 0
                 else:
                     adj[idx1][idx1] = 1
 
-            print('adj ', adj)
+            print('adj ', adj.item())
 
             adj_matrix_list.append(adj)
 
