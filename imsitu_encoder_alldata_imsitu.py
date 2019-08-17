@@ -735,6 +735,8 @@ class imsitu_encoder():
 
         for id in verb_ids:
             print('adj ids :', id)
+            a = self.details_of_ordered['verb2role_list'][id]
+            print('roles ', a)
             encoding = self.details_of_ordered['verb2role_encoding'][id]
             print('encoding ', encoding)
             encoding_tensor = torch.unsqueeze(encoding.clone().detach(), 0)
@@ -746,6 +748,7 @@ class imsitu_encoder():
             adj = expanded*transpose
 
             for idx in encoding:
+                print('idx ', idx)
                 if idx == 1:
                     adj[idx][idx] = 0
                 else:
