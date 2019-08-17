@@ -393,7 +393,6 @@ class imsitu_encoder():
 
         for verb_id in verbs:
             role_ids = self.get_role_ids_ordered(verb_id)
-            print('role ids ', role_ids)
             role_batch_list.append(role_ids)
 
         return torch.stack(role_batch_list,0)
@@ -583,10 +582,8 @@ class imsitu_encoder():
 
     def get_label_ids_ordered(self, verb, frames):
         all_frame_id_list = []
-        print('verb ', verb)
         verb_id = self.verb_list.index(verb)
         roles = self.details_of_ordered['verb2role_list'][verb_id]
-        print('roles ', roles)
 
 
         for frame in frames:
@@ -611,7 +608,6 @@ class imsitu_encoder():
             all_frame_id_list.append(torch.tensor(label_id_list))
 
         labels = torch.stack(all_frame_id_list,0)
-        print('label ', labels)
 
         return labels
 
@@ -750,8 +746,6 @@ class imsitu_encoder():
                     adj[idx1][idx1] = 0
                 else:
                     adj[idx1][idx1] = 1
-
-            print('adj ', adj)
 
             adj_matrix_list.append(adj)
 
