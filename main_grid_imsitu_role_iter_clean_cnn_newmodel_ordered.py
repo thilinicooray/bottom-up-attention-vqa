@@ -1,6 +1,6 @@
 import torch
 from imsitu_encoder_alldata_imsitu import imsitu_encoder
-from imsitu_loader import imsitu_loader_roleq_buatt_with_cnn
+from imsitu_loader import imsitu_loader_roleq_buatt_with_cnn_ordered
 from imsitu_scorer_log import imsitu_scorer
 import json
 import os
@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    if gpu_mode >= 0 :
+    '''if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model
-    #pmodel = model
+        pmodel = model'''
+    pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (_, img, verb, labels, label_scores) in enumerate(train_loader):
+        for i, (_, img, verb, labels) in enumerate(train_loader):
             #print("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -59,12 +59,10 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
-                label_scores = torch.autograd.Variable(label_scores.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
-                label_scores = torch.autograd.Variable(label_scores)
 
 
 
@@ -200,7 +198,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
     top5 = imsitu_scorer(encoder, 5, 3)
     with torch.no_grad():
         mx = len(dev_loader)
-        for i, (img_id, img, verb, labels, label_scores) in enumerate(dev_loader):
+        for i, (img_id, img, verb, labels) in enumerate(dev_loader):
             #print("{}/{} batches\r".format(i+1,mx)) ,
             '''im_data = torch.squeeze(im_data,0)
             im_info = torch.squeeze(im_info,0)
@@ -214,12 +212,10 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 img = torch.autograd.Variable(img.cuda())
                 verb = torch.autograd.Variable(verb.cuda())
                 labels = torch.autograd.Variable(labels.cuda())
-                label_scores = torch.autograd.Variable(label_scores.cuda())
             else:
                 img = torch.autograd.Variable(img)
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
-                label_scores = torch.autograd.Variable(label_scores)
 
             role_predict = model(img, labels, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
@@ -280,7 +276,7 @@ def main():
     clip_norm = 0.25
     n_epoch = args.epochs
     batch_size = args.batch_size
-    n_worker = 3
+    n_worker = 1
 
     #dataset_folder = 'imSitu'
     #imgset_folder = 'resized_256'
@@ -298,7 +294,7 @@ def main():
     w_emb_path = 'data/glove6b_init_imsitu_final_300d.npy'
     encoder = imsitu_encoder(train_set, imsitu_roleq, dictionary)
 
-    train_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
+    train_set = imsitu_loader_roleq_buatt_with_cnn_ordered(imgset_folder, train_set, encoder, dictionary, 'train', encoder.train_transform)
 
     #get role_model
 
@@ -311,11 +307,11 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     dev_set = json.load(open(dataset_folder + '/' + args.dev_file))
-    dev_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, dev_set, encoder, dictionary, 'val', encoder.dev_transform)
+    dev_set = imsitu_loader_roleq_buatt_with_cnn_ordered(imgset_folder, dev_set, encoder, dictionary, 'val', encoder.dev_transform)
     dev_loader = torch.utils.data.DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     test_set = json.load(open(dataset_folder + '/' + args.test_file))
-    test_set = imsitu_loader_roleq_buatt_with_cnn(imgset_folder, test_set, encoder, dictionary, 'test', encoder.dev_transform)
+    test_set = imsitu_loader_roleq_buatt_with_cnn_ordered(imgset_folder, test_set, encoder, dictionary, 'test', encoder.dev_transform)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=n_worker)
 
     if not os.path.exists(args.output_dir):

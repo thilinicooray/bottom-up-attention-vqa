@@ -749,7 +749,7 @@ class imsitu_encoder():
                 else:
                     adj[idx1][idx1] = 1
 
-            print('adj ', adj.item())
+            print('adj ', adj)
 
             adj_matrix_list.append(adj)
 

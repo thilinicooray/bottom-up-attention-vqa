@@ -319,6 +319,32 @@ class imsitu_loader_roleq_buatt_with_cnn(data.Dataset):
     def __len__(self):
         return len(self.annotations)
 
+
+class imsitu_loader_roleq_buatt_with_cnn_ordered(data.Dataset):
+    def __init__(self, img_dir, annotation_file, encoder, dictionary, name, transform=None, dataroot='data'):
+        self.img_dir = img_dir
+        self.annotations = annotation_file
+        self.ids = list(self.annotations.keys())
+        self.encoder = encoder
+        self.dictionary = dictionary
+        self.transform = transform
+
+    def __getitem__(self, index):
+        _id = self.ids[index]
+        ann = self.annotations[_id]
+        img = Image.open(os.path.join(self.img_dir, _id)).convert('RGB')
+        #transform must be None in order to give it as a tensor
+        if self.transform is not None: img = self.transform(img)
+
+        #verb, labels = self.encoder.encode_ban(ann)
+        verb, labels = self.encoder.encode_roleonly_ordered(ann)
+        #questions = self.tokenize(nl_qs)
+
+        return _id, img, verb, labels
+
+    def __len__(self):
+        return len(self.annotations)
+
 class imsitu_loader_buatt_roleonly_indiloss(data.Dataset):
     def __init__(self, img_dir, annotation_file, encoder, dictionary, name, transform=None, dataroot='data'):
         self.img_dir = img_dir
