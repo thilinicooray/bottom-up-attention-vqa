@@ -1706,6 +1706,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         v = v.unsqueeze(-1)
         v = v.expand(v.size(0), v.size(1), v.size(2),4)
+        v = v.permute(0,1,3,2)
         v = v.contiguous().view(v.size(0), v.size(1), -1)
 
         batch_size = v.size(0)
