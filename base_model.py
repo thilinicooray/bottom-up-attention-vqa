@@ -1698,13 +1698,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
         img_features = feat.view(batch_size, -1, conv_h, conv_w)
-        print('out ', img_features.size())
 
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
         img_org = img_features.view(batch_size, -1, conv_h* conv_w)
         v = img_org.permute(0, 2, 1)
-        print('img ', v.size())
 
         batch_size = v.size(0)
 
