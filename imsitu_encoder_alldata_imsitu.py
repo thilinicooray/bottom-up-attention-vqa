@@ -751,7 +751,9 @@ class imsitu_encoder():
                 idx = idx1.item()
                 print('idx ', idx1, idx1.item(), idx == 1)
                 if idx == 1:
+                    print('came')
                     adj[idx][idx] = 0
+                    print('now ', adj[idx][idx])
                 else:
                     adj[idx][idx] = 1
 
