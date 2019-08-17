@@ -125,8 +125,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #top1.add_point_eval5(verb_predict, verb, role_predict, labels)
             #top5.add_point_eval5(verb_predict, verb, role_predict, labels)
 
-            top1.add_point_noun(verb, role_predict, labels)
-            top5.add_point_noun(verb, role_predict, labels)
+            top1.add_point_noun_log_ordered(verb, role_predict, labels)
+            top5.add_point_noun_log_ordered(verb, role_predict, labels)
 
 
             if total_steps % print_freq == 0:
@@ -221,11 +221,11 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
-                top1.add_point_noun_log(img_id, verb, role_predict, labels)
-                top5.add_point_noun_log(img_id, verb, role_predict, labels)
+                top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+                top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
             else:
-                top1.add_point_noun(verb, role_predict, labels)
-                top5.add_point_noun(verb, role_predict, labels)
+                top1.add_point_noun_log_ordered(verb, role_predict, labels)
+                top5.add_point_noun_log_ordered(verb, role_predict, labels)
 
             del role_predict, img, verb, labels
             #break
