@@ -753,7 +753,7 @@ class imsitu_encoder():
                 if idx == 1:
                     print('came')
                     adj[idx][idx] = 0
-                    print('now ', adj[idx][idx])
+                    print('now ', adj)
                 else:
                     adj[idx][idx] = 1
 
