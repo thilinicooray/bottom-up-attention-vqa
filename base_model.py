@@ -1704,9 +1704,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img_org = img_features.view(batch_size, -1, conv_h* conv_w)
         v = img_org.permute(0, 2, 1)
 
-        v = v.unsqueeze(-1)
-        v = v.expand(v.size(0), v.size(1), v.size(2),4)
-        v = v.permute(0,1,3,2)
+        v = v.unsqueeze(0)
+        v = v.expand(4, v.size(0), v.size(1), v.size(2))
+        v = v.permute(1,2,0,3)
         v = v.contiguous().view(v.size(0), v.size(1), -1)
 
         batch_size = v.size(0)
