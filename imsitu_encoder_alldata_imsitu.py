@@ -749,7 +749,7 @@ class imsitu_encoder():
 
             for idx in encoding:
                 print('idx ', idx)
-                if idx == 1:
+                if idx.item() == 1:
                     adj[idx][idx] = 0
                 else:
                     adj[idx][idx] = 1
