@@ -49,7 +49,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
         #print('current sample : ', i, img.size(), verb.size(), roles.size(), labels.size())
         #sizes batch_size*3*height*width, batch*504*1, batch*6*190*1, batch*3*6*lebale_count*1
         mx = len(train_loader)
-        for i, (_, img, verb, labels) in enumerate(train_loader):
+        for i, (img_id, img, verb, labels) in enumerate(train_loader):
             #print("epoch{}-{}/{} batches\r".format(epoch,i+1,mx)) ,
             t0 = time.time()
             t1 = time.time()
@@ -125,8 +125,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #top1.add_point_eval5(verb_predict, verb, role_predict, labels)
             #top5.add_point_eval5(verb_predict, verb, role_predict, labels)
 
-            top1.add_point_noun_log_ordered(verb, role_predict, labels)
-            top5.add_point_noun_log_ordered(verb, role_predict, labels)
+            top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+            top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
 
 
             if total_steps % print_freq == 0:
@@ -224,8 +224,8 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
                 top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
             else:
-                top1.add_point_noun_log_ordered(verb, role_predict, labels)
-                top5.add_point_noun_log_ordered(verb, role_predict, labels)
+                top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+                top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
 
             del role_predict, img, verb, labels
             #break
