@@ -1503,7 +1503,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size + 512, 512)
+        self.resize_ctx = nn.Linear(self.hidden_size + 2048, 2048)
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -2091,6 +2091,10 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         img_org = img_features.view(batch_size, n_channel, -1)
         v = img_org.permute(0, 2, 1)
+
+        v = v.unsqueeze(2)
+        v = v.expand(v.size(0), v.size(1), 4, v.size(2))
+        v = v.contiguous().view(v.size(0), v.size(1), -1)
 
         batch_size = v.size(0)
 
@@ -5330,9 +5334,9 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
     verb_emb = nn.Embedding(n_verbs, 300)
     query_composer = FCNet([600, hidden_size])
-    v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
+    v_att = Attention(2048//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
-    v_net = FCNet([512//n_heads, hidden_size])
+    v_net = FCNet([2048//n_heads, hidden_size])
 
     projector = nn.Sequential(weight_norm(nn.Linear(hidden_size, hidden_size*2), dim=None),
                               nn.ReLU(),
