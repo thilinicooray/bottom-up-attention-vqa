@@ -91,6 +91,15 @@ class imsitu_encoder():
                     elif label not in self.label_list:
                         self.label_list.append(label)
 
+        if 'UNK' not in self.place_label_list:
+            self.place_label_list.append('UNK')
+
+        if 'UNK' not in self.agent_label_list:
+            self.agent_label_list.append('UNK')
+
+        if 'UNK' not in self.label_list:
+            self.label_list.append('UNK')
+
         print('train set stats: \n\t verb count:', len(self.verb_list), '\n\t role count:',len(self.role_list),
               '\n\t label count:', len(self.label_list) ,
               '\n\t agent label count:', len(self.agent_label_list) ,
@@ -579,7 +588,7 @@ class imsitu_encoder():
                 if label in self.place_label_list:
                     label_id = self.place_label_list.index(label)
                 else:
-                    label_id = self.place_label_list.index('#UNK#')
+                    label_id = self.place_label_list.index('UNK')
 
                 label_id_list.append(label_id)
 
@@ -595,7 +604,7 @@ class imsitu_encoder():
                 if label in self.agent_label_list:
                     label_id = self.agent_label_list.index(label)
                 else:
-                    label_id = self.agent_label_list.index('#UNK#')
+                    label_id = self.agent_label_list.index('UNK')
 
                 label_id_list.append(label_id)
 
@@ -611,7 +620,7 @@ class imsitu_encoder():
                     if label in self.label_list:
                         label_id = self.label_list.index(label)
                     else:
-                        label_id = self.label_list.index('#UNK#')
+                        label_id = self.label_list.index('UNK')
 
                     label_id_list.append(label_id)
 
