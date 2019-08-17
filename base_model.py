@@ -1696,13 +1696,17 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         batch_size, n_channel, conv_h, conv_w = img_features.size()
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
-        feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
-        img_features = feat.view(batch_size, -1, conv_h, conv_w)
+        '''feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
+        img_features = feat.view(batch_size, -1, conv_h, conv_w)'''
 
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
         img_org = img_features.view(batch_size, -1, conv_h* conv_w)
         v = img_org.permute(0, 2, 1)
+
+        v = v.unsqueeze(-1)
+        v = v.expand(v.size(0), v.size(1), v.size(2),4)
+        v = v.contiguous().view(v.size(0), v.size(1), -1)
 
         batch_size = v.size(0)
 
@@ -2091,13 +2095,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
         img_features = feat.view(batch_size, -1, conv_h, conv_w)
-        print('out ', img_features.size())
 
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
         img_org = img_features.view(batch_size, -1, conv_h* conv_w)
         v = img_org.permute(0, 2, 1)
-        print('img ', v.size())
 
         '''v = v.unsqueeze(-1)
         v = v.expand(v.size(0), v.size(1), v.size(2),4)
