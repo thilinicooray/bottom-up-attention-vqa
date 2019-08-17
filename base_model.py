@@ -2098,9 +2098,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
         batch_size, n_channel, conv_h, conv_w = img_features.size()
 
-        feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
-        img_features = feat.view(batch_size, -1, conv_h, conv_w)
-
         #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
 
         img_org = img_features.view(batch_size, -1, conv_h* conv_w)
