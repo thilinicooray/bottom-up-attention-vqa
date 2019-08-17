@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    '''if gpu_mode >= 0 :
+    if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
-    pmodel = model
+        pmodel = model
+    #pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -276,7 +276,7 @@ def main():
     clip_norm = 0.25
     n_epoch = args.epochs
     batch_size = args.batch_size
-    n_worker = 1
+    n_worker = 3
 
     #dataset_folder = 'imSitu'
     #imgset_folder = 'resized_256'
