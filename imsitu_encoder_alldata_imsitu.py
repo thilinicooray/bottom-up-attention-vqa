@@ -746,11 +746,9 @@ class imsitu_encoder():
             adj = expanded*transpose
 
             for idx1 in range(encoding.size(0)):
-                print('idx ', idx1, idx1, encoding[idx1] == 1)
+                print('idx ', idx1, idx1, encoding[idx1].item() == 1)
                 if encoding[idx1] == 1:
-                    print('came')
                     adj[idx1][idx1] = 0
-                    print('now ', adj)
                 else:
                     adj[idx1][idx1] = 1
 
