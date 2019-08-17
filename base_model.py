@@ -2296,13 +2296,13 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             for index in range(gt_labels.size()[1]):
                 frame_loss = 0
 
-                frame_loss += (utils_imsitu.cross_entropy_loss(logits_place[i], gt_labels[i,index,0] ,len(self.encoder.place_label_list))
-                               + utils_imsitu.cross_entropy_loss(logits_agent[i], gt_labels[i,index,1] ,len(self.encoder.agent_label_list))
+                frame_loss += (utils_imsitu.cross_entropy_loss_noskip(logits_place[i], gt_labels[i,index,0] )
+                               + utils_imsitu.cross_entropy_loss_noskip(logits_agent[i], gt_labels[i,index,1] )
                                )
 
                 #verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
                 for j in range(4):
-                    frame_loss += utils_imsitu.cross_entropy_loss(logits_rest[i][j], gt_labels[i,index,2+j] ,self.encoder.get_num_labels())
+                    frame_loss += utils_imsitu.cross_entropy_loss_noskip(logits_rest[i][j], gt_labels[i,index,2+j] )
                 frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
@@ -5338,10 +5338,10 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
                               nn.ReLU(),
                               nn.Dropout(0.5, inplace=True))
 
-    place_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.place_label_list)), dim=None)
+    place_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.place_label_list) + 1), dim=None)
 
-    agent_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.agent_label_list)), dim=None)
-    classifier = weight_norm(nn.Linear(hidden_size*2, num_ans_classes), dim=None)
+    agent_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.agent_label_list) + 1), dim=None)
+    classifier = weight_norm(nn.Linear(hidden_size*2, num_ans_classes+1), dim=None)
 
 
     #verb_classifier = SimpleClassifier(

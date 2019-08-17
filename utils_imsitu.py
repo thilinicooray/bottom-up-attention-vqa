@@ -125,6 +125,27 @@ def cross_entropy_loss(pred, target, ignore_index=None):
     #print('single loss ', loss)
     return loss
 
+def cross_entropy_loss_noskip(pred, target):
+    #-x[class] + log (sum_j exp(x[j]))
+
+    _x_class = - pred[target]
+    pred = torch.unsqueeze(pred,1)
+    #print('pred size',pred.size() )
+    #max_score, max_i = torch.max(pred)
+    score,_ = torch.sort(pred, 0, True)
+    max_score = torch.unsqueeze(score[0],1)
+
+    max_score_broadcast = max_score.view(-1,1).expand(pred.size())
+    denom = max_score + torch.log(torch.sum(torch.exp(pred - max_score_broadcast)))
+
+    #denom = torch.log(torch.sum(torch.exp(pred)))
+
+    #print('target :', target, _x_class, denom)
+
+    loss = _x_class + denom
+    #print('single loss ', loss)
+    return loss
+
 def binary_cross_entropy(pred, target, p_w=10, n_w=1):
     #loss = -p_w*target*torch.log(pred) - n_w*(1-target)*torch.log(1-pred)
     loss = torch.clamp(pred, min=0) - pred * target + (1 + 9*target)*torch.log(1 + torch.exp(-torch.abs(pred)))
