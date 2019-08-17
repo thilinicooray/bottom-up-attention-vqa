@@ -365,6 +365,7 @@ def main():
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
         optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
+            {'params': model.projector.parameters()},
             {'params': model.classifier.parameters()},
             {'params': model.place_classifier.parameters()},
             {'params': model.agent_classifier.parameters()},

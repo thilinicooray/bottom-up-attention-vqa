@@ -9,6 +9,7 @@ import utils_imsitu
 import numpy as np
 import torch.nn.functional as F
 import math
+from torch.nn.utils.weight_norm import weight_norm
 
 import copy
 
@@ -1484,7 +1485,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_EXTCTX(nn.Module):
         return (role_loss / self.encoder.max_role_count)
 
 class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
-    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, place_classifier,
+    def __init__(self, convnet, role_emb, verb_emb, query_composer, v_att, q_net, v_net, projector, place_classifier,
                  agent_classifier,classifier, encoder, num_iter):
         super(BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel, self).__init__()
         self.hidden_size = 1024
@@ -1495,6 +1496,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.v_att = v_att
         self.q_net = q_net
         self.v_net = v_net
+        self.projector = projector
         self.classifier = classifier
         self.place_classifier = place_classifier
         self.agent_classifier = agent_classifier
@@ -2226,6 +2228,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             q_emb = self.Dropout_C(self.lstm_proj2(q_emb_up))
 
 
+        out = self.projector(out)
         role_label_pred = out.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
 
         logits_place = self.place_classifier(role_label_pred[:,0])
@@ -5330,19 +5333,21 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
     v_net = FCNet([512//n_heads, hidden_size])
-    place_classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, len(encoder.place_label_list), 0.5)
+
+    projector = nn.Sequential(weight_norm(nn.Linear(hidden_size, hidden_size*2), dim=None),
+                              nn.ReLU(),
+                              nn.Dropout(0.5, inplace=True))
+
+    place_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.place_label_list)), dim=None)
+
+    agent_classifier = weight_norm(nn.Linear(hidden_size*2, len(encoder.agent_label_list)), dim=None)
+    classifier = weight_norm(nn.Linear(hidden_size*2, num_ans_classes), dim=None)
 
 
-    agent_classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, len(encoder.agent_label_list), 0.5)
-
-    classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, num_ans_classes, 0.5)
     #verb_classifier = SimpleClassifier(
         #num_hid, 2 * num_hid, n_verbs, 0.5)
     return BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(covnet, role_emb, verb_emb, query_composer, v_att, q_net,
-                                                           v_net, place_classifier, agent_classifier, classifier, encoder, num_iter)
+                                                           v_net, projector, place_classifier, agent_classifier, classifier, encoder, num_iter)
 
 def build_baseline0grid_imsitu_roleiter_beam(dataset, num_hid, num_ans_classes, encoder, num_iter, beam_size, upperlimit):
     print('words count :', dataset.dictionary.ntoken)
