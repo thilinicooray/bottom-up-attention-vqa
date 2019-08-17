@@ -595,7 +595,6 @@ class imsitu_encoder():
                     label_id_list.append(self.label_list.index(""))
                 else:
                     role = self.role_list[role_id]
-                    print(role)
                     label = frame[role]
                     #use UNK when unseen labels come
                     if label in self.label_list:
