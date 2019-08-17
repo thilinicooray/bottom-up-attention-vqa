@@ -2234,12 +2234,12 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         rest = rest.contiguous().view(v.size(0)*4, -1)
         logits_rest = self.classifier(rest)
         logits_rest = logits_rest.contiguous().view(v.size(0), 4, -1)
-        logits = torch.cat([logits_place.unsqueeze(1), logits_agent.unsqueeze(1),logits_rest], 1)
+        #logits = torch.cat([logits_place.unsqueeze(1), logits_agent.unsqueeze(1),logits_rest], 1)
 
         '''if self.training:
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
 
-        return logits
+        return logits_place, logits_agent, logits_rest
 
     def calculate_loss_with_verbs(self, verb_pred, gt_verbs, role_label_pred, gt_labels):
 
@@ -2274,6 +2274,32 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
                 for j in range(0, self.encoder.max_role_count):
                     frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
+                frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
+                #print('frame loss', frame_loss, 'verb loss', verb_loss)
+                loss += frame_loss
+
+
+        final_loss = loss/batch_size
+        #print('loss :', final_loss)
+        return final_loss
+
+
+    def calculate_loss_sepagplz(self, gt_verbs, logits_place, logits_agent, logits_rest, gt_labels):
+
+        batch_size = gt_verbs.size()[0]
+
+        loss = 0
+        for i in range(batch_size):
+            for index in range(gt_labels.size()[1]):
+                frame_loss = 0
+
+                frame_loss += (utils_imsitu.cross_entropy_loss(logits_place[i], gt_labels[i,index,0] ,len(self.encoder.place_label_list))
+                               + utils_imsitu.cross_entropy_loss(logits_agent[i], gt_labels[i,index,1] ,len(self.encoder.agent_label_list))
+                               )
+
+                #verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                for j in range(4):
+                    frame_loss += utils_imsitu.cross_entropy_loss(logits_rest[i][j], gt_labels[i,index,2+j] ,self.encoder.get_num_labels())
                 frame_loss = frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
@@ -5305,11 +5331,11 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
     v_net = FCNet([512//n_heads, hidden_size])
     place_classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, num_ans_classes, 0.5)
+        hidden_size, 2 * num_hid, len(encoder.place_label_list), 0.5)
 
 
     agent_classifier = SimpleClassifier(
-        hidden_size, 2 * num_hid, num_ans_classes, 0.5)
+        hidden_size, 2 * num_hid, len(encoder.agent_label_list), 0.5)
 
     classifier = SimpleClassifier(
         hidden_size, 2 * num_hid, num_ans_classes, 0.5)

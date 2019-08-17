@@ -1,5 +1,5 @@
 import torch
-from imsitu_encoder_alldata_imsitu import imsitu_encoder
+from imsitu_encoder_alldata_imsitu_ordered_sepagplz import imsitu_encoder
 from imsitu_loader import imsitu_loader_roleq_buatt_with_cnn_ordered
 from imsitu_scorer_log import imsitu_scorer
 import json
@@ -75,8 +75,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            role_predict = pmodel(img, labels, verb)
-            loss1 = model.calculate_loss(verb, role_predict, labels)
+            logits_place, logits_agent, logits_rest = pmodel(img, labels, verb)
+            loss1 = model.calculate_loss_sepagplz(verb, logits_place, logits_agent, logits_rest, labels)
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
@@ -125,8 +125,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             #top1.add_point_eval5(verb_predict, verb, role_predict, labels)
             #top5.add_point_eval5(verb_predict, verb, role_predict, labels)
 
-            top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
-            top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+            top1.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
+            top5.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
 
 
             if total_steps % print_freq == 0:
@@ -182,7 +182,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
                 top1 = imsitu_scorer(encoder, 1, 3)
                 top5 = imsitu_scorer(encoder, 5, 3)
 
-            del role_predict, loss, img, verb, labels
+            del logits_place, logits_agent, logits_rest, loss, img, verb, labels
             #break
         print('Epoch ', epoch, ' completed!')
         scheduler.step()
@@ -217,17 +217,17 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            role_predict = model(img, labels, verb)
+            logits_place, logits_agent, logits_rest = model(img, labels, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
-                top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
-                top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+                top1.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
+                top5.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
             else:
-                top1.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
-                top5.add_point_noun_log_ordered(img_id, verb, role_predict, labels)
+                top1.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
+                top5.add_point_noun_log_ordered(img_id, verb, logits_place, logits_agent, logits_rest, labels)
 
-            del role_predict, img, verb, labels
+            del logits_place, logits_agent, logits_rest, img, verb, labels
             #break
 
     #return top1, top5, val_loss/mx

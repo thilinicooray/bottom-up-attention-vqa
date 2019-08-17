@@ -428,7 +428,7 @@ class imsitu_scorer():
             self.score_cards.append(new_card)
 
 
-    def add_point_noun_log_ordered(self, img_id, gt_verbs, labels_predict, gt_labels):
+    def add_point_noun_log_ordered(self, img_id, gt_verbs, logits_place, logits_agent, logits_rest, gt_labels):
         #encoded predictions should be batch x verbs x values #assumes the are the same order as the references
         #encoded reference should be batch x 1+ references*roles,values (sorted)
 
@@ -436,7 +436,9 @@ class imsitu_scorer():
         for i in range(batch_size):
             imgid = img_id[i]
             gt_verb = gt_verbs[i]
-            label_pred = labels_predict[i]
+            place_pred = logits_place[i]
+            agent_pred = logits_agent[i]
+            label_pred = logits_rest[i]
             gt_label = gt_labels[i]
 
             gt_v = gt_verb
@@ -460,7 +462,13 @@ class imsitu_scorer():
             pred_situ = []
 
             for k in range(6):
-                label_id = torch.max(label_pred[k],0)[1]
+                if k == 0:
+                    label_id = torch.max(place_pred,0)[1]
+                elif k == 1:
+                    label_id = torch.max(agent_pred,0)[1]
+                else:
+                    label_id = torch.max(label_pred,0)[1]
+
 
                 if role_encoding[k].item() == 1:
                     found = False
