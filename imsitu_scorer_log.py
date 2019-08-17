@@ -439,6 +439,7 @@ class imsitu_scorer():
             place_pred = logits_place[i]
             agent_pred = logits_agent[i]
             label_pred = logits_rest[i]
+            print('all pred', logits_place.size(), logits_agent.size(), logits_rest())
             gt_label = gt_labels[i]
 
             gt_v = gt_verb
@@ -474,6 +475,7 @@ class imsitu_scorer():
                     found = False
                     for r in range(0,self.nref):
                         gt_label_id = gt_label[r][k]
+                        print('gt and pred :', gt_label_id, label_id)
                         if label_id == gt_label_id:
                             found = True
                             break
