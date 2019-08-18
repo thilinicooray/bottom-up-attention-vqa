@@ -66,7 +66,7 @@ class resnet_modified_medium(nn.Module):
 class vgg16_modified(nn.Module):
     def __init__(self):
         super(vgg16_modified, self).__init__()
-        vgg = tv.models.vgg16(pretrained=True)
+        vgg = tv.models.vgg16_bn(pretrained=True)
         self.vgg_features = vgg.features
 
     def rep_size(self):
@@ -1756,7 +1756,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_list = []
         ans_list = []
 
-        for i in range(3):
+        for i in range(2):
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
@@ -1813,21 +1813,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             labelrep_expand = labelrep_expand.transpose(0,1)
 
             labelrep_expand_new = rolewise_att.unsqueeze(-1) * labelrep_expand
-
-            '''labelrep_expand_new = torch.zeros([batch_size, self.encoder.max_role_count, self.encoder.max_role_count-1, 1024])
-            for iter in range(self.encoder.max_role_count):
-                if iter == 0:
-                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,1:]
-                elif iter == self.encoder.max_role_count -1:
-                    labelrep_expand_new[:,iter] = labelrep_expand[:,iter,:iter]
-                else:
-                    labelrep_expand_new[:,iter] = torch.cat([labelrep_expand[:,iter,:iter], labelrep_expand[:,iter,iter+1:]], 1)
-
-            if torch.cuda.is_available():
-                labelrep_expand_new = labelrep_expand_new.to(torch.device('cuda'))
-                
-            labelrep_expand = labelrep_expand_new.contiguous().view(-1, self.encoder.max_role_count - 1, 1024)
-                '''
 
             out = mfb_l2
 
