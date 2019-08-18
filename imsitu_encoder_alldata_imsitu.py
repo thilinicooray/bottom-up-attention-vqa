@@ -564,14 +564,14 @@ class imsitu_encoder():
                 if label in self.label_list:
                     label_id = self.label_list.index(label)
                 else:
-                    label_id = self.label_list.index('#UNK#')
+                    label_id = self.label_list.index('UNK')
 
                 label_id_list.append(label_id)
 
             role_padding_count = self.max_role_count - len(label_id_list)
 
             for i in range(role_padding_count):
-                label_id_list.append(self.label_list.index(""))
+                label_id_list.append(len(self.label_list))
 
             all_frame_id_list.append(torch.tensor(label_id_list))
 
