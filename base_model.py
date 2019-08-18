@@ -1507,12 +1507,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
-        self.bn = nn.BatchNorm2d(512)
 
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
-        self.lstm_proj2 = weight_norm(nn.Linear(self.hidden_size * 2, self.hidden_size))
+        self.lstm_proj2 = nn.Linear(self.hidden_size * 2, self.hidden_size)
 
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
