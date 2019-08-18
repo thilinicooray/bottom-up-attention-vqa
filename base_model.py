@@ -1502,7 +1502,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = nn.Linear(self.hidden_size + 512, 512)
+        self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -1511,7 +1511,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
-        self.lstm_proj2 = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        self.lstm_proj2 = weight_norm(nn.Linear(self.hidden_size * 2, self.hidden_size))
 
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
