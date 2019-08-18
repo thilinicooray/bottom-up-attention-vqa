@@ -2351,13 +2351,13 @@ class MultiHeadedAttention(nn.Module):
         # We assume d_v always equals d_k
         self.d_k = d_model // h
         self.h = h
-        self.linears = self.clones(weight_norm(nn.Linear(d_model, d_model)), 4)
+        self.linears = self.clones(nn.Linear(d_model, d_model), 4)
         self.attn = None
         self.dropout = nn.Dropout(p=dropout)
 
     def clones(self, module, N):
         "Produce N identical layers."
-        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+        return nn.ModuleList([weight_norm(copy.deepcopy(module)) for _ in range(N)])
 
     def forward(self, query, key, value, mask=None):
         "Implements Figure 2"
