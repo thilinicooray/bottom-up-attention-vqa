@@ -1507,7 +1507,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
-        self.bn = nn.BatchNorm1d(512)
+        self.bn = nn.BatchNorm2d(512)
 
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
@@ -1808,9 +1808,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
             img = added_img * img
 
-            img_lin = img.contiguous().view(-1,img.size(-1))
+            img_lin = img.permute(0, 2, 1).contiguous().view(-1, v.size(-1), conv_h, conv_w,)
             img_lin = self.bn(img_lin)
-            img = img_lin.contiguous().view(img.size(0),img.size(1),img.size(-1))
+
+            img_lin = img_lin.view(batch_size * self.encoder.max_role_count, -1, conv_h* conv_w)
+            img = img_lin.permute(0, 2, 1)
 
 
             #img = img * self.resize_ctx(withctx).unsqueeze(1)
