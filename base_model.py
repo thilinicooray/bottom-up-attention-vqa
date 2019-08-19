@@ -2734,9 +2734,7 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
 
 
         role_idx = torch.tensor([0, 1, 2])
-        print('before exp', role_idx.size())
         role_idx = role_idx.expand(batch_size, role_idx.size(0) )
-        print('after exp', role_idx.size())
 
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
@@ -3269,7 +3267,6 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         return logits_place, logits_agent, logits_rest
 
     def calculate_loss_with_verbs(self, verb_pred, gt_verbs, role_label_pred, gt_labels):
-        print('role_pred size', role_label_pred.size())
 
         batch_size = role_label_pred.size()[0]
 

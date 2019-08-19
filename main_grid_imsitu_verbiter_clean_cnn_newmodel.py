@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    '''if gpu_mode >= 0 :
+    if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
-    pmodel = model
+        pmodel = model
+    #pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -229,7 +229,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
 
             del logits_verb, logits_plzagent, img, verb, labels
 
-            break
+            #break
 
     #return top1, top5, val_loss/mx
 
