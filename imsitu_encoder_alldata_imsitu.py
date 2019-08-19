@@ -592,7 +592,7 @@ class imsitu_encoder():
             for role_idx in roles:
                 role_id = role_idx.item()
                 if role_id == len(self.role_list):
-                    label_id_list.append(self.label_list.index(""))
+                    label_id_list.append(len(self.label_list))
                 else:
                     role = self.role_list[role_id]
                     label = frame[role]
