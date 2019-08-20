@@ -6397,7 +6397,7 @@ def build_baseline0grid_imsitu_verb_with_cnn_newmodel(num_hid, n_roles, n_verbs,
     classifier = weight_norm(nn.Linear(hidden_size*2, num_ans_classes+1), dim=None)'''
 
     classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        num_hid, 2 * num_hid, num_ans_classes + 1, 0.5)
 
     verb_classifier = SimpleClassifier(
         num_hid, 2 * num_hid, n_verbs, 0.5)
