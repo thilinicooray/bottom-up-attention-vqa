@@ -67,7 +67,7 @@ class vgg16_modified(nn.Module):
     def __init__(self):
         super(vgg16_modified, self).__init__()
         vgg = tv.models.vgg16_bn(pretrained=True)
-        self.vgg_features = vgg.features
+        self.vgg_features = vgg.features[:-1]
 
     def rep_size(self):
         return 1024
@@ -78,6 +78,7 @@ class vgg16_modified(nn.Module):
     def forward(self,x):
         #return self.dropout2(self.relu2(self.lin2(self.dropout1(self.relu1(self.lin1(self.vgg_features(x).view(-1, 512*7*7)))))))
         features = self.vgg_features(x)
+        print('feature size ', features.size())
 
         return features
 
