@@ -78,8 +78,6 @@ class vgg16_modified(nn.Module):
     def forward(self,x):
         #return self.dropout2(self.relu2(self.lin2(self.dropout1(self.relu1(self.lin1(self.vgg_features(x).view(-1, 512*7*7)))))))
         features = self.vgg_features(x)
-        print('feature size ', features.size())
-
         return features
 
 
