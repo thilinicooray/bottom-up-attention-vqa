@@ -365,7 +365,7 @@ def main():
         #utils_imsitu.set_trainable(model.convnet, False)
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
         optimizer = torch.optim.Adamax([
-            {'params': model.convnet.parameters(), 'lr': 5e-5},
+            {'params': model.convnet.parameters(), 'lr': 1e-4},
             {'params': model.verb_classifier.parameters()},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
