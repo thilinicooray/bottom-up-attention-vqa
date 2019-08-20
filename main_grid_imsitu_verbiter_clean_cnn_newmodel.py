@@ -377,7 +377,7 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
-        ], lr=1e-3)
+        ], lr=5e-2)
 
 
 
