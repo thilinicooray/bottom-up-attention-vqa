@@ -3280,7 +3280,6 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
                     frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
 
                 role_loss = frame_loss / 2
-                print('verb, role', verb_loss, role_loss)
                 frame_loss = verb_loss + role_loss
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
