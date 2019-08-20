@@ -3273,10 +3273,10 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         for i in range(batch_size):
             for index in range(gt_labels.size()[1]):
                 frame_loss = 0
-                verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
+                verb_loss = utils_imsitu.cross_entropy_loss_noskip(verb_pred[i], gt_verbs[i])
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
                 for j in range(0, 2):
-                    frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
+                    frame_loss += utils_imsitu.cross_entropy_loss_noskip(role_label_pred[i][j], gt_labels[i,index,j])
 
                 role_loss = frame_loss / 2
                 frame_loss = verb_loss + role_loss
