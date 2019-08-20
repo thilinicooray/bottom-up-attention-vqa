@@ -397,6 +397,13 @@ class imsitu_encoder():
 
         return torch.stack(role_batch_list,0)
 
+    def get_role_ids_plz_ag(self, batch_size):
+        ids = [self.role_list.index('place'), self.role_list.index('agent')]
+        ids = torch.tensor(ids)
+        id_batch = ids.expand(batch_size, ids.size(0))
+
+        return id_batch
+
     def get_role_ids_with_actionrole_batch(self, verbs):
         role_batch_list = []
         q_len = []

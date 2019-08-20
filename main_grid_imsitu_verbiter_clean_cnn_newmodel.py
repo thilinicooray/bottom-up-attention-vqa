@@ -15,7 +15,7 @@ from dataset import Dictionary
 import base_model
 
 
-def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4000):
+def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler, max_epoch, model_dir, encoder, gpu_mode, clip_norm, lr_max, model_name, model_saving_name, args,eval_frequency=4):
     model.train()
     train_loss = 0
     total_steps = 0
@@ -75,8 +75,8 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print('=========================================================================')
             print(labels)'''
 
-            logits_verb, logits_plzagent = pmodel(img)
-            loss1 = model.calculate_loss_with_verbs(logits_verb, verb, logits_plzagent[:,:2,:], labels)
+            logits_verb, logits_plzagent = pmodel(img, verb)
+            loss1 = model.calculate_loss_with_verbs(logits_verb, verb, logits_plzagent, labels)
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()
@@ -217,7 +217,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
                 verb = torch.autograd.Variable(verb)
                 labels = torch.autograd.Variable(labels)
 
-            logits_verb, logits_plzagent = model(img)
+            logits_verb, logits_plzagent = model(img, verb)
             '''loss = model.calculate_eval_loss(verb_predict, verb, role_predict, labels)
             val_loss += loss.item()'''
             if write_to_file:
@@ -229,7 +229,7 @@ def eval(model, dev_loader, encoder, gpu_mode, write_to_file = False):
 
             del logits_verb, logits_plzagent, img, verb, labels
 
-            #break
+            break
 
     #return top1, top5, val_loss/mx
 

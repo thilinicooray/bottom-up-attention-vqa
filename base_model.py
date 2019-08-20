@@ -2700,8 +2700,11 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
 
         return role_label_pred
 
-    def forward(self, v_org):
-        role_count = 3
+    def forward(self, v_org, gt_verb):
+        if self.training:
+            role_count = self.encoder.max_role_count+1
+        else:
+            role_count = 3
 
         #self.convnet.eval()
 
@@ -2733,9 +2736,16 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
             mask = mask.to(torch.device('cuda'))
 
 
-        role_idx = torch.tensor([0, 1, 2])
-        role_idx = role_idx.expand(batch_size, role_idx.size(0) )
+        if self.training:
+            role_idx = self.encoder.get_ordered_role_ids_batch(gt_verb)
+        else:
+            role_idx = self.encoder.get_role_ids_plz_ag(batch_size)
 
+        verb_id = torch.tensor(len(self.encoder.role_list) + 1)
+        verb_id_batch = verb_id.expand(batch_size, 1)
+        role_idx = torch.cat([verb_id_batch, role_idx], -1)
+
+        print('expanded role ', role_idx.size())
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
 
@@ -3276,9 +3286,9 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
                 frame_loss = 0
                 verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
-                for j in range(0, 2):
+                for j in range(0, self.encoder.max_role_count):
                     frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
-                frame_loss = verb_loss + frame_loss/2
+                frame_loss = verb_loss + frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
 
@@ -6380,7 +6390,7 @@ def build_baseline0grid_imsitu_verb_with_cnn_newmodel(num_hid, n_roles, n_verbs,
     hidden_size = 1024
     n_heads = 2
     covnet = vgg16_modified()
-    role_emb = nn.Embedding(3, 600)
+    role_emb = nn.Embedding(n_roles+2, 600, padding_idx=n_roles)
     query_composer = FCNet([600, hidden_size])
     v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
