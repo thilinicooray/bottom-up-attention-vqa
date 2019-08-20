@@ -6381,7 +6381,7 @@ def build_baseline0grid_imsitu_verb_with_cnn_newmodel(num_hid, n_roles, n_verbs,
     hidden_size = 1024
     n_heads = 2
     covnet = vgg16_modified()
-    role_emb = nn.Embedding(3, 600, padding_idx=n_roles)
+    role_emb = nn.Embedding(3, 600)
     query_composer = FCNet([600, hidden_size])
     v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
