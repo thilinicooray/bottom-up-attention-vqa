@@ -76,7 +76,7 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
             print(labels)'''
 
             logits_verb, logits_plzagent = pmodel(img, verb)
-            loss1 = model.calculate_loss_with_verbs(logits_verb, verb, logits_plzagent, labels)
+            loss1 = model.calculate_loss_with_verbs(logits_verb, verb, logits_plzagent, labels[:,:2,:])
             #verb_predict, rol1pred, role_predict = pmodel.forward_eval5(img)
             #print ("forward time = {}".format(time.time() - t1))
             t1 = time.time()

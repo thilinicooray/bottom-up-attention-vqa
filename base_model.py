@@ -2701,10 +2701,7 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         return role_label_pred
 
     def forward(self, v_org, gt_verb):
-        if self.training:
-            role_count = self.encoder.max_role_count+1
-        else:
-            role_count = 3
+        role_count = 3
 
         #self.convnet.eval()
 
@@ -2735,15 +2732,9 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         if torch.cuda.is_available():
             mask = mask.to(torch.device('cuda'))
 
-
-        if self.training:
-            role_idx = self.encoder.get_ordered_role_ids_batch(gt_verb)
-        else:
-            role_idx = self.encoder.get_role_ids_plz_ag(batch_size)
-
-        verb_id = torch.tensor(len(self.encoder.role_list) + 1)
-        verb_id_batch = verb_id.expand(batch_size, 1)
-        role_idx = torch.cat([verb_id_batch, role_idx], -1)
+        verb_id = torch.tensor([0,1,2])
+        verb_id_batch = verb_id.expand(batch_size, role_count)
+        role_idx = verb_id_batch
 
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
@@ -3285,9 +3276,12 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
                 frame_loss = 0
                 verb_loss = utils_imsitu.cross_entropy_loss(verb_pred[i], gt_verbs[i])
                 #frame_loss = criterion(role_label_pred[i], gt_labels[i,index])
-                for j in range(0, self.encoder.max_role_count):
+                for j in range(0, 2):
                     frame_loss += utils_imsitu.cross_entropy_loss(role_label_pred[i][j], gt_labels[i,index,j] ,self.encoder.get_num_labels())
-                frame_loss = verb_loss + frame_loss/len(self.encoder.verb2_role_dict[self.encoder.verb_list[gt_verbs[i]]])
+
+                role_loss = frame_loss / 2
+                print('verb, role', verb_loss, role_loss)
+                frame_loss = verb_loss + role_loss
                 #print('frame loss', frame_loss, 'verb loss', verb_loss)
                 loss += frame_loss
 
