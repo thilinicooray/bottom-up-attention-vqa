@@ -2700,7 +2700,7 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         return role_label_pred
 
     def forward(self, v_org, gt_verb):
-        role_count = self.encoder.max_role_count
+        role_count = self.encoder.max_role_count + 1
 
         #self.convnet.eval()
 
@@ -2731,9 +2731,16 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         if torch.cuda.is_available():
             mask = mask.to(torch.device('cuda'))
 
-        verb_id = torch.tensor([0,1,2])
+        '''verb_id = torch.tensor([0,1,2])
         verb_id_batch = verb_id.expand(batch_size, role_count)
-        role_idx = verb_id_batch
+        role_idx = verb_id_batch'''
+        role_ids = self.encoder.get_ordered_role_ids_batch(gt_verb)
+        verb_id = torch.tensor([len(self.encoder.role_list)+1])
+        print(verb_id.size(), role_ids.size())
+        verb_id_batch = verb_id.expand(batch_size, verb_id.size(0))
+        tot = torch.cat([verb_id_batch, role_ids],1)
+        print(tot.size(), tot[:5])
+        role_idx = tot
 
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
@@ -6381,7 +6388,7 @@ def build_baseline0grid_imsitu_verb_with_cnn_newmodel(num_hid, n_roles, n_verbs,
     hidden_size = 1024
     n_heads = 2
     covnet = vgg16_modified()
-    role_emb = nn.Embedding(3, 600)
+    role_emb = nn.Embedding(n_roles+2, 600, padding_idx=n_roles)
     query_composer = FCNet([600, hidden_size])
     v_att = Attention(512//n_heads, hidden_size//n_heads, hidden_size)
     q_net = FCNet([hidden_size//n_heads, hidden_size ])
