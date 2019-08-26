@@ -2751,8 +2751,6 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
             role_idx = verb_id_batch
 
 
-        print(role_idx.size())
-
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
 
