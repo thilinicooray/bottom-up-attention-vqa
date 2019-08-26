@@ -2853,8 +2853,9 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
 
             all_ans = out.contiguous().view(v.size(0), role_count, -1)
             ans_verb = all_ans[:,0,:].squeeze()
-            ans_nouns = all_ans[:,1:,:]
-            ans_nouns = ans_nouns.contiguous().view(v.size(0)* (role_count -1 ), -1)
+            if self.training:
+                ans_nouns = all_ans[:,1:,:]
+                ans_nouns = ans_nouns.contiguous().view(v.size(0)* (role_count -1 ), -1)
 
             q_list.append(q_emb)
             ans_list.append(out)
@@ -2867,11 +2868,14 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
             q_emb_up = h.permute(1, 0, 2).contiguous().view(batch_size*role_count, -1)
             q_emb = self.Dropout_C(self.lstm_proj2(q_emb_up))
 
-        logits = self.classifier(ans_nouns)
+        role_label_pred = None
+        if self.training:
+            logits = self.classifier(ans_nouns)
+            role_label_pred = logits.contiguous().view(v.size(0), role_count-1, -1)
         verb_logits = self.verb_classifier(ans_verb)
 
         loss = None
-        role_label_pred = logits.contiguous().view(v.size(0), role_count-1, -1)
+
         '''if self.training:
             loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
 
