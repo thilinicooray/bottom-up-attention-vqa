@@ -2700,7 +2700,11 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         return role_label_pred
 
     def forward(self, v_org, gt_verb):
-        role_count = self.encoder.max_role_count + 1
+
+        if self.training:
+            role_count = self.encoder.max_role_count + 1
+        else:
+            role_count = 1
 
         #self.convnet.eval()
 
@@ -2734,13 +2738,20 @@ class BaseModelGrid_Imsitu_Verb_With_CNN_NewModel(nn.Module):
         '''verb_id = torch.tensor([0,1,2])
         verb_id_batch = verb_id.expand(batch_size, role_count)
         role_idx = verb_id_batch'''
-        role_ids = self.encoder.get_ordered_role_ids_batch(gt_verb)
+
         verb_id = torch.tensor([len(self.encoder.role_list)+1])
-        print(verb_id.size(), role_ids.size())
         verb_id_batch = verb_id.expand(batch_size, verb_id.size(0))
-        tot = torch.cat([verb_id_batch, role_ids],1)
-        print(tot.size(), tot[:5])
-        role_idx = tot
+
+        if self.training:
+            role_ids = self.encoder.get_ordered_role_ids_batch(gt_verb)
+
+            tot = torch.cat([verb_id_batch, role_ids],1)
+            role_idx = tot
+        else:
+            role_idx = verb_id_batch
+
+
+        print(role_idx.size())
 
         if torch.cuda.is_available():
             role_idx = role_idx.to(torch.device('cuda'))
