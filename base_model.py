@@ -1727,7 +1727,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        n_heads = 1
+        n_heads = 2
 
         verb_embd = self.verb_emb(gt_verb)
         role_embd = self.role_emb(role_idx)
