@@ -1690,7 +1690,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward_iter(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
@@ -1727,7 +1727,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         img = img.transpose(0,1)
         img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
 
-        n_heads = 2
+        n_heads = 1
 
         verb_embd = self.verb_emb(gt_verb)
         role_embd = self.role_emb(role_idx)
@@ -1756,7 +1756,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         q_list = []
         ans_list = []
 
-        for i in range(1):
+        for i in range(2):
 
             img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
             img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
@@ -1841,7 +1841,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_single(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
