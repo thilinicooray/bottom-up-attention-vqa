@@ -1501,6 +1501,11 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
+
+        self.Dropout_M = nn.Dropout(0.1)
+        self.Dropout_Q = nn.Dropout(0.1)
+        self.Dropout_C = nn.Dropout(0.1)
+
         '''self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
