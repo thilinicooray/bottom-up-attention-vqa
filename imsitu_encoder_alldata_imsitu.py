@@ -682,7 +682,7 @@ class imsitu_encoder():
         for id in verb_ids:
             #print('ids :', id)
             encoding = self.verb2role_encoding[id]
-            encoding_tensor = torch.unsqueeze(torch.tensor(encoding),0)
+            encoding_tensor = torch.unsqueeze(encoding.clone().detach(),0)
             role_count = self.get_role_count(id)
             #print('role count :', role_count)
             pad_count = self.max_role_count - role_count
