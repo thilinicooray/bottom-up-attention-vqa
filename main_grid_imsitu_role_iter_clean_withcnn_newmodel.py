@@ -23,14 +23,14 @@ def train(model, train_loader, dev_loader, traindev_loader, optimizer, scheduler
     dev_score_list = []
     time_all = time.time()
 
-    '''if gpu_mode >= 0 :
+    if gpu_mode >= 0 :
         ngpus = 2
         device_array = [i for i in range(0,ngpus)]
 
         pmodel = torch.nn.DataParallel(model, device_ids=device_array)
     else:
-        pmodel = model'''
-    pmodel = model
+        pmodel = model
+    #pmodel = model
 
     '''if scheduler.get_lr()[0] < lr_max:
         scheduler.step()'''
@@ -365,7 +365,7 @@ def main():
         #utils_imsitu.load_net(args.pre_trained_cnn_model, [model.convnet], ['convnet'])
         #utils_imsitu.set_trainable(model.convnet, False)
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
-        '''optimizer = torch.optim.Adamax([
+        optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
@@ -378,10 +378,10 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
-        ], lr=1e-3)'''
+        ], lr=1e-3)
 
 
-        optimizer = torch.optim.Adamax([
+        '''optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
@@ -391,7 +391,7 @@ def main():
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
             {'params': model.role_labeller.parameters()},
-        ], lr=1e-3)
+        ], lr=1e-3)'''
 
 
 
