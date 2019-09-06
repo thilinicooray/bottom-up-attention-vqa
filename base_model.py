@@ -1526,7 +1526,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)'''
 
         self.role_labeller = ggnn.GGNN(state_dim=1024, n_edge_types=1,n_node=self.encoder.max_role_count,
-                                  n_steps=1)
+                                  n_steps=2)
 
 
     def forward_gt(self, v, labels, gt_verb):
