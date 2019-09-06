@@ -365,7 +365,7 @@ def main():
         #utils_imsitu.load_net(args.pre_trained_cnn_model, [model.convnet], ['convnet'])
         #utils_imsitu.set_trainable(model.convnet, False)
         #{'params': model.convnet.parameters(), 'lr': 5e-5},
-        '''optimizer = torch.optim.Adamax([
+        optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
@@ -378,10 +378,10 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
-        ], lr=1e-3)'''
+        ], lr=1e-3)
 
 
-        optimizer = torch.optim.Adamax([
+        '''optimizer = torch.optim.Adamax([
             {'params': model.convnet.parameters(), 'lr': 5e-5},
             {'params': model.classifier.parameters()},
             {'params': model.role_emb.parameters()},
@@ -390,7 +390,7 @@ def main():
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
-        ], lr=1e-3)
+        ], lr=1e-3)'''
 
 
 
