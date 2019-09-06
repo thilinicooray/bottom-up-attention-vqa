@@ -1508,7 +1508,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         self.Dropout_Q = nn.Dropout(0.1)
         self.Dropout_C = nn.Dropout(0.1)
 
-        self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
+        '''self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
 
         self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
                               batch_first=True, bidirectional=True)
@@ -1517,9 +1517,9 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
 
-        self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)
+        self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)'''
 
-        #self.role_labeller = ggnn.GGNN(state_dim=1024, n_edge_types=1,n_node=self.encoder.max_role_count, n_steps=2)
+        self.role_labeller = ggnn.GGNN(state_dim=1024, n_edge_types=1,n_node=self.encoder.max_role_count, n_steps=1)
 
 
     def forward_gt(self, v, labels, gt_verb):
@@ -1694,7 +1694,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_iter(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
@@ -1952,7 +1952,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred
 
-    def forward_ggnn(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
