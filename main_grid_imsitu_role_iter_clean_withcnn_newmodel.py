@@ -381,20 +381,6 @@ def main():
         ], lr=1e-3)
 
 
-        '''optimizer = torch.optim.Adamax([
-            {'params': model.convnet.parameters(), 'lr': 5e-5},
-            {'params': model.classifier.parameters()},
-            {'params': model.role_emb.parameters()},
-            {'params': model.verb_emb.parameters()},
-            {'params': model.query_composer.parameters()},
-            {'params': model.v_att.parameters()},
-            {'params': model.q_net.parameters()},
-            {'params': model.v_net.parameters()},
-            {'params': model.role_labeller.parameters()},
-        ], lr=1e-3)'''
-
-
-
 
     #utils_imsitu.set_trainable(model, True)
     #optimizer = torch.optim.Adamax(model.parameters(), lr=1e-3)
