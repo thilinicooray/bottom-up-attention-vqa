@@ -1690,7 +1690,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred, loss
 
-    def forward(self, v_org, labels, gt_verb):
+    def forward_iter(self, v_org, labels, gt_verb): #try real multi head scenario
 
         #self.convnet.eval()
 
@@ -1938,6 +1938,103 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             mfb_l2 = F.normalize(mfb_sign_sqrt)
 
             out = mfb_l2
+
+        logits = self.classifier(out)
+
+        loss = None
+        role_label_pred = logits.contiguous().view(v.size(0), self.encoder.max_role_count, -1)
+        '''if self.training:
+            loss = self.calculate_loss(gt_verb, role_label_pred, labels)'''
+
+        return role_label_pred
+
+    def forward(self, v_org, labels, gt_verb):
+
+        #self.convnet.eval()
+
+        img_features = self.convnet(v_org)
+        #img_feat_flat = self.convnet.resnet.avgpool(img_features).squeeze()
+        batch_size, n_channel, conv_h, conv_w = img_features.size()
+        #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+
+        '''feat = F.interpolate(img_features, size=(14, 14), mode='bilinear')
+        img_features = feat.view(batch_size, -1, conv_h, conv_w)'''
+
+        #labels = labels.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+
+        img_org = img_features.view(batch_size, -1, conv_h* conv_w)
+        v = img_org.permute(0, 2, 1)
+
+        '''v = v.unsqueeze(-1)
+        v = v.expand(v.size(0), v.size(1), v.size(2), 4)
+        v = v.permute(0,1,3,2)
+        v = v.contiguous().view(v.size(0), v.size(1), -1)'''
+
+        batch_size = v.size(0)
+
+        role_idx = self.encoder.get_role_ids_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            role_idx = role_idx.to(torch.device('cuda'))
+
+        img = v
+
+        img = img.expand(self.encoder.max_role_count, img.size(0), img.size(1), img.size(2))
+
+
+        img = img.transpose(0,1)
+        img = img.contiguous().view(batch_size * self.encoder.max_role_count, -1, v.size(2))
+
+        n_heads = 1
+
+        verb_embd = self.verb_emb(gt_verb)
+        role_embd = self.role_emb(role_idx)
+
+        verb_embed_expand = verb_embd.expand(self.encoder.max_role_count, verb_embd.size(0), verb_embd.size(1))
+        verb_embed_expand = verb_embed_expand.transpose(0,1)
+        concat_query = torch.cat([ verb_embed_expand, role_embd], -1)
+        role_verb_embd = concat_query.contiguous().view(-1, role_embd.size(-1)*2)
+        q_emb = self.query_composer(role_verb_embd)
+        q_emb_org = q_emb
+
+        mask = self.encoder.get_adj_matrix_noself(gt_verb)
+        #oh_role_encoding, real_role_count = self.encoder.get_verb2role_encoing_batch(gt_verb)
+
+        if torch.cuda.is_available():
+            mask = mask.to(torch.device('cuda'))
+            #oh_role_encoding = oh_role_encoding.to(torch.device('cuda'))
+
+        prev = None
+
+        '''prev = torch.zeros(batch_size * self.encoder.max_role_count, 1024)
+        if torch.cuda.is_available():
+            prev = prev.to(torch.device('cuda'))'''
+
+        #vemb_list = [init_vemb]
+        q_list = []
+        ans_list = []
+
+        for i in range(1):
+
+            img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+            img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
+
+            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+
+            #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
+            #attention
+
+            att = self.v_att(img_mul_head, q_emb_mul_head)
+            v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            #vemb_list.append(v_emb)
+            #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
+            v_repr = self.v_net(v_emb)
+            q_repr = self.q_net(q_emb_mul_head)
+
+            #composition
+
+            out = torch.mul(q_repr, v_repr)
 
         logits = self.classifier(out)
 
