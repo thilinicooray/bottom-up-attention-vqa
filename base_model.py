@@ -2035,6 +2035,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             #composition
 
             out = torch.mul(q_repr, v_repr)
+            print('out ', out.size())
 
         logits = self.classifier(out)
 
