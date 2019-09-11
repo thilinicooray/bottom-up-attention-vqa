@@ -6571,7 +6571,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
-    hidden_size = 1024
+    hidden_size = 2048
     n_heads = 1
     covnet = vgg16_modified()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
