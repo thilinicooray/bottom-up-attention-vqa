@@ -2035,7 +2035,6 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             #composition
 
             out = torch.mul(q_repr, v_repr)
-            print('out ', out.size())
 
         logits = self.classifier(out)
 
@@ -6592,7 +6591,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_ve
     classifier = weight_norm(nn.Linear(hidden_size*2, num_ans_classes+1), dim=None)'''
 
     classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, num_ans_classes, 0.5)
+        hidden_size, 2 * hidden_size, num_ans_classes, 0.5)
 
 
     #verb_classifier = SimpleClassifier(
