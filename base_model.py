@@ -1501,7 +1501,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.verb_classifier = verb_classifier
         self.encoder = encoder
         self.num_iter = num_iter
-        self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
+        #self.resize_ctx = weight_norm(nn.Linear(self.hidden_size + 512, 512))
         self.l2_criterion = nn.MSELoss()
         self.Dropout_M = nn.Dropout(0.1)
         self.Dropout_Q = nn.Dropout(0.1)
@@ -1509,14 +1509,14 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
         #self.bn = nn.BatchNorm2d(512)
 
 
-        self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
-                              batch_first=True, bidirectional=True)
-        self.lstm_proj2 = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        #self.q_emb2 = nn.LSTM(self.hidden_size, self.hidden_size,
+                              #batch_first=True, bidirectional=True)
+        #self.lstm_proj2 = nn.Linear(self.hidden_size * 2, self.hidden_size)
 
         #self.context_adder = nn.GRUCell(1024, 1024)
         #self.context_adder = nn.Linear(2048,1024)
 
-        self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)
+        #self.ctx_att = MultiHeadedAttention(4, self.hidden_size, dropout=0.1)
 
     def forward_gt(self, v, labels, gt_verb):
 
@@ -1841,7 +1841,7 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         return role_label_pred
 
-    def forward_single(self, v_org, labels, gt_verb):
+    def forward(self, v_org, labels, gt_verb):
 
         #self.convnet.eval()
 
@@ -1909,25 +1909,25 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
 
         for i in range(1):
 
-            img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
-            img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
+            #img_mul_head = img.view(img.size(0), img.size(1),  n_heads, -1).transpose(1, 2)
+            #img_mul_head = img_mul_head.contiguous().view(-1, img_mul_head.size(2), img_mul_head.size(-1))
 
-            q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
-            q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
+            #q_emb_mul_head = q_emb.view(q_emb.size(0), n_heads, -1)
+            #q_emb_mul_head = q_emb_mul_head.contiguous().view(-1, q_emb_mul_head.size(-1))
 
             #print('img q :', img_mul_head.size(), q_emb_mul_head.size())
             #attention
 
-            att = self.v_att(img_mul_head, q_emb_mul_head)
-            v_emb = (att * img_mul_head).sum(1) # [batch, v_dim]
+            att = self.v_att(img, q_emb)
+            v_emb = (att * img).sum(1) # [batch, v_dim]
             #vemb_list.append(v_emb)
             #v_emb = v_emb.contiguous().view(batch_size* self.encoder.max_role_count, -1)
             v_repr = self.v_net(v_emb)
-            q_repr = self.q_net(q_emb_mul_head)
+            q_repr = self.q_net(q_emb)
 
             #composition
 
-            mfb_iq_eltwise = torch.mul(q_repr, v_repr)
+            '''mfb_iq_eltwise = torch.mul(q_repr, v_repr)
 
             mfb_iq_drop = self.Dropout_M(mfb_iq_eltwise)
 
@@ -1937,7 +1937,8 @@ class BaseModelGrid_Imsitu_RoleIter_With_CNN_NewModel(nn.Module):
             mfb_sign_sqrt = torch.sqrt(F.relu(mfb_out)) - torch.sqrt(F.relu(-mfb_out))
             mfb_l2 = F.normalize(mfb_sign_sqrt)
 
-            out = mfb_l2
+            out = mfb_l2'''
+            out = q_repr * v_repr
 
         logits = self.classifier(out)
 
@@ -6571,7 +6572,7 @@ def build_baseline0grid_imsitu_roleiter_with_cnn_extctx(dataset, num_hid, num_an
 
 def build_baseline0grid_imsitu_roleiter_with_cnn_newmodel(num_hid, n_roles, n_verbs, num_ans_classes, encoder, num_iter):
     #print('words count :', dataset.dictionary.ntoken)
-    hidden_size = 2048
+    hidden_size = 1024
     n_heads = 1
     covnet = vgg16_modified()
     role_emb = nn.Embedding(n_roles+1, 300, padding_idx=n_roles)
