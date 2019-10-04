@@ -371,7 +371,6 @@ def main():
             {'params': model.role_emb.parameters()},
             {'params': model.verb_emb.parameters()},
             {'params': model.query_composer.parameters()},
-            {'params': model.q_emb2.parameters()},
             {'params': model.v_att.parameters()},
             {'params': model.q_net.parameters()},
             {'params': model.v_net.parameters()},
