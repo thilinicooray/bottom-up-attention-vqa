@@ -23,9 +23,9 @@ def create_glove_embedding_init(object_list, glove_file):
     for idx, object in enumerate(object_list):
 
         words = object.split()
-        final_embedding = None
+        final_embedding = word2emb[words[0]]
 
-        for word in words:
+        for word in words[1:]:
             final_embedding += word2emb[word]
 
         weights[idx] = final_embedding
