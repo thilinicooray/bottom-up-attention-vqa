@@ -41,4 +41,4 @@ if __name__ == '__main__':
     object_list = [x.strip() for x in content]
 
     weights, word2emb = create_glove_embedding_init(object_list, glove_file)
-    np.save('data/glove6b_init_imsitu_carn.npy' % emb_dim, weights)
+    np.save('data/glove6b_init_imsitu_carn.npy', weights)
